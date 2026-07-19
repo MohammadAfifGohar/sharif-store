@@ -179,14 +179,14 @@ export function CategoryCarousel({
       aria-roledescription="carousel"
       aria-labelledby="category-carousel-title"
     >
-      <div className="mb-7 flex items-end justify-between gap-6">
+      <div className="mb-5 flex items-end justify-between gap-4 sm:mb-7 sm:gap-6">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
             {eyebrow}
           </p>
           <h2
             id="category-carousel-title"
-            className="mt-2 font-heading text-3xl font-semibold"
+            className="mt-2 font-heading text-2xl font-semibold sm:text-3xl"
           >
             {title}
           </h2>

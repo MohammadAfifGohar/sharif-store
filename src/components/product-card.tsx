@@ -41,21 +41,24 @@ export function ProductCard({ product, index }: ProductCardProps) {
           )}
 
           {product.on_sale ? (
-            <Badge className="absolute left-3 top-3" variant="secondary">
+            <Badge
+              className="absolute left-2 top-2 sm:left-3 sm:top-3"
+              variant="secondary"
+            >
               Sale
             </Badge>
           ) : null}
         </a>
 
-        <div className="flex items-start justify-between gap-4 pt-4">
+        <div className="flex items-start justify-between gap-2 pt-3 sm:gap-4 sm:pt-4">
           <div className="min-w-0">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="mb-1 truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:text-xs sm:tracking-[0.14em]">
               {product.categories[0]?.name ?? "Sharif selection"}
             </p>
-            <h3 className="truncate font-heading text-lg font-semibold capitalize">
+            <h3 className="truncate font-heading text-sm font-semibold capitalize sm:text-lg">
               <a href={product.permalink}>{product.name}</a>
             </h3>
-            <div className="mt-2 flex items-center gap-2 text-sm">
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:mt-2 sm:text-sm">
               <span className="font-bold">{formatPrice(product)}</span>
               {product.on_sale ? (
                 <span className="text-muted-foreground line-through">
@@ -69,8 +72,8 @@ export function ProductCard({ product, index }: ProductCardProps) {
             href={product.permalink}
             aria-label={`View ${product.name}`}
             className={cn(
-              buttonVariants({ variant: "outline", size: "icon" }),
-              "shrink-0",
+              buttonVariants({ variant: "outline", size: "icon-sm" }),
+              "shrink-0 sm:size-8",
             )}
           >
             <ArrowUpRightIcon />

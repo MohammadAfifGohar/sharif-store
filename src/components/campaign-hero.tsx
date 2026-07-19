@@ -29,7 +29,7 @@ export function CampaignHero({
             priority
             quality={85}
             sizes="100vw"
-            className="h-auto w-full"
+            className="h-36 w-full object-cover object-center sm:h-auto"
           />
         </a>
       </section>
