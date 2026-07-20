@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { ArrowUpRightIcon } from "lucide-react";
 
-import { Reveal } from "@/components/reveal";
+import { Reveal } from "./reveal";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {

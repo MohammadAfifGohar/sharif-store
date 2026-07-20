@@ -1,17 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { getImageProps } from "next/image";
 
 import {
   Carousel,
-  type CarouselApi,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
+import { useCampaignCarousel } from "../hooks/use-campaign-carousel";
 
 type CampaignImage = {
   height: number;
@@ -30,52 +29,9 @@ type CampaignHeroProps = {
   slides: CampaignSlide[];
 };
 
-const ROTATION_INTERVAL = 6000;
-
 export function CampaignHero({ slides }: CampaignHeroProps) {
-  const [api, setApi] = useState<CarouselApi>();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const updatePreference = () => setPrefersReducedMotion(query.matches);
-
-    updatePreference();
-    query.addEventListener("change", updatePreference);
-
-    return () => query.removeEventListener("change", updatePreference);
-  }, []);
-
-  useEffect(() => {
-    if (!api) {
-      return;
-    }
-
-    const updateActiveIndex = () => setActiveIndex(api.selectedScrollSnap());
-
-    updateActiveIndex();
-    api.on("select", updateActiveIndex);
-    api.on("reInit", updateActiveIndex);
-
-    return () => {
-      api.off("select", updateActiveIndex);
-      api.off("reInit", updateActiveIndex);
-    };
-  }, [api]);
-
-  useEffect(() => {
-    if (!api || isPaused || prefersReducedMotion || slides.length < 2) {
-      return;
-    }
-
-    const interval = window.setInterval(() => {
-      api.scrollNext();
-    }, ROTATION_INTERVAL);
-
-    return () => window.clearInterval(interval);
-  }, [api, isPaused, prefersReducedMotion, slides.length]);
+  const { activeIndex, api, pause, resume, setApi } =
+    useCampaignCarousel(slides.length);
 
   if (slides.length === 0) {
     return null;
@@ -87,10 +43,10 @@ export function CampaignHero({ slides }: CampaignHeroProps) {
       opts={{ loop: true }}
       aria-label="Featured collections"
       className="group overflow-hidden"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onFocus={() => setIsPaused(true)}
-      onBlur={() => setIsPaused(false)}
+      onMouseEnter={pause}
+      onMouseLeave={resume}
+      onFocus={pause}
+      onBlur={resume}
     >
       <CarouselContent className="ml-0">
         {slides.map((slide, index) => {

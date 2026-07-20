@@ -1,20 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
 import { RefreshCwIcon, ShoppingBagIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useRouteErrorReporting } from "./hooks/use-route-error-reporting";
 
-export default function ErrorPage({
+export default function HomeError({
   error,
   unstable_retry,
 }: {
   error: Error & { digest?: string };
   unstable_retry: () => void;
 }) {
-  useEffect(() => {
-    console.error("Storefront route error:", error);
-  }, [error]);
+  useRouteErrorReporting("Home", error);
 
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-20 sm:px-6">

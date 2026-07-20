@@ -1,121 +1,17 @@
 import Image from "next/image";
-import {
-  ArrowRightIcon,
-  HeartHandshakeIcon,
-  PackageCheckIcon,
-  ShieldCheckIcon,
-} from "lucide-react";
+import { ArrowRightIcon } from "lucide-react";
 
-import { CampaignHero } from "@/components/campaign-hero";
-import { CategoryCarousel } from "@/components/category-carousel";
-import { Reveal } from "@/components/reveal";
+import { CampaignHero } from "./components/campaign-hero";
+import { CategoryCarousel } from "./components/category-carousel";
+import { CategoryItem } from "./components/category-item";
+import { Reveal } from "./components/reveal";
+import { heroSlides, promises } from "./utils/home-content";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import {
-  getHomepageCommerceData,
-  type WooCategory,
-} from "@/lib/woocommerce";
+import { getHomepageCommerceData } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
-const promises = [
-  {
-    icon: PackageCheckIcon,
-    title: "Carefully packed",
-    copy: "Every order is checked and packed with care before it leaves us.",
-  },
-  {
-    icon: ShieldCheckIcon,
-    title: "Genuine finds",
-    copy: "Straightforward prices and a catalogue chosen for everyday use.",
-  },
-  {
-    icon: HeartHandshakeIcon,
-    title: "Human support",
-    copy: "Questions before ordering? Speak to a real person from our store.",
-  },
-];
-
-const heroSlides = [
-  {
-    alt: "Women's handbags under ₹500",
-    desktopImage: {
-      src: "/handbags-under-500-desktop.avif",
-      width: 1800,
-      height: 900,
-    },
-    mobileImage: {
-      src: "/handbags-under-500-mobile.avif",
-      width: 768,
-      height: 1200,
-    },
-    href: "https://thesharifstore.in/product-category/bags-fashion/",
-  },
-  {
-    alt: "Jewellery picks with lasting shine",
-    desktopImage: {
-      src: "/jewellery-picks-desktop.avif",
-      width: 1800,
-      height: 900,
-    },
-    mobileImage: {
-      src: "/jewellery-picks-mobile.avif",
-      width: 768,
-      height: 1200,
-    },
-    href: "https://thesharifstore.in/product-category/jewellery/",
-  },
-  {
-    alt: "Dove and Philips hair care essentials",
-    desktopImage: {
-      src: "/hair-care-essentials-desktop.avif",
-      width: 1800,
-      height: 900,
-    },
-    mobileImage: {
-      src: "/hair-care-essentials-mobile.avif",
-      width: 768,
-      height: 1200,
-    },
-    href: "https://thesharifstore.in/product-category/hair-care/",
-  },
-];
-
-function CategoryItem({ category }: { category: WooCategory }) {
-  const categoryName = category.name.replaceAll("&amp;", "&");
-
-  return (
-    <a
-      href={category.permalink}
-      className="group flex w-20 shrink-0 snap-start flex-col gap-1.5 sm:w-32 sm:gap-2.5"
-    >
-      <span className="relative block size-20 shrink-0 overflow-hidden rounded-lg bg-secondary sm:size-32 sm:rounded-xl">
-        {category.image ? (
-          <Image
-            src={category.image.src}
-            alt={category.image.alt || categoryName}
-            fill
-            sizes="(max-width: 639px) 80px, 128px"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <span className="grid h-full place-items-center bg-gradient-to-br from-secondary to-muted font-heading text-4xl font-semibold text-primary">
-            {categoryName.charAt(0)}
-          </span>
-        )}
-      </span>
-      <span className="px-1 text-center">
-        <span className="line-clamp-2 min-h-8 font-heading text-xs font-semibold leading-4 sm:min-h-10 sm:text-sm sm:leading-5">
-          {categoryName}
-        </span>
-        <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-[0.1em] text-muted-foreground sm:mt-1 sm:text-[10px] sm:tracking-[0.12em]">
-          {category.count} {category.count === 1 ? "find" : "finds"}
-        </span>
-      </span>
-    </a>
-  );
-}
-
-export default async function Home() {
+export default async function HomePage() {
   const { products, categories, featuredDiscoveryProduct } =
     await getHomepageCommerceData();
   const currentProducts = products

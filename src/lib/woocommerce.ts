@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 const STORE_API_URL =
   process.env.WORDPRESS_URL ??
   "https://thesharifstore.in";
@@ -62,12 +64,31 @@ async function fetchStoreApi<T>(path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export const getStoreCategories = cache(async () =>
+  fetchStoreApi<WooCategory[]>(
+    "products/categories?hide_empty=false&per_page=100",
+  ),
+);
+
+export const getCategoryPageData = cache(async (slug: string) => {
+  const categories = await getStoreCategories();
+  const category = categories.find((item) => item.slug === slug);
+
+  if (!category) {
+    return null;
+  }
+
+  const products = await fetchStoreApi<WooProduct[]>(
+    `products?category=${category.id}&per_page=100`,
+  );
+
+  return { category, products };
+});
+
 export async function getHomepageCommerceData() {
   const [products, categories, featuredProducts] = await Promise.all([
     fetchStoreApi<WooProduct[]>("products?per_page=8"),
-    fetchStoreApi<WooCategory[]>(
-      "products/categories?hide_empty=false&per_page=100",
-    ),
+    getStoreCategories(),
     fetchStoreApi<WooProduct[]>("products?slug=white-oud-al-ahmed"),
   ]);
 
