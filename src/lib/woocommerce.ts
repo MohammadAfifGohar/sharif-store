@@ -63,16 +63,18 @@ async function fetchStoreApi<T>(path: string): Promise<T> {
 }
 
 export async function getHomepageCommerceData() {
-  const [products, categories] = await Promise.all([
+  const [products, categories, featuredProducts] = await Promise.all([
     fetchStoreApi<WooProduct[]>("products?per_page=8"),
     fetchStoreApi<WooCategory[]>(
       "products/categories?hide_empty=false&per_page=100",
     ),
+    fetchStoreApi<WooProduct[]>("products?slug=white-oud-al-ahmed"),
   ]);
 
   return {
     products,
     categories: categories.filter((category) => category.parent === 0),
+    featuredDiscoveryProduct: featuredProducts[0] ?? null,
   };
 }
 

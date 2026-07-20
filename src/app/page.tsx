@@ -1,7 +1,6 @@
 import Image from "next/image";
 import {
   ArrowRightIcon,
-  BadgeIndianRupeeIcon,
   HeartHandshakeIcon,
   PackageCheckIcon,
   ShieldCheckIcon,
@@ -33,6 +32,51 @@ const promises = [
     icon: HeartHandshakeIcon,
     title: "Human support",
     copy: "Questions before ordering? Speak to a real person from our store.",
+  },
+];
+
+const heroSlides = [
+  {
+    alt: "Women's handbags under ₹500",
+    desktopImage: {
+      src: "/handbags-under-500-desktop.avif",
+      width: 1800,
+      height: 900,
+    },
+    mobileImage: {
+      src: "/handbags-under-500-mobile.avif",
+      width: 768,
+      height: 1200,
+    },
+    href: "https://thesharifstore.in/product-category/bags-fashion/",
+  },
+  {
+    alt: "Jewellery picks with lasting shine",
+    desktopImage: {
+      src: "/jewellery-picks-desktop.avif",
+      width: 1800,
+      height: 900,
+    },
+    mobileImage: {
+      src: "/jewellery-picks-mobile.avif",
+      width: 768,
+      height: 1200,
+    },
+    href: "https://thesharifstore.in/product-category/jewellery/",
+  },
+  {
+    alt: "Dove and Philips hair care essentials",
+    desktopImage: {
+      src: "/hair-care-essentials-desktop.avif",
+      width: 1800,
+      height: 900,
+    },
+    mobileImage: {
+      src: "/hair-care-essentials-mobile.avif",
+      width: 768,
+      height: 1200,
+    },
+    href: "https://thesharifstore.in/product-category/hair-care/",
   },
 ];
 
@@ -72,27 +116,15 @@ function CategoryItem({ category }: { category: WooCategory }) {
 }
 
 export default async function Home() {
-  const { products, categories } = await getHomepageCommerceData();
+  const { products, categories, featuredDiscoveryProduct } =
+    await getHomepageCommerceData();
   const currentProducts = products
     .filter((product) => product.id > 1000)
     .slice(0, 5);
 
   return (
       <main className="flex-1">
-        <CampaignHero
-          alt="Women's handbags under ₹500"
-          desktopImage={{
-            src: "/handbags-under-500-desktop.avif",
-            width: 1800,
-            height: 900,
-          }}
-          mobileImage={{
-            src: "/handbags-under-500-mobile.avif",
-            width: 768,
-            height: 1200,
-          }}
-          href="https://thesharifstore.in/product-category/bags-fashion/"
-        />
+        <CampaignHero slides={heroSlides} />
 
         <section id="categories" className="border-y border-border bg-background">
           <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
@@ -113,7 +145,6 @@ export default async function Home() {
             <Reveal className="flex flex-col justify-between gap-12 px-6 py-12 sm:min-h-[520px] sm:gap-0 sm:p-12 lg:p-16">
               <div className="flex items-center justify-between gap-6">
                 <Badge variant="secondary">The value edit</Badge>
-                <BadgeIndianRupeeIcon className="size-8 opacity-60" />
               </div>
               <div>
                 <p className="mb-5 max-w-md text-sm leading-6 text-primary-foreground/65">
@@ -158,6 +189,53 @@ export default async function Home() {
                 </span>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section
+          id="new-finds"
+          className="border-b border-border bg-secondary text-secondary-foreground"
+        >
+          <div className="mx-auto grid max-w-[1440px] lg:grid-cols-2">
+            <div className="relative order-2 aspect-[4/3] overflow-hidden bg-muted sm:aspect-auto sm:min-h-[520px] lg:order-1">
+              {featuredDiscoveryProduct?.images[0] ? (
+                <Image
+                  src={featuredDiscoveryProduct.images[0].src}
+                  alt={
+                    featuredDiscoveryProduct.images[0].alt ||
+                    featuredDiscoveryProduct.name
+                  }
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover transition-transform duration-700 hover:scale-[1.02]"
+                />
+              ) : null}
+            </div>
+
+            <Reveal className="order-1 flex flex-col justify-between gap-12 px-6 py-12 sm:min-h-[520px] sm:p-12 lg:order-2 lg:p-16">
+              <Badge variant="outline" className="w-fit">
+                Freshly picked
+              </Badge>
+              <div>
+                <p className="mb-5 max-w-md text-sm leading-6 text-muted-foreground">
+                  New beauty, gifting and everyday-use discoveries selected to
+                  make browsing feel a little more rewarding.
+                </p>
+                <h2 className="max-w-xl font-heading text-4xl font-semibold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
+                  Small finds. Everyday delight.
+                </h2>
+                <a
+                  href="https://thesharifstore.in/shop-2/?orderby=date"
+                  className={cn(
+                    buttonVariants({ variant: "default", size: "lg" }),
+                    "mt-8 w-full sm:mt-9 sm:w-auto",
+                  )}
+                >
+                  Explore new finds
+                  <ArrowRightIcon data-icon="inline-end" />
+                </a>
+              </div>
+            </Reveal>
           </div>
         </section>
 
