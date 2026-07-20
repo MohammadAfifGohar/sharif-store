@@ -9,7 +9,6 @@ import {
 
 import { CampaignHero } from "@/components/campaign-hero";
 import { CategoryCarousel } from "@/components/category-carousel";
-import { ProductCard } from "@/components/product-card";
 import { Reveal } from "@/components/reveal";
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
@@ -45,15 +44,15 @@ function CategoryItem({ category }: { category: WooCategory }) {
   return (
     <a
       href={category.permalink}
-      className="group flex min-w-[116px] shrink-0 snap-start flex-col gap-2.5 sm:min-w-[128px]"
+      className="group flex w-20 shrink-0 snap-start flex-col gap-1.5 sm:w-32 sm:gap-2.5"
     >
-      <span className="relative block aspect-square overflow-hidden rounded-xl bg-secondary">
+      <span className="relative block size-20 shrink-0 overflow-hidden rounded-lg bg-secondary sm:size-32 sm:rounded-xl">
         {category.image ? (
           <Image
             src={category.image.src}
             alt={category.image.alt || categoryName}
             fill
-            sizes="(max-width: 640px) 116px, 128px"
+            sizes="(max-width: 639px) 80px, 128px"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
@@ -63,10 +62,10 @@ function CategoryItem({ category }: { category: WooCategory }) {
         )}
       </span>
       <span className="px-1 text-center">
-        <span className="block font-heading text-sm font-semibold leading-5">
+        <span className="line-clamp-2 min-h-8 font-heading text-xs font-semibold leading-4 sm:min-h-10 sm:text-sm sm:leading-5">
           {categoryName}
         </span>
-        <span className="mt-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+        <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-[0.1em] text-muted-foreground sm:mt-1 sm:text-[10px] sm:tracking-[0.12em]">
           {category.count} {category.count === 1 ? "find" : "finds"}
         </span>
       </span>
@@ -86,13 +85,18 @@ export default async function Home() {
 
       <main>
         <CampaignHero
-          alt="Nykaa Fashion Hot Pink Sale, up to 80% off"
+          alt="Women's handbags under ₹500"
           desktopImage={{
-            src: "/campaign-banner.avif",
+            src: "/handbags-under-500-desktop.avif",
             width: 1800,
-            height: 398,
+            height: 900,
           }}
-          href="#categories"
+          mobileImage={{
+            src: "/handbags-under-500-mobile.avif",
+            width: 768,
+            height: 1200,
+          }}
+          href="https://thesharifstore.in/product-category/bags-fashion/"
         />
 
         <section id="categories" className="border-y border-border bg-background">
@@ -107,49 +111,6 @@ export default async function Home() {
               ))}
             </CategoryCarousel>
           </div>
-        </section>
-
-        <section
-          id="new-arrivals"
-          className="mx-auto max-w-[1440px] px-4 py-16 sm:px-6 sm:py-24 lg:px-10 lg:py-32"
-        >
-          <Reveal className="mb-9 flex flex-col justify-between gap-6 sm:mb-12 sm:flex-row sm:items-end">
-            <div className="max-w-2xl">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-                Latest collection
-              </p>
-              <h2 className="mt-3 font-heading text-3xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
-                Just landed, already loved.
-              </h2>
-            </div>
-            <a
-              href="https://thesharifstore.in/shop-2/"
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "w-full sm:w-auto",
-              )}
-            >
-              View the full shop
-              <ArrowRightIcon data-icon="inline-end" />
-            </a>
-          </Reveal>
-
-          {currentProducts.length > 0 ? (
-            <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-4 sm:gap-y-12 md:grid-cols-3 lg:grid-cols-5 lg:gap-x-6">
-              {currentProducts.map((product, index) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  index={index}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="border border-dashed border-border p-7 text-center text-sm text-muted-foreground sm:p-12 sm:text-base">
-              The store catalogue is temporarily unavailable. Please try again
-              shortly.
-            </div>
-          )}
         </section>
 
         <section id="deals" className="bg-primary text-primary-foreground">
@@ -248,7 +209,7 @@ export default async function Home() {
         <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 sm:py-12 lg:px-10">
           <div className="grid grid-cols-2 gap-x-8 gap-y-10 py-6 sm:py-8 md:grid-cols-[1.4fr_0.6fr_0.6fr] md:gap-12">
             <div className="col-span-2 md:col-span-1">
-              <div className="relative h-14 w-40 sm:h-16 sm:w-44">
+              <div className="relative -ml-4 h-14 w-40 sm:h-16 sm:w-44">
                 <Image
                   src="/logo.webp"
                   alt="The Shareef Store"
