@@ -63,28 +63,17 @@ async function fetchStoreApi<T>(path: string): Promise<T> {
 }
 
 export async function getHomepageCommerceData() {
-  try {
-    const [products, categories] = await Promise.all([
-      fetchStoreApi<WooProduct[]>("products?per_page=8"),
-      fetchStoreApi<WooCategory[]>(
-        "products/categories?hide_empty=false&per_page=100",
-      ),
-    ]);
+  const [products, categories] = await Promise.all([
+    fetchStoreApi<WooProduct[]>("products?per_page=8"),
+    fetchStoreApi<WooCategory[]>(
+      "products/categories?hide_empty=false&per_page=100",
+    ),
+  ]);
 
-    return {
-      products,
-      categories: categories.filter((category) => category.parent === 0),
-      connected: true,
-    };
-  } catch (error) {
-    console.error("Could not load WooCommerce homepage data:", error);
-
-    return {
-      products: [],
-      categories: [],
-      connected: false,
-    };
-  }
+  return {
+    products,
+    categories: categories.filter((category) => category.parent === 0),
+  };
 }
 
 export function formatPrice(product: WooProduct) {
