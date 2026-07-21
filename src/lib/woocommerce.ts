@@ -25,7 +25,8 @@ export type WooProduct = {
   id: number;
   name: string;
   slug: string;
-  permalink: string;
+  short_description?: string;
+  description?: string;
   type: "simple" | "variable" | string;
   on_sale: boolean;
   images: WooImage[];
@@ -83,6 +84,14 @@ export const getCategoryPageData = cache(async (slug: string) => {
   );
 
   return { category, products };
+});
+
+export const getProductBySlug = cache(async (slug: string) => {
+  const products = await fetchStoreApi<WooProduct[]>(
+    `products?slug=${encodeURIComponent(slug)}`,
+  );
+
+  return products[0] ?? null;
 });
 
 export async function getHomepageCommerceData() {

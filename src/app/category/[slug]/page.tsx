@@ -33,7 +33,7 @@ export default async function CategoryPage(
   return (
     <main>
       <CategoryHero category={category} productCount={products.length} />
-      <ProductGrid products={products} />
+      <ProductGrid products={products} categorySlug={category.slug} />
     </main>
   );
 }

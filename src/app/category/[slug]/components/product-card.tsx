@@ -1,29 +1,37 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowUpRightIcon } from "lucide-react";
 
 import { Reveal } from "./reveal";
-import { Badge } from "@/components/ui/badge";
+import { SaleBadge } from "@/components/sale-badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
   formatPrice,
   formatRegularPrice,
   type WooProduct,
 } from "@/lib/woocommerce";
+import { getProductPath } from "@/lib/product-route.mjs";
 import { cn } from "@/lib/utils";
 
 type ProductCardProps = {
   product: WooProduct;
   index: number;
+  categorySlug: string;
 };
 
-export function ProductCard({ product, index }: ProductCardProps) {
+export function ProductCard({
+  product,
+  index,
+  categorySlug,
+}: ProductCardProps) {
   const image = product.images[0];
+  const productHref = getProductPath(categorySlug, product.slug);
 
   return (
     <Reveal delay={index * 0.07}>
       <article className="group">
-        <a
-          href={product.permalink}
+        <Link
+          href={productHref}
           className="relative block aspect-[4/5] overflow-hidden bg-muted"
         >
           {image ? (
@@ -41,14 +49,9 @@ export function ProductCard({ product, index }: ProductCardProps) {
           )}
 
           {product.on_sale ? (
-            <Badge
-              className="absolute left-2 top-2 sm:left-3 sm:top-3"
-              variant="secondary"
-            >
-              Sale
-            </Badge>
+            <SaleBadge className="absolute left-2 top-2 transition-transform duration-300 group-hover:scale-105 sm:left-3 sm:top-3" />
           ) : null}
-        </a>
+        </Link>
 
         <div className="flex items-start justify-between gap-2 pt-3 sm:gap-4 sm:pt-4">
           <div className="min-w-0">
@@ -56,7 +59,7 @@ export function ProductCard({ product, index }: ProductCardProps) {
               {product.categories[0]?.name ?? "Sharif selection"}
             </p>
             <h3 className="truncate font-heading text-sm font-semibold capitalize sm:text-lg">
-              <a href={product.permalink}>{product.name}</a>
+              <Link href={productHref}>{product.name}</Link>
             </h3>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:mt-2 sm:text-sm">
               <span className="font-bold">{formatPrice(product)}</span>
@@ -68,8 +71,8 @@ export function ProductCard({ product, index }: ProductCardProps) {
             </div>
           </div>
 
-          <a
-            href={product.permalink}
+          <Link
+            href={productHref}
             aria-label={`View ${product.name}`}
             className={cn(
               buttonVariants({ variant: "outline", size: "icon-sm" }),
@@ -77,7 +80,7 @@ export function ProductCard({ product, index }: ProductCardProps) {
             )}
           >
             <ArrowUpRightIcon />
-          </a>
+          </Link>
         </div>
       </article>
     </Reveal>

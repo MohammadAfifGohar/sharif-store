@@ -5,13 +5,24 @@ import type { WooProduct } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "./product-card";
 
-export function ProductGrid({ products }: { products: WooProduct[] }) {
+export function ProductGrid({
+  products,
+  categorySlug,
+}: {
+  products: WooProduct[];
+  categorySlug: string;
+}) {
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
       {products.length > 0 ? (
         <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
           {products.map((product, index) => (
-            <ProductCard key={product.id} product={product} index={index} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              index={index}
+              categorySlug={categorySlug}
+            />
           ))}
         </div>
       ) : (
