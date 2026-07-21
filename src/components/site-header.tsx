@@ -8,10 +8,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 const navItems = [
-  { label: "New arrivals", href: "#new-arrivals", badge: "New" },
-  { label: "Shop categories", href: "#categories", badge: null },
-  { label: "Best deals", href: "#deals", badge: null },
-  { label: "Our promise", href: "#our-promise", badge: null },
+  { label: "New arrivals", href: "/new-arrivals", badge: "New" },
+  { label: "Shop categories", href: "/#categories", badge: null },
+  { label: "Best deals", href: "/#deals", badge: null },
+  { label: "Our promise", href: "/#our-promise", badge: null },
 ] satisfies readonly NavigationItem[];
 
 export function SiteHeader() {
@@ -40,7 +40,7 @@ export function SiteHeader() {
 
           <nav className="ml-auto hidden items-center justify-end gap-7 lg:flex">
             {navItems.map((item) => (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
@@ -51,7 +51,7 @@ export function SiteHeader() {
                     {item.badge}
                   </Badge>
                 ) : null}
-              </a>
+              </Link>
             ))}
           </nav>
 

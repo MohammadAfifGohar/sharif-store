@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRightIcon, MenuIcon } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 
@@ -15,6 +16,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+
+const MotionLink = motion.create(Link);
 
 export type NavigationItem = {
   label: string;
@@ -70,7 +73,7 @@ export function MobileNavigationSheet({
 
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-6">
           {items.map((item, index) => (
-            <motion.a
+            <MotionLink
               key={item.href}
               href={item.href}
               initial={shouldReduceMotion ? false : { opacity: 0, x: 24 }}
@@ -96,7 +99,7 @@ export function MobileNavigationSheet({
                 aria-hidden="true"
                 className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1"
               />
-            </motion.a>
+            </MotionLink>
           ))}
         </nav>
 

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import { Separator } from "@/components/ui/separator";
 
@@ -28,9 +29,9 @@ export function SiteFooter() {
               Explore
             </p>
             <div className="mt-5 flex flex-col gap-3 text-sm text-background/65">
-              <a href="#new-arrivals">New arrivals</a>
-              <a href="#categories">Categories</a>
-              <a href="#deals">Offers</a>
+              <Link href="/new-arrivals">New arrivals</Link>
+              <Link href="/#categories">Categories</Link>
+              <Link href="/#deals">Offers</Link>
             </div>
           </div>
 

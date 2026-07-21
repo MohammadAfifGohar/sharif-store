@@ -112,6 +112,12 @@ export const getProductReviews = cache(async (productId: number) =>
   ),
 );
 
+export const getNewArrivalProducts = cache(async () =>
+  fetchStoreApi<WooProduct[]>(
+    "products?orderby=date&order=desc&per_page=12",
+  ),
+);
+
 export async function getHomepageCommerceData() {
   const [products, categories, featuredProducts] = await Promise.all([
     fetchStoreApi<WooProduct[]>("products?per_page=8"),
