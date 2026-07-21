@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeftIcon, CheckIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { ProductReviews, ProductReviewsSkeleton } from "./components/product-reviews";
 import { SaleBadge } from "@/components/sale-badge";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,23 +14,13 @@ import {
   formatRegularPrice,
   getProductBySlug,
 } from "@/lib/woocommerce";
+import { textFromHtml } from "@/lib/html-text";
 import { getProductPath } from "@/lib/product-route.mjs";
 import { cn } from "@/lib/utils";
 
 type CategoryProductPageProps = {
   params: Promise<{ slug: string; productSlug: string }>;
 };
-
-function textFromHtml(value?: string) {
-  return value
-    ?.replace(/<[^>]*>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&#8217;|&rsquo;/g, String.fromCharCode(39))
-    .replace(/&#8211;|&ndash;/g, "-")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 async function getRouteProduct(categorySlug: string, productSlug: string) {
   const product = await getProductBySlug(productSlug);
@@ -86,7 +78,7 @@ export default async function CategoryProductPage(
 
       <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
         <section className="min-w-0">
-          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-[#f7f7f7]">
+          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-border bg-[#f7f7f7]">
             {image ? (
               <Image
                 src={image.src}
@@ -135,6 +127,14 @@ export default async function CategoryProductPage(
           </Link>
         </section>
       </div>
+
+      <Suspense fallback={<ProductReviewsSkeleton />}>
+        <ProductReviews
+          productId={product.id}
+          reviewCount={product.review_count}
+          averageRating={Number(product.average_rating)}
+        />
+      </Suspense>
     </main>
   );
 }

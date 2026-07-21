@@ -21,6 +21,16 @@ export type WooCategory = {
   image: WooImage | null;
 };
 
+export type WooProductReview = {
+  id: number;
+  formatted_date_created: string;
+  product_id: number;
+  reviewer: string;
+  review: string;
+  rating: number;
+  verified: boolean;
+};
+
 export type WooProduct = {
   id: number;
   name: string;
@@ -29,6 +39,8 @@ export type WooProduct = {
   description?: string;
   type: "simple" | "variable" | string;
   on_sale: boolean;
+  average_rating: string;
+  review_count: number;
   images: WooImage[];
   categories: Array<Pick<WooCategory, "id" | "name" | "slug">>;
   prices: {
@@ -93,6 +105,12 @@ export const getProductBySlug = cache(async (slug: string) => {
 
   return products[0] ?? null;
 });
+
+export const getProductReviews = cache(async (productId: number) =>
+  fetchStoreApi<WooProductReview[]>(
+    `products/reviews?product_id=${encodeURIComponent(productId)}&per_page=20`,
+  ),
+);
 
 export async function getHomepageCommerceData() {
   const [products, categories, featuredProducts] = await Promise.all([

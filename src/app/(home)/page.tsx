@@ -109,7 +109,10 @@ export default async function HomePage() {
             </div>
 
             <Reveal className="order-1 flex flex-col justify-between gap-12 px-6 py-12 sm:min-h-[520px] sm:p-12 lg:order-2 lg:p-16">
-              <Badge variant="outline" className="w-fit">
+              <Badge
+                variant="outline"
+                className="w-fit border-primary/25 bg-primary/10 text-primary"
+              >
                 Freshly picked
               </Badge>
               <div>

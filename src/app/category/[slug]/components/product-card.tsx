@@ -29,7 +29,7 @@ export function ProductCard({
 
   return (
     <Reveal delay={index * 0.07}>
-      <article className="group">
+      <article className="group overflow-hidden rounded-xl border border-border bg-background">
         <Link
           href={productHref}
           className="relative block aspect-[4/5] overflow-hidden bg-muted"
@@ -53,7 +53,7 @@ export function ProductCard({
           ) : null}
         </Link>
 
-        <div className="flex items-start justify-between gap-2 pt-3 sm:gap-4 sm:pt-4">
+        <div className="flex items-start justify-between gap-2 p-3 sm:gap-4 sm:p-4">
           <div className="min-w-0">
             <p className="mb-1 truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:text-xs sm:tracking-[0.14em]">
               {product.categories[0]?.name ?? "Sharif selection"}
