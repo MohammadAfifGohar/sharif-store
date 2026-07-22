@@ -15,6 +15,10 @@ export const metadata: Metadata = {
   title: "Sharif Store | Beauty, Gifts & Everyday Finds",
   description:
     "Shop beauty, fragrance, accessories, gifts and useful everyday finds from Sharif Store.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({

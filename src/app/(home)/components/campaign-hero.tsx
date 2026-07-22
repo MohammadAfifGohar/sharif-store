@@ -75,7 +75,7 @@ export function CampaignHero({ slides }: CampaignHeroProps) {
               <a href={slide.href} className="block overflow-hidden">
                 <picture className="block">
                   <source
-                    media="(min-width: 768px)"
+                    media="(min-width: 651px)"
                     srcSet={desktopSrcSet}
                     width={slide.desktopImage.width}
                     height={slide.desktopImage.height}
@@ -83,7 +83,7 @@ export function CampaignHero({ slides }: CampaignHeroProps) {
                   <img
                     {...mobileProps}
                     alt={slide.alt}
-                    className="block h-auto w-full"
+                    className="block h-[min(156.25vw,80svh)] w-full object-cover object-top min-[651px]:h-auto"
                   />
                 </picture>
               </a>
