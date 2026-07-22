@@ -86,7 +86,7 @@ export default async function CategoryProductPage(
                 fill
                 priority
                 sizes="(max-width: 1023px) 100vw, 50vw"
-                className="object-contain"
+                className="object-cover"
               />
             ) : (
               <div className="grid h-full place-items-center text-muted-foreground">

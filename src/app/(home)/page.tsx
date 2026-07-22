@@ -14,9 +14,18 @@ import { cn } from "@/lib/utils";
 export default async function HomePage() {
   const { products, categories, featuredDiscoveryProduct } =
     await getHomepageCommerceData();
-  const currentProducts = products
-    .filter((product) => product.id > 1000)
-    .slice(0, 5);
+  const offerFeatureProduct =
+    products.find(
+      (product) =>
+        product.id > 1000 &&
+        product.on_sale &&
+        product.images[0] &&
+        product.id !== featuredDiscoveryProduct?.id,
+    ) ??
+    products.find(
+      (product) =>
+        product.images[0] && product.id !== featuredDiscoveryProduct?.id,
+    );
 
   return (
       <main className="flex-1">
@@ -64,12 +73,12 @@ export default async function HomePage() {
             </Reveal>
 
             <div className="relative aspect-[4/3] overflow-hidden bg-secondary sm:aspect-auto sm:min-h-[520px]">
-              {currentProducts[2]?.images[0] ? (
+              {offerFeatureProduct?.images[0] ? (
                 <Image
-                  src={currentProducts[2].images[0].src}
+                  src={offerFeatureProduct.images[0].src}
                   alt={
-                    currentProducts[2].images[0].alt ||
-                    currentProducts[2].name
+                    offerFeatureProduct.images[0].alt ||
+                    offerFeatureProduct.name
                   }
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"

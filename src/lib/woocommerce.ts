@@ -95,7 +95,11 @@ export const getCategoryPageData = cache(async (slug: string) => {
     `products?category=${category.id}&per_page=100`,
   );
 
-  return { category, products };
+  const subcategories = categories.filter(
+    (item) => item.parent === category.id,
+  );
+
+  return { category, products, subcategories };
 });
 
 export const getProductBySlug = cache(async (slug: string) => {

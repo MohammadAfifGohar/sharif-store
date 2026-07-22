@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getCategoryPageData } from "@/lib/woocommerce";
 import { CategoryHero } from "./components/category-hero";
 import { ProductGrid } from "./components/product-grid";
+import { SubcategoryList } from "./components/subcategory-list";
 import {
   getCategoryMetadata,
   getCategoryStaticParams,
@@ -28,11 +29,15 @@ export default async function CategoryPage(
 
   if (!data) notFound();
 
-  const { category, products } = data;
+  const { category, products, subcategories } = data;
 
   return (
     <main>
       <CategoryHero category={category} productCount={products.length} />
+      <SubcategoryList
+        parentName={category.name}
+        subcategories={subcategories}
+      />
       <ProductGrid products={products} categorySlug={category.slug} />
     </main>
   );
