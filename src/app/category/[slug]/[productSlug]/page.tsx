@@ -131,6 +131,7 @@ export default async function CategoryProductPage(
       <Suspense fallback={<ProductReviewsSkeleton />}>
         <ProductReviews
           productId={product.id}
+          productName={product.name}
           reviewCount={product.review_count}
           averageRating={Number(product.average_rating)}
         />

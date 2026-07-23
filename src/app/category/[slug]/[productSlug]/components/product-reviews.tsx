@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { getProductReviews } from "@/lib/woocommerce";
 import { textFromHtml } from "@/lib/html-text";
 import { cn } from "@/lib/utils";
+import { ReviewForm } from "./review-form";
 
 function RatingStars({ rating }: { rating: number }) {
   return (
@@ -41,22 +42,34 @@ function ReviewInitial({ reviewer }: { reviewer: string }) {
 
 type ProductReviewsProps = {
   productId: number;
+  productName: string;
   reviewCount: number;
   averageRating: number;
 };
 
 export async function ProductReviews({
   productId,
+  productName,
   reviewCount,
   averageRating,
 }: ProductReviewsProps) {
   const reviews = await getProductReviews(productId);
+  const reviewSubmissionEnabled = Boolean(
+    process.env.WOOCOMMERCE_CONSUMER_KEY &&
+      process.env.WOOCOMMERCE_CONSUMER_SECRET,
+  );
 
   return (
     <section
       aria-labelledby="product-reviews-heading"
       className="mt-14 border-t border-border pt-10 sm:mt-20 sm:pt-14"
     >
+      <ReviewForm
+        productId={productId}
+        productName={productName}
+        enabled={reviewSubmissionEnabled}
+      />
+
       <div className="mb-7 flex flex-col gap-3 sm:mb-9 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
