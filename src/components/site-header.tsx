@@ -11,7 +11,6 @@ const navItems = [
   { label: "New arrivals", href: "/new-arrivals", badge: "New" },
   { label: "Shop categories", href: "/#categories", badge: null },
   { label: "Best deals", href: "/#deals", badge: null },
-  { label: "Our promise", href: "/#our-promise", badge: null },
 ] satisfies readonly NavigationItem[];
 
 export function SiteHeader() {

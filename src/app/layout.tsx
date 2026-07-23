@@ -3,6 +3,7 @@ import { Urbanist } from "next/font/google";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { ScrollToTop } from "@/components/scroll-to-top";
 
 import "./globals.css";
 
@@ -32,6 +33,7 @@ export default function RootLayout({
       className={`${urbanist.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <ScrollToTop />
         <SiteHeader />
         {children}
         <SiteFooter />
