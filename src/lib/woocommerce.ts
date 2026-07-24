@@ -2,7 +2,7 @@ import { cache } from "react";
 
 const STORE_API_URL =
   process.env.WORDPRESS_URL ??
-  "https://thesharifstore.in";
+  "https://api.thesharifstore.in";
 
 export type WooImage = {
   id: number;

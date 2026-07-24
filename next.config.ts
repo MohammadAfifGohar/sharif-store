@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "thesharifstore.in",
+        hostname: "api.thesharifstore.in",
         pathname: "/wp-content/uploads/**",
       },
     ],

@@ -67,7 +67,7 @@ export async function POST(request: Request) {
   const consumerSecret = process.env.WOOCOMMERCE_CONSUMER_SECRET;
   const wordpressUrl =
     process.env.WORDPRESS_URL?.replace(/\/$/, "") ??
-    "https://thesharifstore.in";
+    "https://api.thesharifstore.in";
 
   if (!consumerKey || !consumerSecret) {
     return NextResponse.json(
