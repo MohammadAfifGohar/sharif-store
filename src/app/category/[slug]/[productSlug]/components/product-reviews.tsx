@@ -1,33 +1,10 @@
-import { CheckCircle2Icon, StarIcon } from "lucide-react";
+import { CheckCircle2Icon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { getProductReviews } from "@/lib/woocommerce";
 import { textFromHtml } from "@/lib/html-text";
-import { cn } from "@/lib/utils";
+import { RatingStars } from "@/components/rating-stars";
 import { ReviewForm } from "./review-form";
-
-function RatingStars({ rating }: { rating: number }) {
-  return (
-    <div
-      className="flex gap-0.5"
-      role="img"
-      aria-label={`${rating} out of 5 stars`}
-    >
-      {Array.from({ length: 5 }, (_, index) => (
-        <StarIcon
-          key={index}
-          aria-hidden="true"
-          className={cn(
-            "size-4",
-            index < rating
-              ? "fill-[#e80071] text-[#e80071]"
-              : "fill-muted text-border",
-          )}
-        />
-      ))}
-    </div>
-  );
-}
 
 function ReviewInitial({ reviewer }: { reviewer: string }) {
   return (

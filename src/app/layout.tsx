@@ -3,7 +3,7 @@ import { Urbanist } from "next/font/google";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { ScrollToTop } from "@/components/scroll-to-top";
+import { SITE_NAME, SITE_URL } from "@/lib/site-config";
 
 import "./globals.css";
 
@@ -13,7 +13,11 @@ const urbanist = Urbanist({
 });
 
 export const metadata: Metadata = {
-  title: "Sharif Store | Beauty, Gifts & Everyday Finds",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} | Beauty, Gifts & Everyday Finds`,
+    template: `%s | ${SITE_NAME}`,
+  },
   description:
     "Shop beauty, fragrance, accessories, gifts and useful everyday finds from Sharif Store.",
   icons: {
@@ -33,7 +37,6 @@ export default function RootLayout({
       className={`${urbanist.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <ScrollToTop />
         <SiteHeader />
         {children}
         <SiteFooter />

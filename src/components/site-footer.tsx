@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { Separator } from "@/components/ui/separator";
+import { absoluteUrl, SITE_NAME } from "@/lib/site-config";
 
 export function SiteFooter() {
   return (
@@ -12,7 +13,7 @@ export function SiteFooter() {
             <div className="relative -ml-4 h-14 w-40 sm:h-16 sm:w-44">
               <Image
                 src="/logo.webp"
-                alt="The Shareef Store"
+                alt={SITE_NAME}
                 fill
                 sizes="176px"
                 className="object-contain object-left invert"
@@ -40,9 +41,9 @@ export function SiteFooter() {
               Help
             </p>
             <div className="mt-5 flex flex-col gap-3 text-sm text-background/65">
-              <a href="https://thesharifstore.in/contact/">Contact</a>
-              <a href="https://thesharifstore.in/my-account/">My account</a>
-              <a href="https://thesharifstore.in/terms-conditions/">Terms</a>
+              <a href={absoluteUrl("/contact/")}>Contact</a>
+              <a href={absoluteUrl("/my-account/")}>My account</a>
+              <a href={absoluteUrl("/terms-conditions/")}>Terms</a>
             </div>
           </div>
         </div>
@@ -50,7 +51,7 @@ export function SiteFooter() {
         <Separator className="bg-background/15" />
 
         <div className="flex flex-col items-center justify-between gap-2 pt-6 text-center text-xs text-background/50 sm:flex-row sm:gap-3 sm:pt-7 sm:text-left">
-          <p>© 2026 Sharif Beauty & Gift Collection</p>
+          <p>© {new Date().getFullYear()} Sharif Beauty & Gift Collection</p>
           <p>Products and prices synced from WooCommerce.</p>
         </div>
       </div>

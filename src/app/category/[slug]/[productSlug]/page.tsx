@@ -1,70 +1,46 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeftIcon, CheckIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { ProductGallery } from "./components/product-gallery";
 import { ProductReviews, ProductReviewsSkeleton } from "./components/product-reviews";
+import { RatingStars } from "@/components/rating-stars";
+import {
+  getProductMetadata,
+  getProductRouteData,
+  getProductStaticParams,
+  getProductViewModel,
+} from "./utils/product-route";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { SaleBadge } from "@/components/sale-badge";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import {
-  formatPrice,
-  formatRegularPrice,
-  getProductBySlug,
-} from "@/lib/woocommerce";
-import { textFromHtml } from "@/lib/html-text";
-import { getProductPath } from "@/lib/product-route.mjs";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-type CategoryProductPageProps = {
-  params: Promise<{ slug: string; productSlug: string }>;
-};
-
-async function getRouteProduct(categorySlug: string, productSlug: string) {
-  const product = await getProductBySlug(productSlug);
-
-  if (!product) return null;
-
-  const category = product.categories.find(
-    (item) => item.slug === categorySlug,
-  );
-
-  return category ? { category, product } : null;
+export async function generateStaticParams() {
+  return getProductStaticParams();
 }
 
 export async function generateMetadata(
-  props: CategoryProductPageProps,
+  props: PageProps<"/category/[slug]/[productSlug]">,
 ): Promise<Metadata> {
   const { slug, productSlug } = await props.params;
-  const data = await getRouteProduct(slug, productSlug);
-
-  if (!data) return { title: "Product not found" };
-
-  return {
-    title: data.product.name,
-    description: textFromHtml(data.product.short_description) || undefined,
-    alternates: {
-      canonical: getProductPath(data.category.slug, data.product.slug),
-    },
-  };
+  return getProductMetadata(slug, productSlug);
 }
 
 export default async function CategoryProductPage(
-  props: CategoryProductPageProps,
+  props: PageProps<"/category/[slug]/[productSlug]">,
 ) {
   const { slug, productSlug } = await props.params;
-  const data = await getRouteProduct(slug, productSlug);
+  const data = await getProductRouteData(slug, productSlug);
 
   if (!data) notFound();
 
   const { category, product } = data;
-  const image = product.images[0];
-  const description =
-    textFromHtml(product.description) ||
-    textFromHtml(product.short_description) ||
-    "A curated pick from The Sharif Store.";
+  const view = getProductViewModel(data);
 
   return (
     <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 sm:py-12 lg:px-10 lg:py-16">
@@ -78,53 +54,123 @@ export default async function CategoryProductPage(
 
       <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
         <section className="min-w-0">
-          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-border bg-[#f7f7f7]">
-            {image ? (
-              <Image
-                src={image.src}
-                alt={image.alt || product.name}
-                fill
-                priority
-                sizes="(max-width: 1023px) 100vw, 50vw"
-                className="object-cover"
-              />
-            ) : (
-              <div className="grid h-full place-items-center text-muted-foreground">
-                Product image coming soon
-              </div>
-            )}
-          </div>
+          <ProductGallery images={product.images} productName={product.name} />
         </section>
 
         <section className="flex min-w-0 flex-col lg:sticky lg:top-28">
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary">{category.name}</Badge>
+            {product.brands.map((brand) => (
+              <Badge key={brand.id} variant="outline">
+                {brand.name}
+              </Badge>
+            ))}
             {product.on_sale ? <SaleBadge /> : null}
           </div>
+
           <h1 className="mt-4 font-heading text-3xl font-semibold capitalize tracking-tight sm:text-5xl">
             {product.name}
           </h1>
+
+          {view.hasRating ? (
+            <div className="mt-3 flex items-center gap-2 text-sm">
+              <RatingStars rating={view.averageRating} />
+              <span className="font-semibold">
+                {view.averageRating.toFixed(1)}
+              </span>
+              <a
+                href="#product-reviews-heading"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                ({product.review_count}{" "}
+                {product.review_count === 1 ? "review" : "reviews"})
+              </a>
+            </div>
+          ) : null}
+
           <div className="mt-5 flex items-baseline gap-3 text-lg sm:text-xl">
-            <span className="font-bold">{formatPrice(product)}</span>
+            <span className="font-bold">{view.productPrice}</span>
             {product.on_sale ? (
               <span className="text-muted-foreground line-through">
-                {formatRegularPrice(product)}
+                {view.regularPrice}
               </span>
             ) : null}
           </div>
-          <p className="mt-6 max-w-xl leading-7 text-muted-foreground">
-            {description}
+
+          {view.shortDescription ? (
+            <p className="mt-4 max-w-xl leading-7 text-muted-foreground">
+              {view.shortDescription}
+            </p>
+          ) : null}
+
+          <Separator className="my-6" />
+          <p className="max-w-xl leading-7 text-muted-foreground">
+            {view.description}
           </p>
-          <p className="mt-6 flex items-center gap-2 text-sm font-semibold">
-            <CheckIcon className="size-4" />
-            {product.is_in_stock ? "In stock" : "Currently out of stock"}
-          </p>
-          <Link
-            href={`/category/${category.slug}`}
-            className={cn(buttonVariants({ size: "lg" }), "mt-8 w-full sm:w-fit")}
+
+          <p
+            className={cn(
+              "flex items-center gap-2 text-sm font-semibold my-6",
+              !view.isInStock && "text-destructive",
+            )}
           >
-            Continue shopping
-          </Link>
+            <CheckIcon className="size-4" />
+            {view.stockLabel}
+            {view.isInStock && view.lowStockRemaining ? (
+              <span className="font-normal text-muted-foreground">
+                ({view.lowStockRemaining} left)
+              </span>
+            ) : null}
+          </p>
+
+          <a
+            href={view.whatsAppOrderUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(buttonVariants({ size: "lg" }), "w-full")}
+          >
+            <WhatsAppIcon data-icon="inline-start" className="text-[#25d366]" />
+            Order on WhatsApp
+          </a>
+
+          {view.specs.length > 0 ? (
+            <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-border pt-6 text-sm sm:grid-cols-2">
+              {view.specs.map((spec) => (
+                <div key={spec.label} className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">{spec.label}</dt>
+                  <dd className="text-right font-medium">{spec.value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : null}
+
+          {product.attributes.length > 0 ? (
+            <div className="mt-6 space-y-3 border-t border-border pt-6">
+              {product.attributes.map((attribute) => (
+                <div key={attribute.id} className="text-sm">
+                  <p className="font-semibold">{attribute.name}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {attribute.terms.map((term) => (
+                      <Badge key={term.id} variant="secondary">
+                        {term.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {product.tags.length > 0 ? (
+            <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-6">
+              <span className="text-sm text-muted-foreground">Tags:</span>
+              {product.tags.map((tag) => (
+                <Badge key={tag.id} variant="outline">
+                  {tag.name}
+                </Badge>
+              ))}
+            </div>
+          ) : null}
         </section>
       </div>
 
@@ -133,7 +179,7 @@ export default async function CategoryProductPage(
           productId={product.id}
           productName={product.name}
           reviewCount={product.review_count}
-          averageRating={Number(product.average_rating)}
+          averageRating={view.averageRating}
         />
       </Suspense>
     </main>

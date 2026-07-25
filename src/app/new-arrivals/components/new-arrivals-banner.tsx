@@ -11,7 +11,7 @@ export function NewArrivalsBanner() {
         alt="Just landed. New arrivals. The latest beauty, gifting and everyday discoveries, gathered in one fresh edit."
         width={1800}
         height={900}
-        priority
+        fetchPriority="high"
         sizes="100vw"
         className="mx-auto block h-auto w-full max-w-[1800px]"
       />

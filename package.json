@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test tests/product-routing.test.mjs tests/review-submission.test.ts"
+    "test": "tsx --test tests/product-routing.test.mjs tests/review-submission.test.ts tests/html-text.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

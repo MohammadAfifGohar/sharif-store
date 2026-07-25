@@ -23,7 +23,7 @@ export async function getCategoryMetadata(slug: string): Promise<Metadata> {
     };
   }
 
-  const title = `${data.category.name} | The Sharif Store`;
+  const title = data.category.name;
   const description = `Shop ${data.category.name} products at The Sharif Store. Discover carefully selected everyday beauty, fragrance, gifting and personal-care picks.`;
   const path = `/category/${encodeURIComponent(data.category.slug)}`;
 

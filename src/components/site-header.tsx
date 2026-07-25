@@ -31,7 +31,7 @@ export function SiteHeader() {
               src="/logo.webp"
               alt="The Shareef Store"
               fill
-              priority
+              fetchPriority="high"
               sizes="(max-width: 640px) 112px, 160px"
               className="object-contain object-left"
             />

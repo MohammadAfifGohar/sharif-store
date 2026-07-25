@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getProductPath } from "../src/lib/product-route.mjs";
+import { getProductPath } from "../src/lib/product-route";
 
 test("builds the canonical nested product route", () => {
   assert.equal(

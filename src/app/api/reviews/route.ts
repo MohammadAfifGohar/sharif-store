@@ -1,9 +1,34 @@
-import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { reviewSubmissionSchema } from "@/lib/review-submission";
+import { getWordpressUrl } from "@/lib/site-config";
 
 const MAX_BODY_SIZE = 10_000;
+const UPSTREAM_TIMEOUT_MS = 10_000;
+
+// Lightweight in-memory rate limiting. Per serverless instance rather than
+// global, but enough to blunt scripted spam against this write endpoint.
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 5;
+const hits = new Map<string, { count: number; resetAt: number }>();
+
+function isRateLimited(ip: string) {
+  const now = Date.now();
+  const entry = hits.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    hits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  entry.count += 1;
+  return entry.count > RATE_LIMIT_MAX;
+}
+
+function getClientIp(request: Request) {
+  const forwarded = request.headers.get("x-forwarded-for");
+  return forwarded?.split(",")[0]?.trim() || "unknown";
+}
 
 export async function POST(request: Request) {
   if (!request.headers.get("content-type")?.includes("application/json")) {
@@ -13,25 +38,36 @@ export async function POST(request: Request) {
     );
   }
 
-  const contentLength = Number(request.headers.get("content-length") ?? 0);
-  if (contentLength > MAX_BODY_SIZE) {
-    return NextResponse.json(
-      { message: "The review is too large." },
-      { status: 413 },
-    );
-  }
-
+  // Require a same-origin request. Reject cross-origin AND origin-less
+  // (scripted) POSTs — a browser form submission always sends an Origin.
   const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) {
+  if (!origin || origin !== new URL(request.url).origin) {
     return NextResponse.json(
       { message: "Review submission was not allowed." },
       { status: 403 },
     );
   }
 
+  if (isRateLimited(getClientIp(request))) {
+    return NextResponse.json(
+      { message: "Too many reviews submitted. Please try again shortly." },
+      { status: 429 },
+    );
+  }
+
+  // Read the raw body so the size cap can't be bypassed with a lying
+  // Content-Length (chunked transfer) header.
+  const raw = await request.text();
+  if (raw.length > MAX_BODY_SIZE) {
+    return NextResponse.json(
+      { message: "The review is too large." },
+      { status: 413 },
+    );
+  }
+
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(raw);
   } catch {
     return NextResponse.json(
       { message: "The review could not be read." },
@@ -65,9 +101,6 @@ export async function POST(request: Request) {
 
   const consumerKey = process.env.WOOCOMMERCE_CONSUMER_KEY;
   const consumerSecret = process.env.WOOCOMMERCE_CONSUMER_SECRET;
-  const wordpressUrl =
-    process.env.WORDPRESS_URL?.replace(/\/$/, "") ??
-    "https://api.thesharifstore.in";
 
   if (!consumerKey || !consumerSecret) {
     return NextResponse.json(
@@ -76,9 +109,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const response = await fetch(
-    `${wordpressUrl}/wp-json/wc/v3/products/reviews`,
-    {
+  let response: Response;
+  try {
+    response = await fetch(`${getWordpressUrl()}/wp-json/wc/v3/products/reviews`, {
       method: "POST",
       headers: {
         Authorization: `Basic ${Buffer.from(
@@ -95,8 +128,15 @@ export async function POST(request: Request) {
         status: "hold",
       }),
       cache: "no-store",
-    },
-  );
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    });
+  } catch {
+    // Network failure or timeout reaching WooCommerce.
+    return NextResponse.json(
+      { message: "The review could not be submitted. Please try again." },
+      { status: 502 },
+    );
+  }
 
   if (!response.ok) {
     return NextResponse.json(
@@ -105,7 +145,9 @@ export async function POST(request: Request) {
     );
   }
 
-  revalidateTag("woocommerce", { expire: 0 });
+  // New reviews are created with status "hold", so nothing user-visible
+  // changed — no cache invalidation is needed. Approved reviews appear on the
+  // next scheduled revalidation (revalidate: 300).
 
   return NextResponse.json(
     { message: "Thanks. Your review is awaiting approval." },

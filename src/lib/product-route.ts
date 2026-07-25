@@ -1,9 +1,6 @@
 /**
  * Build the canonical storefront path for a WooCommerce product.
- *
- * @param {string} categorySlug
- * @param {string} productSlug
  */
-export function getProductPath(categorySlug, productSlug) {
+export function getProductPath(categorySlug: string, productSlug: string) {
   return `/category/${encodeURIComponent(categorySlug)}/${encodeURIComponent(productSlug)}`;
 }

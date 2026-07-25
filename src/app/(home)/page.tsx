@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
 import { CampaignHero } from "./components/campaign-hero";
@@ -132,8 +133,8 @@ export default async function HomePage() {
                 <h2 className="max-w-xl font-heading text-4xl font-semibold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
                   Small finds. Everyday delight.
                 </h2>
-                <a
-                  href="https://thesharifstore.in/shop-2/?orderby=date"
+                <Link
+                  href="/new-arrivals"
                   className={cn(
                     buttonVariants({ variant: "default", size: "lg" }),
                     "mt-8 w-full sm:mt-9 sm:w-auto",
@@ -141,7 +142,7 @@ export default async function HomePage() {
                 >
                   Explore new finds
                   <ArrowRightIcon data-icon="inline-end" />
-                </a>
+                </Link>
               </div>
             </Reveal>
           </div>

@@ -17,6 +17,7 @@ import {
   ToggleGroupItem,
 } from "@/components/ui/toggle-group";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 type ReviewFormProps = {
   productId: number;
@@ -39,12 +40,12 @@ export function ReviewForm({
     kind: "idle",
     message: "",
   });
+  const selectedRating = Number(rating[0] ?? 0);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
-    const selectedRating = Number(rating[0]);
 
     if (!selectedRating) {
       setSubmission({
@@ -122,10 +123,17 @@ export function ReviewForm({
                   <ToggleGroupItem
                     key={value}
                     value={String(value)}
-                    aria-label={`${value} ${value === 1 ? "star" : "stars"}`}
-                    className="size-10 rounded-full border border-border data-[pressed]:border-primary data-[pressed]:bg-primary/10"
+                    aria-label={`${value} out of 5 stars`}
+                    className="size-10 rounded-full border border-border text-muted-foreground transition-colors hover:border-amber-300 hover:bg-amber-50 data-[pressed]:border-amber-400 data-[pressed]:bg-amber-50"
                   >
-                    <StarIcon className="size-5 fill-current" />
+                    <StarIcon
+                      className={cn(
+                        "size-5 transition-colors",
+                        value <= selectedRating
+                          ? "fill-amber-400 text-amber-400"
+                          : "fill-transparent text-muted-foreground/45",
+                      )}
+                    />
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
@@ -136,7 +144,7 @@ export function ReviewForm({
               <Input
                 id="reviewer"
                 name="reviewer"
-                className="h-12 rounded-sm"
+                className="h-12 rounded-sm focus-visible:ring-1!"
                 minLength={2}
                 maxLength={80}
                 autoComplete="name"
@@ -150,7 +158,7 @@ export function ReviewForm({
                 id="reviewerEmail"
                 name="reviewerEmail"
                 type="email"
-                className="h-12 rounded-sm"
+                className="h-12 rounded-sm focus-visible:ring-1!"
                 maxLength={254}
                 autoComplete="email"
                 required
@@ -165,7 +173,7 @@ export function ReviewForm({
               <Textarea
                 id="review"
                 name="review"
-                className="min-h-32 rounded-sm"
+                className="min-h-32 rounded-sm focus-visible:ring-1!"
                 minLength={10}
                 maxLength={2000}
                 rows={6}
@@ -205,18 +213,22 @@ export function ReviewForm({
                   configured.
                 </FieldDescription>
               ) : null}
-              {submission.message ? (
-                <p
-                  className={
-                    submission.kind === "success"
-                      ? "text-sm font-medium text-emerald-700"
-                      : "text-sm font-medium text-destructive"
-                  }
-                  role="status"
-                >
-                  {submission.message}
-                </p>
-              ) : null}
+              {/* Permanently-mounted live regions so screen readers announce
+                  status changes. Errors are assertive, successes polite. */}
+              <p
+                role="status"
+                aria-live="polite"
+                className="text-sm font-medium text-emerald-700 empty:hidden"
+              >
+                {submission.kind === "success" ? submission.message : ""}
+              </p>
+              <p
+                role="alert"
+                aria-live="assertive"
+                className="text-sm font-medium text-destructive empty:hidden"
+              >
+                {submission.kind === "error" ? submission.message : ""}
+              </p>
             </Field>
           </FieldGroup>
         </FieldSet>

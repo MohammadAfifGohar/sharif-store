@@ -1,14 +1,54 @@
 import { cache } from "react";
 
-const STORE_API_URL =
-  process.env.WORDPRESS_URL ??
-  "https://api.thesharifstore.in";
+import { getWordpressUrl } from "@/lib/site-config";
+
+/** Abort a WooCommerce request that hasn't responded within this window. */
+const REQUEST_TIMEOUT_MS = 10_000;
+
+export class WooCommerceError extends Error {
+  constructor(
+    readonly status: number,
+    readonly path: string,
+  ) {
+    super(`WooCommerce request to "${path}" failed with ${status}`);
+    this.name = "WooCommerceError";
+  }
+}
 
 export type WooImage = {
   id: number;
   src: string;
   thumbnail: string;
+  srcset?: string;
+  sizes?: string;
+  name?: string;
   alt: string;
+};
+
+export type WooTerm = {
+  id: number;
+  name: string;
+  slug: string;
+  link?: string;
+};
+
+export type WooAttribute = {
+  id: number;
+  name: string;
+  taxonomy?: string | null;
+  has_variations?: boolean;
+  terms: Array<{ id: number; name: string; slug: string }>;
+};
+
+export type WooDimensions = {
+  length: string;
+  width: string;
+  height: string;
+};
+
+export type WooStockAvailability = {
+  text: string;
+  class: string;
 };
 
 export type WooCategory = {
@@ -35,14 +75,20 @@ export type WooProduct = {
   id: number;
   name: string;
   slug: string;
+  permalink?: string;
+  sku?: string;
   short_description?: string;
   description?: string;
   type: "simple" | "variable" | string;
+  variation?: string;
   on_sale: boolean;
   average_rating: string;
   review_count: number;
   images: WooImage[];
-  categories: Array<Pick<WooCategory, "id" | "name" | "slug">>;
+  categories: Array<Pick<WooCategory, "id" | "name" | "slug"> & { link?: string }>;
+  tags: WooTerm[];
+  brands: WooTerm[];
+  attributes: WooAttribute[];
   prices: {
     price: string;
     regular_price: string;
@@ -55,14 +101,24 @@ export type WooProduct = {
       max_amount: string;
     } | null;
   };
+  weight?: string;
+  dimensions?: WooDimensions;
+  formatted_weight?: string;
+  formatted_dimensions?: string;
+  stock_availability?: WooStockAvailability;
+  low_stock_remaining?: number | null;
+  is_purchasable?: boolean;
   is_in_stock: boolean;
+  is_on_backorder?: boolean;
+  sold_individually?: boolean;
   has_options: boolean;
 };
 
 async function fetchStoreApi<T>(path: string): Promise<T> {
   const response = await fetch(
-    `${STORE_API_URL}/wp-json/wc/store/v1/${path}`,
+    `${getWordpressUrl()}/wp-json/wc/store/v1/${path}`,
     {
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       next: {
         revalidate: 300,
         tags: ["woocommerce"],
@@ -71,7 +127,7 @@ async function fetchStoreApi<T>(path: string): Promise<T> {
   );
 
   if (!response.ok) {
-    throw new Error(`WooCommerce request failed with ${response.status}`);
+    throw new WooCommerceError(response.status, path);
   }
 
   return response.json() as Promise<T>;
@@ -102,6 +158,10 @@ export const getCategoryPageData = cache(async (slug: string) => {
   return { category, products, subcategories };
 });
 
+export const getStoreProducts = cache(async () =>
+  fetchStoreApi<WooProduct[]>("products?per_page=100"),
+);
+
 export const getProductBySlug = cache(async (slug: string) => {
   const products = await fetchStoreApi<WooProduct[]>(
     `products?slug=${encodeURIComponent(slug)}`,
@@ -122,11 +182,14 @@ export const getNewArrivalProducts = cache(async () =>
   ),
 );
 
-export async function getHomepageCommerceData() {
+/** Slug of the product highlighted in the homepage "discovery" panel. */
+const FEATURED_DISCOVERY_SLUG = "white-oud-al-ahmed";
+
+export const getHomepageCommerceData = cache(async () => {
   const [products, categories, featuredProducts] = await Promise.all([
     fetchStoreApi<WooProduct[]>("products?per_page=8"),
     getStoreCategories(),
-    fetchStoreApi<WooProduct[]>("products?slug=white-oud-al-ahmed"),
+    fetchStoreApi<WooProduct[]>(`products?slug=${FEATURED_DISCOVERY_SLUG}`),
   ]);
 
   return {
@@ -134,26 +197,30 @@ export async function getHomepageCommerceData() {
     categories: categories.filter((category) => category.parent === 0),
     featuredDiscoveryProduct: featuredProducts[0] ?? null,
   };
+});
+
+function formatMinorAmount(product: WooProduct, minorAmount: string) {
+  const divisor = 10 ** product.prices.currency_minor_unit;
+  const amount = Number(minorAmount) / divisor;
+
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: product.prices.currency_code,
+    maximumFractionDigits: 0,
+  }).format(Number.isFinite(amount) ? amount : 0);
 }
 
 export function formatPrice(product: WooProduct) {
-  const divisor = 10 ** product.prices.currency_minor_unit;
-  const price = Number(product.prices.price) / divisor;
+  // Variable products carry a min–max range instead of a single price.
+  const minorAmount =
+    product.prices.price_range?.min_amount ?? product.prices.price;
 
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: product.prices.currency_code,
-    maximumFractionDigits: 0,
-  }).format(price);
+  return formatMinorAmount(product, minorAmount);
 }
 
 export function formatRegularPrice(product: WooProduct) {
-  const divisor = 10 ** product.prices.currency_minor_unit;
-  const price = Number(product.prices.regular_price) / divisor;
+  const { regular_price, price } = product.prices;
 
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: product.prices.currency_code,
-    maximumFractionDigits: 0,
-  }).format(price);
+  // Fall back to the current price when a regular price isn't set.
+  return formatMinorAmount(product, regular_price || price);
 }
