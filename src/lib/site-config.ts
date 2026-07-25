@@ -3,8 +3,13 @@
  * hardcoded across components, the data layer and the reviews route.
  */
 
-/** Public storefront origin, used for canonical/OG URLs and metadataBase. */
-export const SITE_URL = "https://thesharifstore.in";
+/**
+ * Public storefront origin, used for canonical/OG URLs, metadataBase and the
+ * reviews origin allowlist. Override per-environment with NEXT_PUBLIC_SITE_URL.
+ */
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+  "https://thesharifstore.in";
 
 /** Display brand name. Keep spelling consistent everywhere. */
 export const SITE_NAME = "Sharif Store";

@@ -1,10 +1,47 @@
 import { NextResponse } from "next/server";
 
 import { reviewSubmissionSchema } from "@/lib/review-submission";
-import { getWordpressUrl } from "@/lib/site-config";
+import { getWordpressUrl, SITE_URL } from "@/lib/site-config";
 
 const MAX_BODY_SIZE = 10_000;
 const UPSTREAM_TIMEOUT_MS = 10_000;
+
+/**
+ * Hosts allowed to submit reviews: the configured public site (and its www
+ * variant) plus localhost for development. We validate the browser's `Origin`
+ * against this list rather than against `new URL(request.url).origin`, because
+ * behind a reverse proxy (e.g. Hostinger) the app sees an internal host and
+ * http scheme — so the request URL never matches the public https origin.
+ */
+function getAllowedHosts() {
+  const siteHost = new URL(SITE_URL).host.toLowerCase();
+  const wwwVariant = siteHost.startsWith("www.")
+    ? siteHost.slice(4)
+    : `www.${siteHost}`;
+
+  return new Set([siteHost, wwwVariant]);
+}
+
+function isLocalhost(host: string) {
+  const hostname = host.split(":")[0];
+  return hostname === "localhost" || hostname === "127.0.0.1";
+}
+
+function isAllowedOrigin(request: Request) {
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+
+  let originHost: string;
+  try {
+    const url = new URL(origin);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return false;
+    originHost = url.host.toLowerCase();
+  } catch {
+    return false;
+  }
+
+  return isLocalhost(originHost) || getAllowedHosts().has(originHost);
+}
 
 // Lightweight in-memory rate limiting. Per serverless instance rather than
 // global, but enough to blunt scripted spam against this write endpoint.
@@ -38,10 +75,10 @@ export async function POST(request: Request) {
     );
   }
 
-  // Require a same-origin request. Reject cross-origin AND origin-less
-  // (scripted) POSTs — a browser form submission always sends an Origin.
-  const origin = request.headers.get("origin");
-  if (!origin || origin !== new URL(request.url).origin) {
+  // Require a request from an allowed origin. Reject cross-origin AND
+  // origin-less (scripted) POSTs — a browser form submission always sends an
+  // Origin from the same site.
+  if (!isAllowedOrigin(request)) {
     return NextResponse.json(
       { message: "Review submission was not allowed." },
       { status: 403 },
