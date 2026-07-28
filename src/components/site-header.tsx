@@ -1,19 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { DesktopCategoryMenu } from "@/components/desktop-category-menu";
 import {
   MobileNavigationSheet,
   type NavigationItem,
 } from "@/components/mobile-navigation-sheet";
 import { Badge } from "@/components/ui/badge";
+import { buildCategoryNavigation } from "@/lib/category-navigation";
+import { getStoreCategories } from "@/lib/woocommerce";
 
 const navItems = [
   { label: "New arrivals", href: "/new-arrivals", badge: "New" },
-  { label: "Shop categories", href: "/#categories", badge: null },
   { label: "Best deals", href: "/#deals", badge: null },
 ] satisfies readonly NavigationItem[];
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const categoryItems = buildCategoryNavigation(await getStoreCategories());
+
   return (
     <>
       <div className="bg-primary px-4 py-2 text-center text-[10px] font-semibold uppercase tracking-[0.15em] text-primary-foreground sm:text-xs sm:tracking-[0.18em]">
@@ -38,7 +42,19 @@ export function SiteHeader() {
           </Link>
 
           <nav className="ml-auto hidden items-center justify-end gap-7 lg:flex">
-            {navItems.map((item) => (
+            <Link
+              href={navItems[0].href}
+              className="flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {navItems[0].label}
+              <Badge className="h-4 px-1.5 text-[9px] font-bold uppercase tracking-[0.08em]">
+                {navItems[0].badge}
+              </Badge>
+            </Link>
+
+            <DesktopCategoryMenu categories={categoryItems} />
+
+            {navItems.slice(1).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -55,7 +71,10 @@ export function SiteHeader() {
           </nav>
 
           <div className="ml-auto flex items-center lg:hidden">
-            <MobileNavigationSheet items={navItems} />
+            <MobileNavigationSheet
+              items={navItems}
+              categories={categoryItems}
+            />
           </div>
         </div>
       </header>

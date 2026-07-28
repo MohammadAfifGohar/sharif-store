@@ -86,14 +86,6 @@ export default async function HomePage() {
                   className="object-cover"
                 />
               ) : null}
-              <div className="absolute left-4 top-4 rounded-full bg-background p-4 text-center text-foreground shadow-xl sm:left-7 sm:top-7 sm:p-5">
-                <span className="block font-heading text-2xl font-semibold sm:text-3xl">
-                  40%
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest">
-                  Selected
-                </span>
-              </div>
             </div>
           </div>
         </section>

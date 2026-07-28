@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { selectFirstProductWithImage } from "@/lib/product-selection";
 import { getWordpressUrl } from "@/lib/site-config";
 
 /** Abort a WooCommerce request that hasn't responded within this window. */
@@ -182,20 +183,18 @@ export const getNewArrivalProducts = cache(async () =>
   ),
 );
 
-/** Slug of the product highlighted in the homepage "discovery" panel. */
-const FEATURED_DISCOVERY_SLUG = "white-oud-al-ahmed";
-
 export const getHomepageCommerceData = cache(async () => {
-  const [products, categories, featuredProducts] = await Promise.all([
-    fetchStoreApi<WooProduct[]>("products?per_page=8"),
+  const [products, categories] = await Promise.all([
+    fetchStoreApi<WooProduct[]>(
+      "products?orderby=date&order=desc&per_page=8",
+    ),
     getStoreCategories(),
-    fetchStoreApi<WooProduct[]>(`products?slug=${FEATURED_DISCOVERY_SLUG}`),
   ]);
 
   return {
     products,
     categories: categories.filter((category) => category.parent === 0),
-    featuredDiscoveryProduct: featuredProducts[0] ?? null,
+    featuredDiscoveryProduct: selectFirstProductWithImage(products),
   };
 });
 
