@@ -117,7 +117,7 @@ export function MobileNavigationSheet({
           >
             <Accordion>
               <AccordionItem value="shop-categories" className="border-0">
-                <AccordionTrigger className="py-4 font-heading text-lg font-semibold no-underline hover:no-underline">
+                <AccordionTrigger className="items-center py-4 font-heading text-lg font-semibold no-underline hover:no-underline">
                   Shop categories
                 </AccordionTrigger>
                 <AccordionContent className="pb-4 [&_a]:!no-underline">
@@ -126,7 +126,7 @@ export function MobileNavigationSheet({
                       <AccordionItem key={category.id} value={category.slug} className="border-0">
                         {category.children.length > 0 ? (
                           <>
-                            <AccordionTrigger className="py-3 font-heading text-base no-underline hover:no-underline">
+                            <AccordionTrigger className="items-center py-3 font-heading text-base no-underline hover:no-underline">
                               {category.name}
                             </AccordionTrigger>
                             <AccordionContent className="ml-3 flex flex-col gap-1 pb-3">
