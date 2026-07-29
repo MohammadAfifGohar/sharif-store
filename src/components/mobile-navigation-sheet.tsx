@@ -67,7 +67,7 @@ export function MobileNavigationSheet({
           >
             <div className="relative mb-5 h-11 w-32">
               <Image
-                src="/logo.webp"
+                src="/sharif-store-logo-transparent.png"
                 alt=""
                 fill
                 sizes="128px"

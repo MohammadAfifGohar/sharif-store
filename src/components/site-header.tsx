@@ -12,7 +12,8 @@ import { getStoreCategories } from "@/lib/woocommerce";
 
 const navItems = [
   { label: "New arrivals", href: "/new-arrivals", badge: "New" },
-  { label: "Best deals", href: "/#deals", badge: null },
+  { label: "Best deals", href: "/best-deals", badge: null },
+  { label: "Contact", href: "/contact", badge: null },
 ] satisfies readonly NavigationItem[];
 
 export async function SiteHeader() {
@@ -32,8 +33,8 @@ export async function SiteHeader() {
             aria-label="Sharif Store home"
           >
             <Image
-              src="/logo.webp"
-              alt="The Shareef Store"
+              src="/sharif-store-logo-transparent.png"
+              alt="The Sharif Store"
               fill
               fetchPriority="high"
               sizes="(max-width: 640px) 112px, 160px"

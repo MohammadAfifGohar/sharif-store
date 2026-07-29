@@ -12,11 +12,11 @@ export function SiteFooter() {
           <div className="col-span-2 md:col-span-1">
             <div className="relative -ml-4 h-14 w-40 sm:h-16 sm:w-44">
               <Image
-                src="/logo.webp"
+                src="/sharif-store-logo-footer.png"
                 alt={SITE_NAME}
                 fill
                 sizes="176px"
-                className="object-contain object-left invert"
+                className="object-contain object-left"
               />
             </div>
             <p className="mt-4 max-w-md text-sm leading-6 text-background/60">
@@ -32,7 +32,7 @@ export function SiteFooter() {
             <div className="mt-5 flex flex-col gap-3 text-sm text-background/65">
               <Link href="/new-arrivals">New arrivals</Link>
               <Link href="/#categories">Categories</Link>
-              <Link href="/#deals">Offers</Link>
+              <Link href="/best-deals">Offers</Link>
             </div>
           </div>
 
@@ -41,7 +41,7 @@ export function SiteFooter() {
               Help
             </p>
             <div className="mt-5 flex flex-col gap-3 text-sm text-background/65">
-              <a href={absoluteUrl("/contact/")}>Contact</a>
+              <Link href="/contact">Contact</Link>
               <a href={absoluteUrl("/my-account/")}>My account</a>
               <a href={absoluteUrl("/terms-conditions/")}>Terms</a>
             </div>

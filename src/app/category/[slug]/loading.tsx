@@ -18,7 +18,7 @@ export default function CategoryLoading() {
             className="absolute inset-9 rounded-full bg-[#f8c4cc]/55 shadow-[0_18px_60px_rgba(124,35,58,0.14)] motion-safe:animate-pulse"
           />
           <Image
-            src="/logo.webp"
+            src="/sharif-store-logo-transparent.png"
             alt=""
             width={150}
             height={82}

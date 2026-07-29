@@ -115,7 +115,7 @@ export type WooProduct = {
   has_options: boolean;
 };
 
-async function fetchStoreApi<T>(path: string): Promise<T> {
+async function fetchStoreApiResponse(path: string) {
   const response = await fetch(
     `${getWordpressUrl()}/wp-json/wc/store/v1/${path}`,
     {
@@ -130,6 +130,12 @@ async function fetchStoreApi<T>(path: string): Promise<T> {
   if (!response.ok) {
     throw new WooCommerceError(response.status, path);
   }
+
+  return response;
+}
+
+async function fetchStoreApi<T>(path: string): Promise<T> {
+  const response = await fetchStoreApiResponse(path);
 
   return response.json() as Promise<T>;
 }
@@ -182,6 +188,23 @@ export const getNewArrivalProducts = cache(async () =>
     "products?orderby=date&order=desc&per_page=12",
   ),
 );
+
+export const getSaleProducts = cache(async (page: number) => {
+  const perPage = 24;
+  const safePage = Number.isInteger(page) && page > 0 ? page : 1;
+  const response = await fetchStoreApiResponse(
+    `products?on_sale=true&orderby=date&order=desc&page=${safePage}&per_page=${perPage}`,
+  );
+  const products = (await response.json()) as WooProduct[];
+
+  return {
+    products: products.filter((product) => product.on_sale),
+    page: safePage,
+    perPage,
+    total: Number(response.headers.get("x-wp-total") ?? products.length),
+    totalPages: Number(response.headers.get("x-wp-totalpages") ?? 1),
+  };
+});
 
 export const getHomepageCommerceData = cache(async () => {
   const [products, categories] = await Promise.all([

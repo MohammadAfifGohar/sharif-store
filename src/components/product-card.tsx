@@ -68,7 +68,7 @@ export function ProductCard({ product, categorySlug }: ProductCardProps) {
           ) : null}
           {discountPercent > 0 ? (
             <Badge className="bg-foreground font-bold text-background">
-              -{discountPercent}% OFF
+              {discountPercent}% OFF
             </Badge>
           ) : null}
         </div>
