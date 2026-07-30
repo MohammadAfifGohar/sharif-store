@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { BagSheet } from "@/components/bag-sheet";
 import { DesktopCategoryMenu } from "@/components/desktop-category-menu";
+import { HeaderSearchBar, HeaderSearchTrigger } from "@/components/header-search";
 import {
   MobileNavigationSheet,
   type NavigationItem,
@@ -26,7 +28,7 @@ export async function SiteHeader() {
       </div>
 
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/92 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-4 px-4 sm:h-18 sm:px-6 lg:gap-8 lg:px-10">
+        <div className="mx-auto flex min-h-16 max-w-[1440px] flex-wrap items-center gap-3 px-4 py-2 sm:min-h-18 sm:flex-nowrap sm:gap-4 sm:px-6 sm:py-0 lg:gap-8 lg:px-10">
           <Link
             href="/"
             className="relative h-10 w-28 shrink-0 sm:h-12 sm:w-40"
@@ -42,40 +44,48 @@ export async function SiteHeader() {
             />
           </Link>
 
-          <nav className="ml-auto hidden items-center justify-end gap-7 lg:flex">
-            <Link
-              href={navItems[0].href}
-              className="flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {navItems[0].label}
-              <Badge className="h-4 px-1.5 text-[9px] font-bold uppercase tracking-[0.08em]">
-                {navItems[0].badge}
-              </Badge>
-            </Link>
+          <HeaderSearchBar className="order-3 w-full sm:order-none sm:w-auto sm:max-w-md sm:flex-1" />
 
-            <DesktopCategoryMenu categories={categoryItems} />
-
-            {navItems.slice(1).map((item) => (
+          <div className="ml-auto flex items-center gap-1 lg:gap-3">
+            <nav className="hidden items-center justify-end gap-7 lg:flex">
               <Link
-                key={item.href}
-                href={item.href}
+                href={navItems[0].href}
                 className="flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
               >
-                {item.label}
-                {item.badge ? (
-                  <Badge className="h-4 px-1.5 text-[9px] font-bold uppercase tracking-[0.08em]">
-                    {item.badge}
-                  </Badge>
-                ) : null}
+                {navItems[0].label}
+                <Badge className="h-4 px-1.5 text-[9px] font-bold uppercase tracking-[0.08em]">
+                  {navItems[0].badge}
+                </Badge>
               </Link>
-            ))}
-          </nav>
 
-          <div className="ml-auto flex items-center lg:hidden">
-            <MobileNavigationSheet
-              items={navItems}
-              categories={categoryItems}
-            />
+              <DesktopCategoryMenu categories={categoryItems} />
+
+              {navItems.slice(1).map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {item.label}
+                  {item.badge ? (
+                    <Badge className="h-4 px-1.5 text-[9px] font-bold uppercase tracking-[0.08em]">
+                      {item.badge}
+                    </Badge>
+                  ) : null}
+                </Link>
+              ))}
+            </nav>
+
+            <HeaderSearchTrigger />
+
+            <BagSheet />
+
+            <div className="flex items-center lg:hidden">
+              <MobileNavigationSheet
+                items={navItems}
+                categories={categoryItems}
+              />
+            </div>
           </div>
         </div>
       </header>

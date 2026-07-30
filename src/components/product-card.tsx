@@ -1,11 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRightIcon } from "lucide-react";
 
+import { AddToBagControl } from "@/components/add-to-bag-control";
 import { RatingStars } from "@/components/rating-stars";
 import { SaleBadge } from "@/components/sale-badge";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import {
   formatPrice,
   formatRegularPrice,
@@ -122,16 +121,7 @@ export function ProductCard({ product, categorySlug }: ProductCardProps) {
           ) : null}
         </div>
 
-        <Link
-          href={productHref}
-          aria-label={`View ${product.name}`}
-          className={cn(
-            buttonVariants({ variant: "outline", size: "icon-sm" }),
-            "shrink-0 sm:size-8",
-          )}
-        >
-          <ArrowUpRightIcon />
-        </Link>
+        <AddToBagControl product={product} categorySlug={categorySlug} size="sm" />
       </div>
     </article>
   );

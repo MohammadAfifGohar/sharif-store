@@ -206,6 +206,24 @@ export const getSaleProducts = cache(async (page: number) => {
   };
 });
 
+export const searchProducts = cache(
+  async (query: string, page: number, perPage = 24) => {
+    const safePage = Number.isInteger(page) && page > 0 ? page : 1;
+    const response = await fetchStoreApiResponse(
+      `products?search=${encodeURIComponent(query)}&page=${safePage}&per_page=${perPage}`,
+    );
+    const products = (await response.json()) as WooProduct[];
+
+    return {
+      products,
+      page: safePage,
+      perPage,
+      total: Number(response.headers.get("x-wp-total") ?? products.length),
+      totalPages: Number(response.headers.get("x-wp-totalpages") ?? 1),
+    };
+  },
+);
+
 export const getHomepageCommerceData = cache(async () => {
   const [products, categories] = await Promise.all([
     fetchStoreApi<WooProduct[]>(
@@ -221,15 +239,26 @@ export const getHomepageCommerceData = cache(async () => {
   };
 });
 
-function formatMinorAmount(product: WooProduct, minorAmount: string) {
-  const divisor = 10 ** product.prices.currency_minor_unit;
-  const amount = Number(minorAmount) / divisor;
-
+export function formatMoneyAmount(amount: number, currencyCode: string) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: product.prices.currency_code,
+    currency: currencyCode,
     maximumFractionDigits: 0,
   }).format(Number.isFinite(amount) ? amount : 0);
+}
+
+function formatMinorAmount(product: WooProduct, minorAmount: string) {
+  return formatMoneyAmount(
+    getMajorAmount(minorAmount, product.prices.currency_minor_unit),
+    product.prices.currency_code,
+  );
+}
+
+function getMajorAmount(minorAmount: string, currencyMinorUnit: number) {
+  const divisor = 10 ** currencyMinorUnit;
+  const amount = Number(minorAmount) / divisor;
+
+  return Number.isFinite(amount) ? amount : 0;
 }
 
 export function formatPrice(product: WooProduct) {
@@ -245,4 +274,12 @@ export function formatRegularPrice(product: WooProduct) {
 
   // Fall back to the current price when a regular price isn't set.
   return formatMinorAmount(product, regular_price || price);
+}
+
+/** Raw numeric price (major units) matching what `formatPrice` displays. */
+export function getRawPrice(product: WooProduct) {
+  const minorAmount =
+    product.prices.price_range?.min_amount ?? product.prices.price;
+
+  return getMajorAmount(minorAmount, product.prices.currency_minor_unit);
 }

@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 
 import { ProductGallery } from "./components/product-gallery";
 import { ProductReviews, ProductReviewsSkeleton } from "./components/product-reviews";
+import { AddToBagControl } from "@/components/add-to-bag-control";
 import { RatingStars } from "@/components/rating-stars";
 import {
   getProductMetadata,
@@ -123,15 +124,22 @@ export default async function CategoryProductPage(
             ) : null}
           </p>
 
-          <a
-            href={view.whatsAppOrderUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(buttonVariants({ size: "lg" }), "w-full")}
-          >
-            <WhatsAppIcon data-icon="inline-start" className="text-[#25d366]" />
-            Order on WhatsApp
-          </a>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <AddToBagControl
+              product={product}
+              categorySlug={category.slug}
+              className="sm:flex-1"
+            />
+            <a
+              href={view.whatsAppOrderUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ size: "lg" }), "w-full sm:flex-1")}
+            >
+              <WhatsAppIcon data-icon="inline-start" className="text-[#25d366]" />
+              Order on WhatsApp
+            </a>
+          </div>
 
           {view.specs.length > 0 ? (
             <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-border pt-6 text-sm sm:grid-cols-2">
