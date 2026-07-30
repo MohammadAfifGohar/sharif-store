@@ -45,9 +45,7 @@ export function ProductCard({ product, categorySlug }: ProductCardProps) {
         href={productHref}
         className="relative block aspect-[4/5] overflow-hidden bg-muted"
       >
-
-        
-        {image ? (
+ {image ? (
           <Image
             src={image.src}
             alt={image.alt || product.name}
