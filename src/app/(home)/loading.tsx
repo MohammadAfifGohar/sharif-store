@@ -7,7 +7,7 @@ export default function HomeLoading() {
       aria-label="Loading Sharif Store"
       className="relative grid min-h-[60svh] flex-1 place-items-center overflow-hidden bg-[radial-gradient(circle_at_center,rgba(248,196,204,0.55),transparent_58%)] px-6 py-16"
     >
-      <div className="relative flex flex-col items-center text-center">
+      <div className="relative flex flex-col items-center text-center ">
         <div className="relative grid size-44 place-items-center sm:size-52">
           <span
             aria-hidden="true"
