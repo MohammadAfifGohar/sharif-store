@@ -52,7 +52,6 @@ export function SiteFooter() {
 
         <div className="flex flex-col items-center justify-between gap-2 pt-6 text-center text-xs text-background/50 sm:flex-row sm:gap-3 sm:pt-7 sm:text-left">
           <p>© {new Date().getFullYear()} Sharif Beauty & Gift Collection</p>
-          <p>Products and prices synced from WooCommerce.</p>
         </div>
       </div>
     </footer>
