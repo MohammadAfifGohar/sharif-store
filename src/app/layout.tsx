@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Urbanist } from "next/font/google";
 
+import { BagProvider } from "@/components/bag-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SITE_NAME, SITE_URL } from "@/lib/site-config";
@@ -37,9 +38,11 @@ export default function RootLayout({
       className={`${urbanist.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <SiteHeader />
-        {children}
-        <SiteFooter />
+        <BagProvider>
+          <SiteHeader />
+          {children}
+          <SiteFooter />
+        </BagProvider>
       </body>
     </html>
   );
