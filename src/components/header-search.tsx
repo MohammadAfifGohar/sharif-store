@@ -3,11 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Loader2Icon, SearchIcon, XIcon } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { Loader2Icon, SearchIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MIN_QUERY_LENGTH, useProductSearch } from "@/hooks/use-product-search";
 import { getProductPath } from "@/lib/product-route";
@@ -127,14 +124,11 @@ function SearchResultsDropdown({
   );
 }
 
-/** Always-visible search bar, shown only on the homepage. */
+/** One consistent, always-visible product search for every storefront route. */
 export function HeaderSearchBar({ className }: { className?: string }) {
-  const pathname = usePathname();
   const { query, setQuery, results, isLoading, submitSearch } = useProductSearch();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useOutsideAndEscapeClose(isOpen, () => setIsOpen(false));
-
-  if (pathname !== "/") return null;
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
@@ -154,7 +148,7 @@ export function HeaderSearchBar({ className }: { className?: string }) {
           onFocus={() => setIsOpen(true)}
           placeholder="Search for products"
           aria-label="Search for products"
-          className="h-10 pl-9"
+          className="h-10 pl-9 focus-visible:ring-1"
         />
       </form>
 
@@ -168,88 +162,6 @@ export function HeaderSearchBar({ className }: { className?: string }) {
             submitSearch();
             setIsOpen(false);
           }}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-/** Compact search icon that expands in place into the search UI, shown on every non-homepage route. */
-export function HeaderSearchTrigger() {
-  const pathname = usePathname();
-  const { query, setQuery, results, isLoading, submitSearch } = useProductSearch();
-  const [isOpen, setIsOpen] = useState(false);
-  const shouldReduceMotion = useReducedMotion();
-  const containerRef = useOutsideAndEscapeClose(isOpen, () => setIsOpen(false));
-
-  if (pathname === "/") return null;
-
-  function close() {
-    setIsOpen(false);
-  }
-
-  return (
-    <div ref={containerRef} className="relative flex items-center">
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-lg"
-        className={cn("size-11", isOpen && "pointer-events-none opacity-0")}
-        onClick={() => setIsOpen(true)}
-        aria-label="Search products"
-      >
-        <SearchIcon />
-      </Button>
-
-      <AnimatePresence>
-        {isOpen ? (
-          <motion.form
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault();
-              submitSearch();
-              close();
-            }}
-            initial={shouldReduceMotion ? false : { width: 44, opacity: 0 }}
-            animate={{ width: "min(18rem, 70vw)", opacity: 1 }}
-            exit={shouldReduceMotion ? { opacity: 0 } : { width: 44, opacity: 0 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="absolute right-0 top-1/2 z-10 flex h-11 -translate-y-1/2 items-center gap-1 overflow-hidden rounded-full border border-border bg-popover pr-1 shadow-md"
-          >
-            <SearchIcon className="ml-3 size-4 shrink-0 text-muted-foreground" />
-            <input
-              autoFocus
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search for products"
-              aria-label="Search for products"
-              className="h-9 w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              onClick={close}
-              aria-label="Close search"
-            >
-              <XIcon />
-            </Button>
-          </motion.form>
-        ) : null}
-      </AnimatePresence>
-
-      {isOpen ? (
-        <SearchResultsDropdown
-          query={query}
-          results={results}
-          isLoading={isLoading}
-          onNavigate={close}
-          onViewAll={() => {
-            submitSearch();
-            close();
-          }}
-          className="inset-x-auto right-0 w-[min(18rem,70vw)]"
         />
       ) : null}
     </div>

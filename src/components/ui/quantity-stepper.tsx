@@ -25,8 +25,10 @@ export function QuantityStepper({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1 rounded-lg border border-border bg-background",
-        size === "sm" ? "p-0.5" : "p-1",
+        "inline-flex items-center rounded-lg border border-border bg-background",
+        size === "sm"
+          ? "gap-1 p-0.5"
+          : "h-9 w-full justify-between p-0.5",
         className,
       )}
     >
@@ -42,8 +44,8 @@ export function QuantityStepper({
       </Button>
       <span
         className={cn(
-          "min-w-[1.5em] text-center font-semibold tabular-nums",
-          size === "sm" ? "text-xs" : "text-sm",
+          "text-center font-semibold tabular-nums",
+          size === "sm" ? "min-w-[1.5em] text-xs" : "min-w-8 text-sm",
         )}
       >
         {quantity}

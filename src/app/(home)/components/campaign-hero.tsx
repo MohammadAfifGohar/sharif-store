@@ -1,6 +1,7 @@
 "use client";
 
 import { getImageProps } from "next/image";
+import Link from "next/link";
 
 import {
   Carousel,
@@ -72,7 +73,11 @@ export function CampaignHero({ slides }: CampaignHeroProps) {
               aria-label={`${index + 1} of ${slides.length}: ${slide.alt}`}
               className="pl-0"
             >
-              <a href={slide.href} className="block overflow-hidden">
+              <Link
+                href={slide.href}
+                aria-label={`Shop ${slide.alt}`}
+                className="block cursor-pointer overflow-hidden"
+              >
                 <picture className="block">
                   <source
                     media="(min-width: 651px)"
@@ -86,7 +91,7 @@ export function CampaignHero({ slides }: CampaignHeroProps) {
                     className="block h-[min(156.25vw,80svh)] w-full object-cover object-top min-[651px]:h-auto"
                   />
                 </picture>
-              </a>
+              </Link>
             </CarouselItem>
           );
         })}

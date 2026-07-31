@@ -45,7 +45,7 @@ export function BagSheet() {
       >
         <ShoppingBagIcon />
         {totalCount > 0 ? (
-          <Badge className="absolute -right-1 -top-1 h-4.5 min-w-4.5 justify-center px-1 text-[10px]">
+          <Badge className="absolute right-0 top-0 h-4 min-w-4 justify-center px-0.5 text-[9px] leading-none">
             {totalCount}
           </Badge>
         ) : null}

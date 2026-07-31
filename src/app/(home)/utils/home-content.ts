@@ -38,7 +38,7 @@ export const heroSlides: CampaignSlide[] = [
       width: 768,
       height: 1200,
     },
-    href: getCategoryPath("bags-fashion"),
+    href: getCategoryPath("bags-and-fashion"),
   },
   {
     alt: "Jewellery picks with lasting shine",
@@ -52,7 +52,7 @@ export const heroSlides: CampaignSlide[] = [
       width: 768,
       height: 1200,
     },
-    href: getCategoryPath("jewellery"),
+    href: getCategoryPath("jwellery"),
   },
   {
     alt: "Dove and Philips hair care essentials",
@@ -66,6 +66,6 @@ export const heroSlides: CampaignSlide[] = [
       width: 768,
       height: 1200,
     },
-    href: getCategoryPath("hair-care"),
+    href: getCategoryPath("hair-accessories"),
   },
 ];

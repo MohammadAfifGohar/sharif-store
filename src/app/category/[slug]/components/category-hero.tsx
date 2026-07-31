@@ -31,7 +31,7 @@ export function CategoryHero({
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
             {category.name}
           </h1>
-          <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">
+          <p className="mt-4 hidden max-w-xl text-base leading-7 text-muted-foreground md:block">
             Browse our {category.name.toLowerCase()} collection, selected for
             useful everyday finds and easy gifting.
           </p>
@@ -41,7 +41,7 @@ export function CategoryHero({
         </div>
 
         {category.image ? (
-          <div className="relative aspect-[16/10] overflow-hidden rounded-3xl bg-white shadow-sm">
+          <div className="relative hidden aspect-[16/10] overflow-hidden rounded-3xl bg-white shadow-sm md:block">
             <Image
               src={category.image.src}
               alt={category.image.alt || category.name}

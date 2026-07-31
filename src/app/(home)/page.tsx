@@ -60,8 +60,8 @@ export default async function HomePage() {
                 <h2 className="max-w-xl font-heading text-4xl font-semibold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
                   Good things shouldn&apos;t feel out of reach.
                 </h2>
-                <a
-                  href="https://thesharifstore.in/shop-2/?on_sale=1"
+                <Link
+                  href="/best-deals"
                   className={cn(
                     buttonVariants({ variant: "secondary", size: "lg" }),
                     "mt-8 w-full sm:mt-9 sm:w-auto",
@@ -69,7 +69,7 @@ export default async function HomePage() {
                 >
                   Shop live offers
                   <ArrowRightIcon data-icon="inline-end" />
-                </a>
+                </Link>
               </div>
             </Reveal>
 

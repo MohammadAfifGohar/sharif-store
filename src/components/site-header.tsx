@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { BagSheet } from "@/components/bag-sheet";
 import { DesktopCategoryMenu } from "@/components/desktop-category-menu";
-import { HeaderSearchBar, HeaderSearchTrigger } from "@/components/header-search";
+import { HeaderSearchBar } from "@/components/header-search";
 import {
   MobileNavigationSheet,
   type NavigationItem,
@@ -75,8 +75,6 @@ export async function SiteHeader() {
                 </Link>
               ))}
             </nav>
-
-            <HeaderSearchTrigger />
 
             <BagSheet />
 
