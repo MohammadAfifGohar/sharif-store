@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getCategoryPageData } from "@/lib/woocommerce";
+import { expandProductsForGrid } from "@/lib/product-variants";
 import { CategoryHero } from "./components/category-hero";
 import { ProductGrid } from "./components/product-grid";
 import { SubcategoryList } from "./components/subcategory-list";
@@ -30,6 +31,7 @@ export default async function CategoryPage(
   if (!data) notFound();
 
   const { category, products, subcategories } = data;
+  const items = await expandProductsForGrid(products);
 
   return (
     <main>
@@ -38,7 +40,7 @@ export default async function CategoryPage(
         parentName={category.name}
         subcategories={subcategories}
       />
-      <ProductGrid products={products} categorySlug={category.slug} />
+      <ProductGrid items={items} categorySlug={category.slug} />
     </main>
   );
 }

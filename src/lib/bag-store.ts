@@ -4,6 +4,7 @@ import {
   setItemQuantity,
   toBagItem,
   type BagItem,
+  type BagVariation,
 } from "@/lib/bag";
 import { readBagFromStorage, writeBagToStorage } from "@/lib/bag-storage";
 import type { WooProduct } from "@/lib/woocommerce";
@@ -52,16 +53,21 @@ export function addBagItem(
   product: WooProduct,
   categorySlug: string,
   quantity = 1,
+  variation?: BagVariation,
 ) {
-  setItems(addItemToBag(items, toBagItem(product, categorySlug, quantity)));
+  setItems(addItemToBag(items, toBagItem(product, categorySlug, quantity, variation)));
 }
 
-export function removeBagItem(productId: number) {
-  setItems(removeItemFromBag(items, productId));
+export function removeBagItem(productId: number, variationId: number | null) {
+  setItems(removeItemFromBag(items, productId, variationId));
 }
 
-export function setBagItemQuantity(productId: number, quantity: number) {
-  setItems(setItemQuantity(items, productId, quantity));
+export function setBagItemQuantity(
+  productId: number,
+  variationId: number | null,
+  quantity: number,
+) {
+  setItems(setItemQuantity(items, productId, variationId, quantity));
 }
 
 export function clearBag() {

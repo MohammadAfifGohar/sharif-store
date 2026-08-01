@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type MouseEvent } from "react";
+import { useRef, useState, type MouseEvent, type TouchEvent } from "react";
 import Image from "next/image";
 
 import type { WooImage } from "@/lib/woocommerce";
@@ -11,12 +11,15 @@ type ProductGalleryProps = {
   productName: string;
 };
 
+const SWIPE_THRESHOLD_PX = 40;
+
 export function ProductGallery({ images, productName }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [zoomPosition, setZoomPosition] = useState<{
     x: number;
     y: number;
   } | null>(null);
+  const touchStartXRef = useRef<number | null>(null);
 
   if (images.length === 0) {
     return (
@@ -49,13 +52,35 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
     });
   }
 
+  function handleTouchStart(event: TouchEvent<HTMLDivElement>) {
+    touchStartXRef.current = event.touches[0].clientX;
+  }
+
+  function handleTouchEnd(event: TouchEvent<HTMLDivElement>) {
+    const startX = touchStartXRef.current;
+    touchStartXRef.current = null;
+    if (startX === null) return;
+
+    const deltaX = event.changedTouches[0].clientX - startX;
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) return;
+
+    setActiveIndex((current) =>
+      deltaX < 0
+        ? Math.min(images.length - 1, current + 1)
+        : Math.max(0, current - 1),
+    );
+    setZoomPosition(null);
+  }
+
   return (
     <div className="relative flex flex-col gap-4">
       <div
-        className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-border bg-[#f7f7f7] lg:cursor-crosshair"
+        className="relative aspect-[3/4] w-full touch-pan-y overflow-hidden rounded-2xl border border-border bg-[#f7f7f7] lg:cursor-crosshair"
         onMouseEnter={updateZoomPosition}
         onMouseMove={updateZoomPosition}
         onMouseLeave={() => setZoomPosition(null)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         <Image
           key={activeImage.id}
@@ -92,11 +117,6 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           }}
         />
       ) : null}
-
-      <p className="hidden items-center gap-2 text-xs font-medium text-muted-foreground lg:flex">
-        <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
-        Hover over the image to zoom
-      </p>
 
       {images.length > 1 ? (
         <ul className="flex flex-wrap gap-3" aria-label="Product images">

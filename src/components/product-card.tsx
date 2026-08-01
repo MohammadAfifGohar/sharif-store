@@ -5,9 +5,11 @@ import { AddToBagControl } from "@/components/add-to-bag-control";
 import { RatingStars } from "@/components/rating-stars";
 import { SaleBadge } from "@/components/sale-badge";
 import { Badge } from "@/components/ui/badge";
+import type { ProductCardVariant } from "@/lib/product-variants";
 import {
   formatPrice,
   formatRegularPrice,
+  getDiscountPercent,
   type WooProduct,
 } from "@/lib/woocommerce";
 import { getProductPath } from "@/lib/product-route";
@@ -16,27 +18,21 @@ import { cn } from "@/lib/utils";
 type ProductCardProps = {
   product: WooProduct;
   categorySlug: string;
+  /** Set when this card represents one specific variation of a variable product. */
+  variant?: ProductCardVariant | null;
 };
 
-function getDiscountPercent(product: WooProduct) {
-  const regular = Number(product.prices.regular_price);
-  const current = Number(product.prices.price);
-
-  if (!product.on_sale || !regular || current >= regular) return 0;
-
-  return Math.round(((regular - current) / regular) * 100);
-}
-
-export function ProductCard({ product, categorySlug }: ProductCardProps) {
-  const image = product.images[0];
+export function ProductCard({ product, categorySlug, variant = null }: ProductCardProps) {
+  const displayProduct = variant?.data ?? product;
+  const image = displayProduct.images[0] ?? product.images[0];
   const productHref = getProductPath(categorySlug, product.slug);
   const averageRating = Number(product.average_rating);
   const hasRating = product.review_count > 0 && averageRating > 0;
-  const discountPercent = getDiscountPercent(product);
+  const discountPercent = getDiscountPercent(displayProduct);
   const lowStock =
-    product.is_in_stock &&
-    typeof product.low_stock_remaining === "number" &&
-    product.low_stock_remaining > 0;
+    displayProduct.is_in_stock &&
+    typeof displayProduct.low_stock_remaining === "number" &&
+    displayProduct.low_stock_remaining > 0;
 
   return (
     <article className="group overflow-hidden rounded-xl border border-border bg-background">
@@ -52,7 +48,7 @@ export function ProductCard({ product, categorySlug }: ProductCardProps) {
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className={cn(
               "object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]",
-              !product.is_in_stock && "opacity-60 grayscale",
+              !displayProduct.is_in_stock && "opacity-60 grayscale",
             )}
           />
         ) : (
@@ -62,7 +58,7 @@ export function ProductCard({ product, categorySlug }: ProductCardProps) {
         )}
 
         <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1.5 sm:left-3 sm:top-3">
-          {product.on_sale ? (
+          {displayProduct.on_sale ? (
             <SaleBadge className="transition-transform duration-300 group-hover:scale-105" />
           ) : null}
           {discountPercent > 0 ? (
@@ -72,7 +68,7 @@ export function ProductCard({ product, categorySlug }: ProductCardProps) {
           ) : null}
         </div>
 
-        {!product.is_in_stock ? (
+        {!displayProduct.is_in_stock ? (
           <div className="absolute inset-0 grid place-items-center">
             <Badge
               variant="secondary"
@@ -86,21 +82,24 @@ export function ProductCard({ product, categorySlug }: ProductCardProps) {
 
       <div className="flex items-start justify-between gap-2 p-3 sm:gap-4 sm:p-4">
         <div className="min-w-0">
-          <Badge variant="secondary" className="mb-1.5 max-w-full capitalize">
-            <span className="truncate">
-              {product.categories[0]?.name ?? "Sharif selection"}
-            </span>
-          </Badge>
+          <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+            <Badge variant="secondary" className="max-w-full capitalize">
+              <span className="truncate">
+                {product.categories[0]?.name ?? "Sharif selection"}
+              </span>
+            </Badge>
+            {variant ? <Badge variant="outline">{variant.shortLabel}</Badge> : null}
+          </div>
           <h3 className="truncate font-heading text-sm font-semibold capitalize sm:text-lg">
             <Link href={productHref}>{product.name}</Link>
           </h3>
 
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 sm:mt-2">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-sm">
-              <span className="font-bold">{formatPrice(product)}</span>
-              {product.on_sale ? (
+              <span className="font-bold">{formatPrice(displayProduct)}</span>
+              {displayProduct.on_sale ? (
                 <span className="text-muted-foreground line-through">
-                  {formatRegularPrice(product)}
+                  {formatRegularPrice(displayProduct)}
                 </span>
               ) : null}
             </div>
@@ -116,12 +115,19 @@ export function ProductCard({ product, categorySlug }: ProductCardProps) {
 
           {lowStock ? (
             <p className="mt-1.5 text-[11px] font-semibold text-amber-600 sm:text-xs">
-              Only {product.low_stock_remaining} left
+              Only {displayProduct.low_stock_remaining} left
             </p>
           ) : null}
         </div>
 
-        <AddToBagControl product={product} categorySlug={categorySlug} size="sm" />
+        <AddToBagControl
+          product={product}
+          categorySlug={categorySlug}
+          size="sm"
+          variation={
+            variant ? { id: variant.id, label: variant.label, priceSource: variant.data } : null
+          }
+        />
       </div>
     </article>
   );

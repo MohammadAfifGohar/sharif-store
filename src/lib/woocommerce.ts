@@ -113,6 +113,11 @@ export type WooProduct = {
   is_on_backorder?: boolean;
   sold_individually?: boolean;
   has_options: boolean;
+  /** Lightweight variation list on a variable parent product — id + attribute combo only, no price/stock. */
+  variations?: Array<{
+    id: number;
+    attributes: Array<{ name: string; value: string }>;
+  }>;
 };
 
 async function fetchStoreApiResponse(path: string) {
@@ -175,6 +180,24 @@ export const getProductBySlug = cache(async (slug: string) => {
   );
 
   return products[0] ?? null;
+});
+
+export const getProductById = cache(async (id: number) =>
+  fetchStoreApi<WooProduct>(`products/${id}`),
+);
+
+/**
+ * Resolves the full price/stock/image data for every variation of a variable
+ * product. The Store API only embeds lightweight `{ id, attributes }` entries
+ * on the parent — each variation must be fetched individually as its own
+ * product-shaped object.
+ */
+export const getProductVariations = cache(async (product: WooProduct) => {
+  if (!product.has_options || !product.variations?.length) return [];
+
+  return Promise.all(
+    product.variations.map((variation) => getProductById(variation.id)),
+  );
 });
 
 export const getProductReviews = cache(async (productId: number) =>
@@ -282,4 +305,36 @@ export function getRawPrice(product: WooProduct) {
     product.prices.price_range?.min_amount ?? product.prices.price;
 
   return getMajorAmount(minorAmount, product.prices.currency_minor_unit);
+}
+
+/** "₹180 – ₹280" when the product has a real min–max range, else null. */
+export function formatPriceRange(product: WooProduct) {
+  const range = product.prices.price_range;
+  if (!range || range.min_amount === range.max_amount) return null;
+
+  const min = formatMinorAmount(product, range.min_amount);
+  const max = formatMinorAmount(product, range.max_amount);
+
+  return `${min} – ${max}`;
+}
+
+/** Percentage off the regular price, rounded; 0 when not on sale or not a real discount. */
+export function getDiscountPercent(product: WooProduct) {
+  const regular = Number(product.prices.regular_price);
+  const current = Number(product.prices.price);
+
+  if (!product.on_sale || !regular || current >= regular) return 0;
+
+  return Math.round(((regular - current) / regular) * 100);
+}
+
+/** Amount saved off the regular price (major units); 0 when not on sale. */
+export function getSavingsAmount(product: WooProduct) {
+  if (!product.on_sale) return 0;
+
+  const { currency_minor_unit, regular_price } = product.prices;
+  const regular = getMajorAmount(regular_price, currency_minor_unit);
+  const current = getRawPrice(product);
+
+  return regular > current ? regular - current : 0;
 }
