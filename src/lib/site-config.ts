@@ -15,7 +15,7 @@ export const SITE_URL =
 export const SITE_NAME = "Sharif Store";
 
 /** WhatsApp business number in wa.me format (country code + number, no `+`). */
-export const WHATSAPP_NUMBER = "917020878764";
+export const WHATSAPP_NUMBER = "918421804744";
 
 /**
  * WooCommerce / WordPress origin. Reads `WORDPRESS_URL` and normalises the
