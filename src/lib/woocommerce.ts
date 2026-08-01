@@ -6,6 +6,10 @@ import { getWordpressUrl } from "@/lib/site-config";
 /** Abort a WooCommerce request that hasn't responded within this window. */
 const REQUEST_TIMEOUT_MS = 10_000;
 
+/** Retry transient (likely rate-limit or cold-start) 5xx failures before giving up. */
+const RETRYABLE_RETRY_COUNT = 2;
+const RETRY_DELAY_MS = 500;
+
 export class WooCommerceError extends Error {
   constructor(
     readonly status: number,
@@ -14,6 +18,10 @@ export class WooCommerceError extends Error {
     super(`WooCommerce request to "${path}" failed with ${status}`);
     this.name = "WooCommerceError";
   }
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export type WooImage = {
@@ -121,22 +129,28 @@ export type WooProduct = {
 };
 
 async function fetchStoreApiResponse(path: string) {
-  const response = await fetch(
-    `${getWordpressUrl()}/wp-json/wc/store/v1/${path}`,
-    {
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      next: {
-        revalidate: 300,
-        tags: ["woocommerce"],
+  for (let attempt = 0; ; attempt++) {
+    const response = await fetch(
+      `${getWordpressUrl()}/wp-json/wc/store/v1/${path}`,
+      {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        next: {
+          revalidate: 300,
+          tags: ["woocommerce"],
+        },
       },
-    },
-  );
+    );
 
-  if (!response.ok) {
-    throw new WooCommerceError(response.status, path);
+    if (response.ok) return response;
+
+    // Only 5xx responses are treated as transient; 4xx (e.g. unknown slug) fails fast.
+    const isRetryable = response.status >= 500;
+    if (!isRetryable || attempt >= RETRYABLE_RETRY_COUNT) {
+      throw new WooCommerceError(response.status, path);
+    }
+
+    await sleep(RETRY_DELAY_MS * 2 ** attempt);
   }
-
-  return response;
 }
 
 async function fetchStoreApi<T>(path: string): Promise<T> {
@@ -175,11 +189,23 @@ export const getStoreProducts = cache(async () =>
 );
 
 export const getProductBySlug = cache(async (slug: string) => {
-  const products = await fetchStoreApi<WooProduct[]>(
-    `products?slug=${encodeURIComponent(slug)}`,
-  );
+  try {
+    const products = await fetchStoreApi<WooProduct[]>(
+      `products?slug=${encodeURIComponent(slug)}`,
+    );
 
-  return products[0] ?? null;
+    return products[0] ?? null;
+  } catch (error) {
+    // The single-product lookup can 500 even when the bulk listing (already
+    // fetched for generateStaticParams) is healthy. Fall back to it instead
+    // of failing the whole build over one flaky product endpoint.
+    if (error instanceof WooCommerceError && error.status >= 500) {
+      const products = await getStoreProducts();
+      return products.find((product) => product.slug === slug) ?? null;
+    }
+
+    throw error;
+  }
 });
 
 export const getProductById = cache(async (id: number) =>

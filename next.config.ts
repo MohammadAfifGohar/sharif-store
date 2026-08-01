@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    staticGenerationRetryCount: 2,
+  },
   images: {
     qualities: [75, 85],
     remotePatterns: [
