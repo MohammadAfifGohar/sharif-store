@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import Image from "next/image";
+import useEmblaCarousel from "embla-carousel-react";
 import { BadgePercentIcon } from "lucide-react";
 
 import type { WooImage } from "@/lib/woocommerce";
@@ -18,11 +19,48 @@ export function ProductGallery({
   images,
   productName,
 }: ProductGalleryProps) {
+  // A single image has nothing to snap between, so drag/swipe stays off (#17).
+  const canSwipe = images.length > 1;
+
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: false,
+    dragFree: false,
+    containScroll: "trimSnaps",
+    watchDrag: canSwipe,
+    // Embla animates via spring physics, not a CSS transition — this frame
+    // count is the closest equivalent to a ~300ms snap at 60fps.
+    duration: 20,
+  });
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [zoomPosition, setZoomPosition] = useState<{
     x: number;
     y: number;
   } | null>(null);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setActiveIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+
+    const animationFrame = requestAnimationFrame(onSelect);
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
+  const scrollToIndex = useCallback(
+    (index: number) => emblaApi?.scrollTo(index),
+    [emblaApi],
+  );
 
   if (images.length === 0) {
     return (
@@ -58,20 +96,38 @@ export function ProductGallery({
   return (
     <div className="relative flex flex-col gap-4">
       <div
+        ref={emblaRef}
+        role="region"
+        aria-roledescription="carousel"
+        aria-label={`${productName} images`}
         className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-border bg-[#f7f7f7] lg:cursor-crosshair"
+        style={{ touchAction: "pan-y" }}
         onMouseEnter={updateZoomPosition}
         onMouseMove={updateZoomPosition}
         onMouseLeave={() => setZoomPosition(null)}
       >
-        <Image
-          key={activeImage.id}
-          src={activeImage.src}
-          alt={activeImage.alt || productName}
-          fill
-          fetchPriority="high"
-          sizes="(max-width: 1023px) 100vw, 50vw"
-          className="object-cover"
-        />
+        <div className="flex h-full">
+          {images.map((image, index) => (
+            <div
+              key={image.id}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`Image ${index + 1} of ${images.length}`}
+              aria-hidden={index !== activeIndex}
+              className="relative h-full w-full shrink-0 grow-0 basis-full"
+            >
+              <Image
+                src={image.src}
+                alt={image.alt || productName}
+                fill
+                fetchPriority={index === 0 ? "high" : undefined}
+                loading={index === 0 ? undefined : "lazy"}
+                sizes="(max-width: 1023px) 100vw, 50vw"
+                className="object-cover"
+              />
+            </div>
+          ))}
+        </div>
 
         {discountPercent > 0 ? (
           <div className="pointer-events-none absolute left-0 top-4 z-10 flex items-center gap-2 rounded-r-xl border-y border-r border-white/60 bg-[#df1748] py-2 pl-2.5 pr-3 text-white shadow-[0_8px_24px_rgba(125,14,49,0.3)] sm:top-5 sm:gap-2.5 sm:py-2.5 sm:pl-3 sm:pr-4">
@@ -122,7 +178,7 @@ export function ProductGallery({
               <button
                 type="button"
                 onClick={() => {
-                  setActiveIndex(index);
+                  scrollToIndex(index);
                   setZoomPosition(null);
                 }}
                 aria-label={`View image ${index + 1} of ${images.length}`}
