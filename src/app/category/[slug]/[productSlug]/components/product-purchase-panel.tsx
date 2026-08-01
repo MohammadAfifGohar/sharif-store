@@ -7,121 +7,93 @@ import { ProductStickyCta } from "./product-sticky-cta";
 import { AddToBagControl } from "@/components/add-to-bag-control";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { buttonVariants } from "@/components/ui/button";
-import {
-  getDefaultSelection,
-  getVariationLabel,
-  resolveVariation,
-  type VariantAttribute,
-} from "@/lib/product-variants";
+import { Separator } from "@/components/ui/separator";
 import { absoluteUrl } from "@/lib/site-config";
+import { getProductPath } from "@/lib/product-route";
 import { getWhatsAppOrderUrl } from "@/lib/whatsapp-order";
 import {
-  formatMoneyAmount,
   formatPrice,
   formatRegularPrice,
-  getDiscountPercent,
-  getSavingsAmount,
   type WooProduct,
 } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
 type ProductPurchasePanelProps = {
-  product: WooProduct;
   categorySlug: string;
-  productPath: string;
+  product: WooProduct;
   variations: WooProduct[];
-  variantAttributes: VariantAttribute[];
-  productPrice: string;
-  regularPrice: string;
-  priceRangeDisplay: string | null;
-  savingsDisplay: string | null;
-  isInStock: boolean;
-  stockLabel: string;
-  lowStockRemaining: number | null;
-  whatsAppOrderUrl: string;
 };
 
-export function ProductPurchasePanel({
-  product,
-  categorySlug,
-  productPath,
-  variations,
-  variantAttributes,
-  productPrice,
-  regularPrice,
-  priceRangeDisplay,
-  savingsDisplay,
-  isInStock,
-  stockLabel,
-  lowStockRemaining,
-  whatsAppOrderUrl,
-}: ProductPurchasePanelProps) {
-  const hasVariants = variantAttributes.length > 0;
-  const [selected, setSelected] = useState<Record<string, string>>(() =>
-    hasVariants ? getDefaultSelection(variations) : {},
+function getVariationLabel(variation: WooProduct) {
+  const attributeTerms = variation.attributes.flatMap((attribute) =>
+    attribute.terms.map((term) => term.name),
   );
-  const resolvedVariation = resolveVariation(variations, selected);
-  const priceDisplay = resolvedVariation
-    ? formatPrice(resolvedVariation)
-    : (priceRangeDisplay ?? productPrice);
-  const regularPriceDisplay = resolvedVariation
-    ? formatRegularPrice(resolvedVariation)
-    : regularPrice;
-  const onSale = resolvedVariation ? resolvedVariation.on_sale : product.on_sale;
-  const discountPercent = getDiscountPercent(resolvedVariation ?? product);
-  const resolvedSavingsDisplay = resolvedVariation
-    ? (() => {
-        const amount = getSavingsAmount(resolvedVariation);
-        return amount > 0
-          ? formatMoneyAmount(amount, resolvedVariation.prices.currency_code)
-          : null;
-      })()
-    : savingsDisplay;
-  const stockSource = resolvedVariation ?? (hasVariants ? null : product);
-  const activeIsInStock = stockSource ? stockSource.is_in_stock : isInStock;
-  const activeStockLabel = stockSource
-    ? stockSource.is_in_stock
-      ? stockSource.stock_availability?.text || "In stock"
-      : "Currently out of stock"
-    : stockLabel;
-  const activeLowStockRemaining = stockSource
-    ? typeof stockSource.low_stock_remaining === "number" &&
-      stockSource.low_stock_remaining > 0
-      ? stockSource.low_stock_remaining
-      : null
-    : lowStockRemaining;
-  const variationLabel = getVariationLabel(product, selected);
-  const activeWhatsAppUrl = resolvedVariation
-    ? getWhatsAppOrderUrl({
-        productName: variationLabel
-          ? `${product.name} (${variationLabel})`
-          : product.name,
-        price: priceDisplay,
-        productUrl: absoluteUrl(productPath),
-      })
-    : whatsAppOrderUrl;
-  const variation = resolvedVariation
+
+  if (attributeTerms.length > 0) return attributeTerms.join(" / ");
+
+  const [, value] = variation.variation?.split(":") ?? [];
+  return value?.trim() || variation.name;
+}
+
+export function ProductPurchasePanel({
+  categorySlug,
+  product,
+  variations,
+}: ProductPurchasePanelProps) {
+  const [selectedId, setSelectedId] = useState(
+    variations.find((variation) => variation.is_in_stock)?.id ??
+      variations[0]?.id ??
+      null,
+  );
+  const selectedVariation =
+    variations.find((variation) => variation.id === selectedId) ?? null;
+  const selectedLabel = selectedVariation
+    ? getVariationLabel(selectedVariation)
+    : "";
+  const selectedProduct: WooProduct = selectedVariation
     ? {
-        id: resolvedVariation.id,
-        label: variationLabel,
-        priceSource: resolvedVariation,
+        ...selectedVariation,
+        name: `${product.name} — ${selectedLabel}`,
+        slug: product.slug,
+        categories: product.categories,
+        images:
+          selectedVariation.images.length > 0
+            ? selectedVariation.images
+            : product.images,
+      }
+    : product;
+  const isInStock = selectedProduct.is_in_stock;
+  const regularPriceAmount = Number(selectedProduct.prices.regular_price);
+  const currentPriceAmount = Number(selectedProduct.prices.price);
+  const discountPercent =
+    selectedProduct.on_sale &&
+    regularPriceAmount > 0 &&
+    currentPriceAmount < regularPriceAmount
+      ? Math.round(
+          ((regularPriceAmount - currentPriceAmount) / regularPriceAmount) *
+            100,
+        )
+      : 0;
+  const whatsAppOrderUrl = getWhatsAppOrderUrl({
+    productName: selectedProduct.name,
+    price: formatPrice(selectedProduct),
+    productUrl: absoluteUrl(getProductPath(categorySlug, product.slug)),
+  });
+  const bagVariation = selectedVariation
+    ? {
+        id: selectedVariation.id,
+        label: selectedLabel,
+        priceSource: selectedVariation,
       }
     : null;
 
   return (
     <>
-      <div className="mt-5 flex flex-wrap items-baseline gap-3 text-lg sm:text-xl">
-        <span className="font-bold">
-          {priceDisplay}
-          {resolvedSavingsDisplay ? (
-            <span className="ml-1.5 text-sm font-bold text-emerald-600">
-              · Save {resolvedSavingsDisplay}
-            </span>
-          ) : null}
-        </span>
-        {onSale ? (
+      <div className="mt-5 flex items-baseline gap-3 text-lg sm:text-xl">
+        <span className="font-bold">{formatPrice(selectedProduct)}</span>
+        {selectedProduct.on_sale ? (
           <span className="text-muted-foreground line-through">
-            {regularPriceDisplay}
+            {formatRegularPrice(selectedProduct)}
           </span>
         ) : null}
         {discountPercent > 0 ? (
@@ -131,51 +103,49 @@ export function ProductPurchasePanel({
         ) : null}
       </div>
 
-      {hasVariants ? (
-        <div className="mt-5 space-y-4">
-          {variantAttributes.map((attribute) => (
-            <div key={attribute.name}>
-              <p className="mb-2 text-sm font-semibold">{attribute.name}</p>
-              <div className="flex flex-wrap gap-2">
-                {attribute.terms.map((term) => {
-                  const key = attribute.name.toLowerCase();
-                  const isSelected = selected[key] === term;
-                  return (
-                    <button
-                      key={term}
-                      type="button"
-                      onClick={() =>
-                        setSelected((current) => ({ ...current, [key]: term }))
-                      }
-                      aria-pressed={isSelected}
-                      className={cn(
-                        "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
-                        isSelected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border hover:border-foreground/40",
-                      )}
-                    >
-                      {term}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+      {variations.length > 0 ? (
+        <fieldset className="mt-5">
+          <legend className="text-sm font-semibold">Choose size</legend>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {variations.map((variation) => {
+              const isSelected = variation.id === selectedId;
+
+              return (
+                <button
+                  key={variation.id}
+                  type="button"
+                  disabled={!variation.is_in_stock}
+                  onClick={() => setSelectedId(variation.id)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "min-w-20 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+                    isSelected
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background hover:border-primary/50",
+                  )}
+                >
+                  {getVariationLabel(variation)}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
       ) : null}
 
+      <Separator className="my-6" />
       <p
         className={cn(
           "my-6 flex items-center gap-2 text-sm font-semibold",
-          !activeIsInStock && "text-destructive",
+          !isInStock && "text-destructive",
         )}
       >
         <CheckIcon className="size-4" />
-        {activeStockLabel}
-        {activeIsInStock && activeLowStockRemaining ? (
+        {isInStock
+          ? selectedProduct.stock_availability?.text || "In stock"
+          : "Currently out of stock"}
+        {isInStock && selectedProduct.low_stock_remaining ? (
           <span className="font-normal text-muted-foreground">
-            ({activeLowStockRemaining} left)
+            ({selectedProduct.low_stock_remaining} left)
           </span>
         ) : null}
       </p>
@@ -184,12 +154,12 @@ export function ProductPurchasePanel({
         <AddToBagControl
           product={product}
           categorySlug={categorySlug}
-          variation={variation}
+          variation={bagVariation}
           className="h-11 min-w-0 flex-1 rounded-xl"
           quantityClassName="w-28 flex-none sm:w-44"
         />
         <a
-          href={activeWhatsAppUrl}
+          href={whatsAppOrderUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
@@ -205,9 +175,12 @@ export function ProductPurchasePanel({
       <ProductStickyCta
         product={product}
         categorySlug={categorySlug}
-        priceDisplay={priceDisplay}
-        savingsDisplay={resolvedSavingsDisplay}
-        variation={variation}
+        priceDisplay={formatPrice(selectedProduct)}
+        regularPriceDisplay={
+          selectedProduct.on_sale ? formatRegularPrice(selectedProduct) : null
+        }
+        savingsDisplay={null}
+        variation={bagVariation}
       />
     </>
   );

@@ -15,6 +15,7 @@ import {
 } from "./utils/product-route";
 import { SaleBadge } from "@/components/sale-badge";
 import { Badge } from "@/components/ui/badge";
+import { getProductVariations } from "@/lib/woocommerce";
 
 export async function generateStaticParams() {
   return getProductStaticParams();
@@ -35,11 +36,10 @@ export default async function CategoryProductPage(
 
   if (!data) notFound();
 
-  const { category, product, variations } = data;
+  const { category, product } = data;
   const view = getProductViewModel(data);
-  const attributesExcludingVariants = product.attributes.filter(
-    (attribute) => !attribute.has_variations,
-  );
+  const variations =
+    product.type === "variable" ? await getProductVariations(product) : [];
 
   return (
     <main className="mx-auto w-full max-w-[1440px] px-4 py-8 pb-24 sm:px-6 sm:py-12 lg:px-10 lg:py-16 lg:pb-16">
@@ -96,20 +96,11 @@ export default async function CategoryProductPage(
           ) : null}
 
           <ProductPurchasePanel
-            product={product}
             categorySlug={category.slug}
-            productPath={view.productPath}
+            product={product}
             variations={variations}
-            variantAttributes={view.variantAttributes}
-            productPrice={view.productPrice}
-            regularPrice={view.regularPrice}
-            priceRangeDisplay={view.priceRangeDisplay}
-            savingsDisplay={view.savingsDisplay}
-            isInStock={view.isInStock}
-            stockLabel={view.stockLabel}
-            lowStockRemaining={view.lowStockRemaining}
-            whatsAppOrderUrl={view.whatsAppOrderUrl}
           />
+
           {view.specs.length > 0 ? (
             <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-border pt-6 text-sm sm:grid-cols-2">
               {view.specs.map((spec) => (
@@ -121,22 +112,6 @@ export default async function CategoryProductPage(
             </dl>
           ) : null}
 
-          {attributesExcludingVariants.length > 0 ? (
-            <div className="mt-6 space-y-3 border-t border-border pt-6">
-              {attributesExcludingVariants.map((attribute) => (
-                <div key={attribute.id} className="text-sm">
-                  <p className="font-semibold">{attribute.name}</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {attribute.terms.map((term) => (
-                      <Badge key={term.id} variant="secondary">
-                        {term.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : null}
           {product.tags.length > 0 ? (
             <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-6">
               <span className="text-sm text-muted-foreground">Tags:</span>

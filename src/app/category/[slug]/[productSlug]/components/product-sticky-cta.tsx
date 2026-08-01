@@ -10,6 +10,7 @@ type ProductStickyCtaProps = {
   product: WooProduct;
   categorySlug: string;
   priceDisplay: string;
+  regularPriceDisplay?: string | null;
   savingsDisplay: string | null;
   variation?: BagVariation | null;
 };
@@ -23,6 +24,7 @@ export function ProductStickyCta({
   product,
   categorySlug,
   priceDisplay,
+  regularPriceDisplay = null,
   savingsDisplay,
   variation = null,
 }: ProductStickyCtaProps) {
@@ -50,7 +52,12 @@ export function ProductStickyCta({
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur-md lg:hidden">
           <div className="mx-auto flex max-w-[1440px] items-center gap-3">
             <span className="min-w-0 flex-1 truncate text-base font-bold">
-              {priceDisplay}
+              <span>{priceDisplay}</span>
+              {regularPriceDisplay ? (
+                <span className="ml-2 text-xs font-medium text-muted-foreground line-through">
+                  {regularPriceDisplay}
+                </span>
+              ) : null}
               {savingsDisplay ? (
                 <span className="ml-1.5 text-xs font-bold text-emerald-600">
                   · Save {savingsDisplay}
