@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowLeftIcon, CheckIcon } from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { ProductGallery } from "./components/product-gallery";
+import { ProductPurchasePanel } from "./components/product-purchase-panel";
 import { ProductReviews, ProductReviewsSkeleton } from "./components/product-reviews";
-import { AddToBagControl } from "@/components/add-to-bag-control";
 import { RatingStars } from "@/components/rating-stars";
 import {
   getProductMetadata,
@@ -14,12 +14,9 @@ import {
   getProductStaticParams,
   getProductViewModel,
 } from "./utils/product-route";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { SaleBadge } from "@/components/sale-badge";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 
 export async function generateStaticParams() {
   return getProductStaticParams();
@@ -40,18 +37,36 @@ export default async function CategoryProductPage(
 
   if (!data) notFound();
 
-  const { category, product } = data;
+  const { category, product, variations } = data;
   const view = getProductViewModel(data);
+  const attributesExcludingVariants = product.attributes.filter(
+    (attribute) => !attribute.has_variations,
+  );
 
   return (
-    <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 sm:py-12 lg:px-10 lg:py-16">
-      <Link
-        href={`/category/${category.slug}`}
-        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+    <main className="mx-auto w-full max-w-[1440px] px-4 py-8 pb-24 sm:px-6 sm:py-12 lg:px-10 lg:py-16 lg:pb-16">
+      <nav
+        aria-label="Breadcrumb"
+        className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground"
       >
-        <ArrowLeftIcon className="size-4" />
-        Back to {category.name}
-      </Link>
+        <Link href="/" className="shrink-0 transition-colors hover:text-foreground">
+          Home
+        </Link>
+        <ChevronRightIcon className="size-3.5 shrink-0" aria-hidden="true" />
+        <Link
+          href={`/category/${category.slug}`}
+          className="shrink-0 transition-colors hover:text-foreground"
+        >
+          {category.name}
+        </Link>
+        <ChevronRightIcon className="size-3.5 shrink-0" aria-hidden="true" />
+        <span
+          aria-current="page"
+          className="truncate font-medium text-foreground"
+        >
+          {product.name}
+        </span>
+      </nav>
 
       <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
         <section className="min-w-0">
@@ -89,14 +104,21 @@ export default async function CategoryProductPage(
             </div>
           ) : null}
 
-          <div className="mt-5 flex items-baseline gap-3 text-lg sm:text-xl">
-            <span className="font-bold">{view.productPrice}</span>
-            {product.on_sale ? (
-              <span className="text-muted-foreground line-through">
-                {view.regularPrice}
-              </span>
-            ) : null}
-          </div>
+          <ProductPurchasePanel
+            product={product}
+            categorySlug={category.slug}
+            productPath={view.productPath}
+            variations={variations}
+            variantAttributes={view.variantAttributes}
+            productPrice={view.productPrice}
+            regularPrice={view.regularPrice}
+            priceRangeDisplay={view.priceRangeDisplay}
+            savingsDisplay={view.savingsDisplay}
+            isInStock={view.isInStock}
+            stockLabel={view.stockLabel}
+            lowStockRemaining={view.lowStockRemaining}
+            whatsAppOrderUrl={view.whatsAppOrderUrl}
+          />
 
           {view.shortDescription ? (
             <p className="mt-4 max-w-xl leading-7 text-muted-foreground">
@@ -109,38 +131,6 @@ export default async function CategoryProductPage(
             {view.description}
           </p>
 
-          <p
-            className={cn(
-              "flex items-center gap-2 text-sm font-semibold my-6",
-              !view.isInStock && "text-destructive",
-            )}
-          >
-            <CheckIcon className="size-4" />
-            {view.stockLabel}
-            {view.isInStock && view.lowStockRemaining ? (
-              <span className="font-normal text-muted-foreground">
-                ({view.lowStockRemaining} left)
-              </span>
-            ) : null}
-          </p>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <AddToBagControl
-              product={product}
-              categorySlug={category.slug}
-              className="sm:flex-1"
-            />
-            <a
-              href={view.whatsAppOrderUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(buttonVariants({ size: "lg" }), "w-full sm:flex-1")}
-            >
-              <WhatsAppIcon data-icon="inline-start" className="text-[#25d366]" />
-              Order on WhatsApp
-            </a>
-          </div>
-
           {view.specs.length > 0 ? (
             <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-border pt-6 text-sm sm:grid-cols-2">
               {view.specs.map((spec) => (
@@ -152,9 +142,9 @@ export default async function CategoryProductPage(
             </dl>
           ) : null}
 
-          {product.attributes.length > 0 ? (
+          {attributesExcludingVariants.length > 0 ? (
             <div className="mt-6 space-y-3 border-t border-border pt-6">
-              {product.attributes.map((attribute) => (
+              {attributesExcludingVariants.map((attribute) => (
                 <div key={attribute.id} className="text-sm">
                   <p className="font-semibold">{attribute.name}</p>
                   <div className="mt-2 flex flex-wrap gap-2">

@@ -45,6 +45,8 @@ test("toBagItem builds a line item with the raw unit price", () => {
   const item = toBagItem(makeProduct(), "fragrance", 1);
 
   assert.equal(item.productId, 1);
+  assert.equal(item.variationId, null);
+  assert.equal(item.variationLabel, null);
   assert.equal(item.unitPrice, 499);
   assert.equal(item.currencyCode, "INR");
   assert.equal(item.quantity, 1);
@@ -63,6 +65,22 @@ test("toBagItem clamps quantity to low stock remaining", () => {
 
   assert.equal(item.maxQuantity, 2);
   assert.equal(item.quantity, 2);
+});
+
+test("toBagItem uses the variation's own price and records its id/label", () => {
+  const parent = makeProduct();
+  const variation = makeProduct({ id: 54, type: "variation", prices: { ...makeProduct().prices, price: "28000" } });
+
+  const item = toBagItem(parent, "fragrance", 1, {
+    id: 54,
+    label: "Size: 150 ml",
+    priceSource: variation,
+  });
+
+  assert.equal(item.productId, 1);
+  assert.equal(item.variationId, 54);
+  assert.equal(item.variationLabel, "Size: 150 ml");
+  assert.equal(item.unitPrice, 280);
 });
 
 test("addItemToBag appends a new line for a product not already in the bag", () => {
@@ -94,19 +112,71 @@ test("addItemToBag clamps the combined quantity to maxQuantity", () => {
   assert.equal(result[0].quantity, 3);
 });
 
+test("addItemToBag keeps two different variations of the same product as separate lines", () => {
+  const product = makeProduct();
+  const small = toBagItem(product, "fragrance", 1, {
+    id: 54,
+    label: "Size: 100 ml",
+    priceSource: product,
+  });
+  const large = toBagItem(product, "fragrance", 1, {
+    id: 55,
+    label: "Size: 150 ml",
+    priceSource: product,
+  });
+
+  const result = addItemToBag(addItemToBag([], small), large);
+
+  assert.equal(result.length, 2);
+  assert.deepEqual(
+    result.map((line) => line.variationId),
+    [54, 55],
+  );
+});
+
+test("addItemToBag increments the matching variation, not a different one", () => {
+  const product = makeProduct();
+  const variation = { id: 54, label: "Size: 100 ml", priceSource: product };
+  const first = toBagItem(product, "fragrance", 1, variation);
+  const second = toBagItem(product, "fragrance", 2, variation);
+
+  const result = addItemToBag([first], second);
+
+  assert.equal(result.length, 1);
+  assert.equal(result[0].quantity, 3);
+});
+
 test("removeItemFromBag removes only the matching line", () => {
   const first = toBagItem(makeProduct({ id: 1 }), "fragrance", 1);
   const second = toBagItem(makeProduct({ id: 2, slug: "musk" }), "fragrance", 1);
 
-  const result = removeItemFromBag([first, second], 1);
+  const result = removeItemFromBag([first, second], 1, null);
 
   assert.deepEqual(result.map((line) => line.productId), [2]);
+});
+
+test("removeItemFromBag distinguishes lines by variationId", () => {
+  const product = makeProduct();
+  const small = toBagItem(product, "fragrance", 1, {
+    id: 54,
+    label: "Size: 100 ml",
+    priceSource: product,
+  });
+  const large = toBagItem(product, "fragrance", 1, {
+    id: 55,
+    label: "Size: 150 ml",
+    priceSource: product,
+  });
+
+  const result = removeItemFromBag([small, large], product.id, 54);
+
+  assert.deepEqual(result.map((line) => line.variationId), [55]);
 });
 
 test("setItemQuantity updates the quantity of the matching line", () => {
   const item = toBagItem(makeProduct(), "fragrance", 1);
 
-  const result = setItemQuantity([item], item.productId, 4);
+  const result = setItemQuantity([item], item.productId, null, 4);
 
   assert.equal(result[0].quantity, 4);
 });
@@ -114,7 +184,7 @@ test("setItemQuantity updates the quantity of the matching line", () => {
 test("setItemQuantity removes the line when quantity drops to 0", () => {
   const item = toBagItem(makeProduct(), "fragrance", 1);
 
-  const result = setItemQuantity([item], item.productId, 0);
+  const result = setItemQuantity([item], item.productId, null, 0);
 
   assert.equal(result.length, 0);
 });

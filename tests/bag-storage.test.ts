@@ -6,6 +6,8 @@ import type { BagItem } from "../src/lib/bag";
 
 const validItem: BagItem = {
   productId: 1,
+  variationId: null,
+  variationLabel: null,
   slug: "rose-oud-attar",
   categorySlug: "fragrance",
   name: "Rose Oud Attar",
@@ -37,4 +39,12 @@ test("parseBagItems returns an empty array for a non-positive quantity", () => {
 
 test("parseBagItems returns the parsed items for valid JSON", () => {
   assert.deepEqual(parseBagItems(JSON.stringify([validItem])), [validItem]);
+});
+
+test("parseBagItems defaults variationId/variationLabel to null for pre-existing items missing those fields", () => {
+  const { variationId, variationLabel, ...legacyItem } = validItem;
+  void variationId;
+  void variationLabel;
+
+  assert.deepEqual(parseBagItems(JSON.stringify([legacyItem])), [validItem]);
 });

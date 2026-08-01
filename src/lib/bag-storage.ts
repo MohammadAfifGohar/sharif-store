@@ -6,6 +6,8 @@ export const BAG_STORAGE_KEY = "sharif-store:bag:v1";
 
 const bagItemSchema = z.object({
   productId: z.number(),
+  variationId: z.number().nullable().default(null),
+  variationLabel: z.string().nullable().default(null),
   slug: z.string(),
   categorySlug: z.string(),
   name: z.string(),

@@ -30,7 +30,7 @@ export function BagSheet() {
 
   const whatsAppCheckoutUrl = getWhatsAppBagOrderUrl(
     items.map((item) => ({
-      name: item.name,
+      name: item.variationLabel ? `${item.name} (${item.variationLabel})` : item.name,
       quantity: item.quantity,
       unitPriceDisplay: formatMoneyAmount(item.unitPrice, item.currencyCode),
       productUrl: absoluteUrl(getProductPath(item.categorySlug, item.slug)),
@@ -73,7 +73,10 @@ export function BagSheet() {
           <div className="flex-1 overflow-y-auto px-4 py-4">
             <ul className="flex flex-col gap-4">
               {items.map((item) => (
-                <li key={item.productId} className="flex gap-3">
+                <li
+                  key={`${item.productId}-${item.variationId ?? "base"}`}
+                  className="flex gap-3"
+                >
                   <Link
                     href={getProductPath(item.categorySlug, item.slug)}
                     className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted"
@@ -91,17 +94,24 @@ export function BagSheet() {
 
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <div className="flex items-start justify-between gap-2">
-                      <Link
-                        href={getProductPath(item.categorySlug, item.slug)}
-                        className="truncate text-sm font-semibold capitalize"
-                      >
-                        {item.name}
-                      </Link>
+                      <div className="min-w-0">
+                        <Link
+                          href={getProductPath(item.categorySlug, item.slug)}
+                          className="block truncate text-sm font-semibold capitalize"
+                        >
+                          {item.name}
+                        </Link>
+                        {item.variationLabel ? (
+                          <p className="truncate text-xs text-muted-foreground">
+                            {item.variationLabel}
+                          </p>
+                        ) : null}
+                      </div>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon-xs"
-                        onClick={() => removeItem(item.productId)}
+                        onClick={() => removeItem(item.productId, item.variationId)}
                         aria-label={`Remove ${item.name} from bag`}
                       >
                         <Trash2Icon />
@@ -113,10 +123,10 @@ export function BagSheet() {
                         size="sm"
                         quantity={item.quantity}
                         onIncrement={() =>
-                          setQuantity(item.productId, item.quantity + 1)
+                          setQuantity(item.productId, item.variationId, item.quantity + 1)
                         }
                         onDecrement={() =>
-                          setQuantity(item.productId, item.quantity - 1)
+                          setQuantity(item.productId, item.variationId, item.quantity - 1)
                         }
                       />
                       <span className="text-sm font-bold">
