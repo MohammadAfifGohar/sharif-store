@@ -7,14 +7,20 @@ import { CategoryCarousel } from "./components/category-carousel";
 import { CategoryItem } from "./components/category-item";
 import { Reveal } from "./components/reveal";
 import { heroSlides, promises } from "./utils/home-content";
+import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { expandProductsForGrid } from "@/lib/product-variants";
 import { getHomepageCommerceData } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
   const { products, categories, featuredDiscoveryProduct } =
     await getHomepageCommerceData();
+  const categorizedProducts = products.filter(
+    (product) => product.categories.length > 0,
+  );
+  const trendingItems = await expandProductsForGrid(categorizedProducts);
   const offerFeatureProduct =
     products.find(
       (product) =>
@@ -45,6 +51,41 @@ export default async function HomePage() {
             </CategoryCarousel>
           </div>
         </section>
+
+        {trendingItems.length > 0 ? (
+          <section
+            id="trending"
+            className="mx-auto max-w-[1440px] px-4 py-10 sm:px-6 sm:py-14 lg:px-10 lg:py-16"
+          >
+            <div className="mb-7 flex items-end justify-between gap-5 sm:mb-9">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                  Just landed
+                </p>
+                <h2 className="mt-2 font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
+                  Shop our latest picks
+                </h2>
+              </div>
+              <Link
+                href="/new-arrivals"
+                className="shrink-0 text-sm font-semibold text-primary hover:underline"
+              >
+                View all
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
+              {trendingItems.map((item) => (
+                <ProductCard
+                  key={`${item.product.id}-${item.variant?.id ?? "base"}`}
+                  product={item.product}
+                  categorySlug={item.product.categories[0].slug}
+                  variant={item.variant}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section id="deals" className="bg-primary text-primary-foreground">
           <div className="mx-auto grid max-w-[1440px] lg:grid-cols-2">

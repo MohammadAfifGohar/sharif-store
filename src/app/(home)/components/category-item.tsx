@@ -12,7 +12,7 @@ export function CategoryItem({ category }: { category: WooCategory }) {
       href={getCategoryPath(category.slug)}
       className="group flex w-20 shrink-0 snap-start flex-col gap-1.5 sm:w-32 sm:gap-2.5"
     >
-      <span className="relative block size-20 shrink-0 overflow-hidden rounded-lg border border-border bg-secondary sm:size-32 sm:rounded-xl">
+      <span className="relative block size-20 shrink-0 overflow-hidden rounded-full border border-border bg-secondary sm:size-32">
         {category.image ? (
           <Image
             src={category.image.src}

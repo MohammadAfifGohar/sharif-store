@@ -31,7 +31,7 @@ export function SubcategoryList({
           Explore {parentName}
         </h2>
 
-        <div className="no-scrollbar mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-3 sm:overflow-visible md:grid-cols-4 lg:grid-cols-5">
+        <div className="no-scrollbar mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
           {subcategories.map((subcategory) => {
             const name = subcategory.name.replaceAll("&amp;", "&");
 
@@ -39,15 +39,15 @@ export function SubcategoryList({
               <Link
                 key={subcategory.id}
                 href={`/category/${encodeURIComponent(subcategory.slug)}`}
-                className="group w-32 shrink-0 snap-start sm:w-auto"
+                className="group w-20 shrink-0 snap-start sm:w-32"
               >
-                <span className="relative block aspect-square overflow-hidden rounded-xl border border-border bg-secondary">
+                <span className="relative block size-20 overflow-hidden rounded-full border border-border bg-secondary sm:size-32">
                   {subcategory.image ? (
                     <Image
                       src={subcategory.image.src}
                       alt={subcategory.image.alt || name}
                       fill
-                      sizes="(max-width: 639px) 128px, (max-width: 1023px) 30vw, 20vw"
+                      sizes="(max-width: 639px) 80px, 128px"
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
@@ -59,7 +59,7 @@ export function SubcategoryList({
                   {subcategory.count === 0 ? (
                     <Badge
                       variant="secondary"
-                      className="absolute bottom-2 left-2 text-[10px]"
+                      className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px]"
                     >
                       Coming soon
                     </Badge>
