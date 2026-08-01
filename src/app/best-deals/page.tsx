@@ -10,6 +10,7 @@ import { BestDealsBanner } from "./components/best-deals-banner";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ProductCard } from "@/components/product-card";
 import { buttonVariants } from "@/components/ui/button";
+import { expandProductsForGrid } from "@/lib/product-variants";
 import { getSaleProducts } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +40,9 @@ export default async function BestDealsPage({
   const categorizedProducts = products.filter(
     (product) => product.categories.length > 0,
   );
+  const cardItems = (await expandProductsForGrid(categorizedProducts)).filter(
+    (item) => (item.variant ? item.variant.data.on_sale : item.product.on_sale),
+  );
 
   return (
     <main className="flex-1 bg-[#fffafc]">
@@ -51,7 +55,7 @@ export default async function BestDealsPage({
         aria-label="Products currently on sale"
         className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16"
       >
-        {categorizedProducts.length > 0 ? (
+        {cardItems.length > 0 ? (
           <>
             <div className="mb-7 flex items-end justify-between gap-5 sm:mb-9">
               <div>
@@ -73,11 +77,12 @@ export default async function BestDealsPage({
             </div>
 
             <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
-              {categorizedProducts.map((product) => (
+              {cardItems.map((item) => (
                 <ProductCard
-                  key={product.id}
-                  product={product}
-                  categorySlug={product.categories[0].slug}
+                  key={`${item.product.id}-${item.variant?.id ?? "base"}`}
+                  product={item.product}
+                  categorySlug={item.product.categories[0].slug}
+                  variant={item.variant}
                 />
               ))}
             </div>

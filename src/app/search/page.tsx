@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ProductCard } from "@/components/product-card";
 import { buttonVariants } from "@/components/ui/button";
 import { parseSearchQuery } from "@/lib/product-search";
+import { expandProductsForGrid } from "@/lib/product-variants";
 import { searchProducts } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +61,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const categorizedProducts = products.filter(
     (product) => product.categories.length > 0,
   );
+  const cardItems = await expandProductsForGrid(categorizedProducts);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
@@ -83,14 +85,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </p>
       </div>
 
-      {categorizedProducts.length > 0 ? (
+      {cardItems.length > 0 ? (
         <>
           <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
-            {categorizedProducts.map((product) => (
+            {cardItems.map((item) => (
               <ProductCard
-                key={product.id}
-                product={product}
-                categorySlug={product.categories[0].slug}
+                key={`${item.product.id}-${item.variant?.id ?? "base"}`}
+                product={item.product}
+                categorySlug={item.product.categories[0].slug}
+                variant={item.variant}
               />
             ))}
           </div>

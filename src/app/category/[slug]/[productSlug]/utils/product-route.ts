@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 
 import {
+  formatMoneyAmount,
   formatPrice,
+  formatPriceRange,
   formatRegularPrice,
   getProductBySlug,
+  getProductVariations,
+  getSavingsAmount,
   getStoreProducts,
   type WooProduct,
 } from "@/lib/woocommerce";
+import { getVariantAttributes, type VariantAttribute } from "@/lib/product-variants";
 import { textFromHtml } from "@/lib/html-text";
 import { getProductPath } from "@/lib/product-route";
 import { absoluteUrl } from "@/lib/site-config";
@@ -31,6 +36,7 @@ type ProductSpec = {
 export type ProductRouteData = {
   category: RouteCategory;
   product: WooProduct;
+  variations: WooProduct[];
 };
 
 export type ProductViewModel = {
@@ -40,6 +46,9 @@ export type ProductViewModel = {
   productPath: string;
   productPrice: string;
   regularPrice: string;
+  priceRangeDisplay: string | null;
+  savingsDisplay: string | null;
+  variantAttributes: VariantAttribute[];
   averageRating: number;
   hasRating: boolean;
   isInStock: boolean;
@@ -65,7 +74,11 @@ export async function getProductRouteData(
     (item) => item.slug === categorySlug,
   );
 
-  return category ? { category, product } : null;
+  if (!category) return null;
+
+  const variations = await getProductVariations(product);
+
+  return { category, product, variations };
 }
 
 export async function getProductMetadata(
@@ -144,6 +157,12 @@ export function getProductViewModel({
 }: ProductRouteData): ProductViewModel {
   const productPath = getProductPath(category.slug, product.slug);
   const productPrice = formatPrice(product);
+  const priceRangeDisplay = formatPriceRange(product);
+  const savings = getSavingsAmount(product);
+  const savingsDisplay =
+    savings > 0
+      ? formatMoneyAmount(savings, product.prices.currency_code)
+      : null;
   const averageRating = Number(product.average_rating);
   const lowStockRemaining =
     typeof product.low_stock_remaining === "number" &&
@@ -171,6 +190,9 @@ export function getProductViewModel({
     productPath,
     productPrice,
     regularPrice: formatRegularPrice(product),
+    priceRangeDisplay,
+    savingsDisplay,
+    variantAttributes: getVariantAttributes(product),
     averageRating,
     hasRating: product.review_count > 0 && averageRating > 0,
     isInStock: product.is_in_stock,

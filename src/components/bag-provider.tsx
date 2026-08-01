@@ -12,14 +12,23 @@ import {
   setBagItemQuantity,
   subscribeToBag,
 } from "@/lib/bag-store";
-import type { BagItem } from "@/lib/bag";
+import type { BagItem, BagVariation } from "@/lib/bag";
 import type { WooProduct } from "@/lib/woocommerce";
 
 type BagContextValue = {
   items: BagItem[];
-  addItem: (product: WooProduct, categorySlug: string, quantity?: number) => void;
-  removeItem: (productId: number) => void;
-  setQuantity: (productId: number, quantity: number) => void;
+  addItem: (
+    product: WooProduct,
+    categorySlug: string,
+    quantity?: number,
+    variation?: BagVariation,
+  ) => void;
+  removeItem: (productId: number, variationId: number | null) => void;
+  setQuantity: (
+    productId: number,
+    variationId: number | null,
+    quantity: number,
+  ) => void;
   clear: () => void;
   totalCount: number;
   subtotal: number;

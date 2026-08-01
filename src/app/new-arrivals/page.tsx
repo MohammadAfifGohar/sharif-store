@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { NewArrivalsBanner } from "./components/new-arrivals-banner";
 import { NewArrivalsGrid } from "./components/new-arrivals-grid";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { expandProductsForGrid } from "@/lib/product-variants";
 import { getNewArrivalProducts } from "@/lib/woocommerce";
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
 
 export default async function NewArrivalsPage() {
   const products = await getNewArrivalProducts();
+  const items = await expandProductsForGrid(products);
 
   return (
     <main>
@@ -23,7 +25,7 @@ export default async function NewArrivalsPage() {
         <Breadcrumbs items={[{ label: "New arrivals" }]} />
       </div>
       <NewArrivalsBanner />
-      <NewArrivalsGrid products={products} />
+      <NewArrivalsGrid items={items} />
     </main>
   );
 }
