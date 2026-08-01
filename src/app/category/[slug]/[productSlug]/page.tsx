@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Link from "next/link";
-import { ArrowLeftIcon, CheckIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { ProductGallery } from "./components/product-gallery";
+import { ProductPurchasePanel } from "./components/product-purchase-panel";
 import { ProductReviews, ProductReviewsSkeleton } from "./components/product-reviews";
-import { AddToBagControl } from "@/components/add-to-bag-control";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { RatingStars } from "@/components/rating-stars";
 import {
   getProductMetadata,
@@ -14,12 +13,9 @@ import {
   getProductStaticParams,
   getProductViewModel,
 } from "./utils/product-route";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { SaleBadge } from "@/components/sale-badge";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { getProductVariations } from "@/lib/woocommerce";
 
 export async function generateStaticParams() {
   return getProductStaticParams();
@@ -42,20 +38,26 @@ export default async function CategoryProductPage(
 
   const { category, product } = data;
   const view = getProductViewModel(data);
+  const variations =
+    product.type === "variable" ? await getProductVariations(product.id) : [];
 
   return (
     <main className="mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 sm:py-12 lg:px-10 lg:py-16">
-      <Link
-        href={`/category/${category.slug}`}
-        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeftIcon className="size-4" />
-        Back to {category.name}
-      </Link>
+      <Breadcrumbs
+        className="mb-6"
+        items={[
+          { label: category.name, href: `/category/${category.slug}` },
+          { label: product.name },
+        ]}
+      />
 
       <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
         <section className="min-w-0">
-          <ProductGallery images={product.images} productName={product.name} />
+          <ProductGallery
+            images={product.images}
+            productName={product.name}
+            discountPercent={view.discountPercent}
+          />
         </section>
 
         <section className="flex min-w-0 flex-col lg:sticky lg:top-28">
@@ -73,6 +75,10 @@ export default async function CategoryProductPage(
             {product.name}
           </h1>
 
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+            {view.description}
+          </p>
+
           {view.hasRating ? (
             <div className="mt-3 flex items-center gap-2 text-sm">
               <RatingStars rating={view.averageRating} />
@@ -89,57 +95,11 @@ export default async function CategoryProductPage(
             </div>
           ) : null}
 
-          <div className="mt-5 flex items-baseline gap-3 text-lg sm:text-xl">
-            <span className="font-bold">{view.productPrice}</span>
-            {product.on_sale ? (
-              <span className="text-muted-foreground line-through">
-                {view.regularPrice}
-              </span>
-            ) : null}
-          </div>
-
-          {view.shortDescription ? (
-            <p className="mt-4 max-w-xl leading-7 text-muted-foreground">
-              {view.shortDescription}
-            </p>
-          ) : null}
-
-          <Separator className="my-6" />
-          <p className="max-w-xl leading-7 text-muted-foreground">
-            {view.description}
-          </p>
-
-          <p
-            className={cn(
-              "flex items-center gap-2 text-sm font-semibold my-6",
-              !view.isInStock && "text-destructive",
-            )}
-          >
-            <CheckIcon className="size-4" />
-            {view.stockLabel}
-            {view.isInStock && view.lowStockRemaining ? (
-              <span className="font-normal text-muted-foreground">
-                ({view.lowStockRemaining} left)
-              </span>
-            ) : null}
-          </p>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <AddToBagControl
-              product={product}
-              categorySlug={category.slug}
-              className="sm:flex-1"
-            />
-            <a
-              href={view.whatsAppOrderUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(buttonVariants({ size: "lg" }), "w-full sm:flex-1")}
-            >
-              <WhatsAppIcon data-icon="inline-start" className="text-[#25d366]" />
-              Order on WhatsApp
-            </a>
-          </div>
+          <ProductPurchasePanel
+            categorySlug={category.slug}
+            product={product}
+            variations={variations}
+          />
 
           {view.specs.length > 0 ? (
             <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-border pt-6 text-sm sm:grid-cols-2">
@@ -150,23 +110,6 @@ export default async function CategoryProductPage(
                 </div>
               ))}
             </dl>
-          ) : null}
-
-          {product.attributes.length > 0 ? (
-            <div className="mt-6 space-y-3 border-t border-border pt-6">
-              {product.attributes.map((attribute) => (
-                <div key={attribute.id} className="text-sm">
-                  <p className="font-semibold">{attribute.name}</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {attribute.terms.map((term) => (
-                      <Badge key={term.id} variant="secondary">
-                        {term.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
           ) : null}
 
           {product.tags.length > 0 ? (

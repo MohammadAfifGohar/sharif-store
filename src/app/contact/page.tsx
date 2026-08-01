@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { WHATSAPP_NUMBER } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +50,10 @@ export default function ContactPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
       />
+
+      <div className="mx-auto max-w-[1440px] px-4 py-4 sm:px-6 lg:px-10">
+        <Breadcrumbs items={[{ label: "Contact" }]} />
+      </div>
 
       <section className="relative isolate border-b border-primary/10 px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:py-24">
         <div

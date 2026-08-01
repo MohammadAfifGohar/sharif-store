@@ -2,16 +2,22 @@
 
 import { useState, type MouseEvent } from "react";
 import Image from "next/image";
+import { BadgePercentIcon } from "lucide-react";
 
 import type { WooImage } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
 type ProductGalleryProps = {
+  discountPercent?: number;
   images: WooImage[];
   productName: string;
 };
 
-export function ProductGallery({ images, productName }: ProductGalleryProps) {
+export function ProductGallery({
+  discountPercent = 0,
+  images,
+  productName,
+}: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [zoomPosition, setZoomPosition] = useState<{
     x: number;
@@ -67,6 +73,22 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           className="object-cover"
         />
 
+        {discountPercent > 0 ? (
+          <div className="pointer-events-none absolute left-0 top-4 z-10 flex items-center gap-2 rounded-r-xl border-y border-r border-white/60 bg-[#df1748] py-2 pl-2.5 pr-3 text-white shadow-[0_8px_24px_rgba(125,14,49,0.3)] sm:top-5 sm:gap-2.5 sm:py-2.5 sm:pl-3 sm:pr-4">
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-white/18 ring-1 ring-white/30 sm:size-8">
+              <BadgePercentIcon aria-hidden="true" className="size-4 sm:size-[18px]" />
+            </span>
+            <span className="flex flex-col leading-none">
+              <span className="text-[8px] font-bold uppercase tracking-[0.14em] text-white/80 sm:text-[9px]">
+                Limited offer
+              </span>
+              <strong className="mt-1 text-sm font-black tracking-wide sm:text-base">
+                {discountPercent}% OFF
+              </strong>
+            </span>
+          </div>
+        ) : null}
+
         {zoomPosition ? (
           <span
             aria-hidden="true"
@@ -92,11 +114,6 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           }}
         />
       ) : null}
-
-      <p className="hidden items-center gap-2 text-xs font-medium text-muted-foreground lg:flex">
-        <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
-        Hover over the image to zoom
-      </p>
 
       {images.length > 1 ? (
         <ul className="flex flex-wrap gap-3" aria-label="Product images">

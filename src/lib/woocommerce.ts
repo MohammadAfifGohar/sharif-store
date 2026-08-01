@@ -177,6 +177,12 @@ export const getProductBySlug = cache(async (slug: string) => {
   return products[0] ?? null;
 });
 
+export const getProductVariations = cache(async (parentId: number) =>
+  fetchStoreApi<WooProduct[]>(
+    `products?type=variation&parent=${encodeURIComponent(parentId)}&per_page=100`,
+  ),
+);
+
 export const getProductReviews = cache(async (productId: number) =>
   fetchStoreApi<WooProductReview[]>(
     `products/reviews?product_id=${encodeURIComponent(productId)}&per_page=20`,

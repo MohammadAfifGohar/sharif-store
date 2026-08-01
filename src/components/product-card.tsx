@@ -44,7 +44,7 @@ export function ProductCard({ product, categorySlug }: ProductCardProps) {
         href={productHref}
         className="relative block aspect-[4/5] overflow-hidden bg-muted"
       >
- {image ? (
+        {image ? (
           <Image
             src={image.src}
             alt={image.alt || product.name}
@@ -84,14 +84,28 @@ export function ProductCard({ product, categorySlug }: ProductCardProps) {
         ) : null}
       </Link>
 
-      <div className="flex items-start justify-between gap-2 p-3 sm:gap-4 sm:p-4">
-        <div className="min-w-0">
-          <Badge variant="secondary" className="mb-1.5 max-w-full capitalize">
-            <span className="truncate">
-              {product.categories[0]?.name ?? "Sharif selection"}
-            </span>
-          </Badge>
-          <h3 className="truncate font-heading text-sm font-semibold capitalize sm:text-lg">
+      <div className="p-3 sm:p-4">
+        <div className="grid grid-cols-2 items-center gap-2 sm:gap-4">
+          <div className="min-w-0">
+            <Badge variant="secondary" className="max-w-full capitalize">
+              <span className="truncate">
+                {product.categories[0]?.name ?? "Sharif selection"}
+              </span>
+            </Badge>
+          </div>
+
+          <div className="flex min-w-0 justify-end">
+            <AddToBagControl
+              product={product}
+              categorySlug={categorySlug}
+              size="sm"
+              className="max-w-full"
+            />
+          </div>
+        </div>
+
+        <div className="mt-2 w-full sm:mt-3">
+          <h3 className="line-clamp-2 min-h-8 font-heading text-sm font-semibold capitalize leading-4 sm:min-h-10 sm:text-lg sm:leading-5">
             <Link href={productHref}>{product.name}</Link>
           </h3>
 
@@ -120,8 +134,6 @@ export function ProductCard({ product, categorySlug }: ProductCardProps) {
             </p>
           ) : null}
         </div>
-
-        <AddToBagControl product={product} categorySlug={categorySlug} size="sm" />
       </div>
     </article>
   );

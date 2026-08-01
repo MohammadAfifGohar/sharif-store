@@ -64,7 +64,7 @@ function SearchResultsDropdown({
   return (
     <div
       className={cn(
-        "absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-border bg-popover shadow-lg",
+        "absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-border/70 bg-popover shadow-xl",
         className,
       )}
     >
@@ -84,7 +84,7 @@ function SearchResultsDropdown({
               <Link
                 href={getProductPath(result.categorySlug, result.slug)}
                 onClick={onNavigate}
-                className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted"
+                className="flex min-h-14 items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted"
               >
                 <span className="relative size-10 shrink-0 overflow-hidden rounded-md bg-muted">
                   {result.image ? (
@@ -140,15 +140,15 @@ export function HeaderSearchBar({ className }: { className?: string }) {
           setIsOpen(false);
         }}
       >
-        <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => setIsOpen(true)}
-          placeholder="Search for products"
+          placeholder="Search products, brands…"
           aria-label="Search for products"
-          className="h-10 pl-9 focus-visible:ring-1"
+          className="h-11 rounded-full border-border/70 bg-muted/55 pl-11 pr-4 shadow-inner shadow-black/[0.03] placeholder:text-muted-foreground/80 hover:bg-muted/70 focus-visible:border-primary/45 focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary/20"
         />
       </form>
 

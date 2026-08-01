@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test tests/product-routing.test.mjs tests/review-submission.test.ts tests/html-text.test.ts tests/desktop-category-menu.test.mjs tests/bag.test.ts tests/bag-storage.test.ts tests/whatsapp-bag-order.test.ts tests/woocommerce-price.test.ts tests/product-search.test.ts"
+    "test": "tsx --test tests/product-routing.test.mjs tests/review-submission.test.ts tests/html-text.test.ts tests/desktop-category-menu.test.mjs tests/breadcrumbs.test.mjs tests/bag.test.ts tests/bag-storage.test.ts tests/whatsapp-bag-order.test.ts tests/woocommerce-price.test.ts tests/product-search.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

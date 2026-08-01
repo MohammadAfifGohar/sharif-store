@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 
 import { NotFoundState } from "@/components/not-found-state";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ProductCard } from "@/components/product-card";
 import { buttonVariants } from "@/components/ui/button";
 import { parseSearchQuery } from "@/lib/product-search";
@@ -39,11 +40,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   if (!query) {
     return (
-      <NotFoundState
-        eyebrow="Search"
-        title="Search Sharif Store"
-        description="Use the search bar above to find products by name."
-      />
+      <>
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <Breadcrumbs items={[{ label: "Search" }]} />
+        </div>
+        <NotFoundState
+          eyebrow="Search"
+          title="Search Sharif Store"
+          description="Use the search bar above to find products by name."
+        />
+      </>
     );
   }
 
@@ -57,6 +63,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
+      <Breadcrumbs className="mb-7 sm:mb-9" items={[{ label: "Search" }]} />
       <div className="mb-7 flex items-end justify-between gap-5 sm:mb-9">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">

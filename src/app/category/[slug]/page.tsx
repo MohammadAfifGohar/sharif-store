@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getCategoryPageData } from "@/lib/woocommerce";
-import { CategoryHero } from "./components/category-hero";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ProductGrid } from "./components/product-grid";
 import { SubcategoryList } from "./components/subcategory-list";
 import {
@@ -33,7 +33,9 @@ export default async function CategoryPage(
 
   return (
     <main>
-      <CategoryHero category={category} productCount={products.length} />
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <Breadcrumbs items={[{ label: category.name }]} />
+      </div>
       <SubcategoryList
         parentName={category.name}
         subcategories={subcategories}

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 import { BestDealsBanner } from "./components/best-deals-banner";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ProductCard } from "@/components/product-card";
 import { buttonVariants } from "@/components/ui/button";
 import { getSaleProducts } from "@/lib/woocommerce";
@@ -41,6 +42,9 @@ export default async function BestDealsPage({
 
   return (
     <main className="flex-1 bg-[#fffafc]">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <Breadcrumbs items={[{ label: "Best deals" }]} />
+      </div>
       <BestDealsBanner />
 
       <section

@@ -34,6 +34,7 @@ export type ProductRouteData = {
 };
 
 export type ProductViewModel = {
+  discountPercent: number;
   description: string;
   shortDescription: string;
   productPath: string;
@@ -149,8 +150,19 @@ export function getProductViewModel({
     product.low_stock_remaining > 0
       ? product.low_stock_remaining
       : null;
+  const regularPriceAmount = Number(product.prices.regular_price);
+  const currentPriceAmount = Number(product.prices.price);
+  const discountPercent =
+    product.on_sale &&
+    regularPriceAmount > 0 &&
+    currentPriceAmount < regularPriceAmount
+      ? Math.round(
+          ((regularPriceAmount - currentPriceAmount) / regularPriceAmount) * 100,
+        )
+      : 0;
 
   return {
+    discountPercent,
     description:
       textFromHtml(product.description) ||
       textFromHtml(product.short_description) ||

@@ -13,6 +13,7 @@ type AddToBagControlProps = {
   categorySlug: string;
   size?: "sm" | "lg";
   className?: string;
+  quantityClassName?: string;
 };
 
 export function AddToBagControl({
@@ -20,6 +21,7 @@ export function AddToBagControl({
   categorySlug,
   size = "lg",
   className,
+  quantityClassName,
 }: AddToBagControlProps) {
   const { items, addItem, setQuantity } = useBag();
   const bagItem = items.find((line) => line.productId === product.id);
@@ -29,7 +31,7 @@ export function AddToBagControl({
     return (
       <QuantityStepper
         size={size}
-        className={className}
+        className={cn(className, quantityClassName)}
         quantity={bagItem.quantity}
         disabled={disabled}
         onIncrement={() => setQuantity(product.id, bagItem.quantity + 1)}
