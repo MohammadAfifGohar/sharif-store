@@ -180,6 +180,7 @@ export function ProductPurchasePanel({
           selectedProduct.on_sale ? formatRegularPrice(selectedProduct) : null
         }
         savingsDisplay={null}
+        discountPercent={discountPercent}
         variation={bagVariation}
       />
     </>
