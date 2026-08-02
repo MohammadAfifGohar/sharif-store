@@ -16,11 +16,11 @@ const urbanist = Urbanist({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} | Beauty, Gifts & Everyday Finds`,
+    default: "Sharif Beauty & Gift Collection",
     template: `%s | ${SITE_NAME}`,
   },
   description:
-    "Shop beauty, fragrance, accessories, gifts and useful everyday finds from Sharif Store.",
+    "Shop premium beauty products and unique gifts at Sharif Beauty & Gift Collection. Trusted quality, elegant collections, and a refined shopping experience.",
   icons: {
     icon: "/icon.png",
     apple: "/apple-icon.png",
