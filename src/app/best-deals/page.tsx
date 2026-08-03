@@ -14,13 +14,6 @@ import { expandProductsForGrid } from "@/lib/product-variants";
 import { getSaleProducts } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Best Deals",
-  description:
-    "Shop current sale products and limited-time offers from Sharif Store.",
-  alternates: { canonical: "/best-deals" },
-};
-
 type BestDealsPageProps = {
   searchParams: Promise<{ page?: string | string[] }>;
 };
@@ -28,6 +21,28 @@ type BestDealsPageProps = {
 function parsePage(value: string | string[] | undefined) {
   const parsed = Number(Array.isArray(value) ? value[0] : value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: BestDealsPageProps): Promise<Metadata> {
+  const query = await searchParams;
+  const page = parsePage(query.page);
+  const canonical = page > 1 ? `/best-deals?page=${page}` : "/best-deals";
+  const title = page > 1 ? `Best Deals - Page ${page}` : "Best Deals";
+
+  return {
+    title,
+    description:
+      "Shop current sale products and limited-time offers from Sharif Store.",
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description:
+        "Shop current sale products and limited-time offers from Sharif Store.",
+      url: canonical,
+    },
+  };
 }
 
 export default async function BestDealsPage({

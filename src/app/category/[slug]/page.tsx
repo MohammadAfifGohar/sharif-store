@@ -37,6 +37,15 @@ export default async function CategoryPage(
     <main>
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <Breadcrumbs items={[{ label: category.name }]} />
+        <div className="pb-2 pt-5 sm:pt-7">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
+            {category.name}
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+            Shop {category.name.toLowerCase()} products selected for everyday
+            use, thoughtful gifting and easy local ordering.
+          </p>
+        </div>
       </div>
       <SubcategoryList
         parentName={category.name}

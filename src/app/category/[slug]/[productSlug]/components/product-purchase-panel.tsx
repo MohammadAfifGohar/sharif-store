@@ -12,8 +12,10 @@ import { absoluteUrl } from "@/lib/site-config";
 import { getProductPath } from "@/lib/product-route";
 import { getWhatsAppOrderUrl } from "@/lib/whatsapp-order";
 import {
+  formatMoneyAmount,
   formatPrice,
   formatRegularPrice,
+  getSavingsAmount,
   type WooProduct,
 } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
@@ -74,6 +76,11 @@ export function ProductPurchasePanel({
             100,
         )
       : 0;
+  const savingsAmount = getSavingsAmount(selectedProduct);
+  const savingsDisplay =
+    savingsAmount > 0
+      ? formatMoneyAmount(savingsAmount, selectedProduct.prices.currency_code)
+      : null;
   const whatsAppOrderUrl = getWhatsAppOrderUrl({
     productName: selectedProduct.name,
     price: formatPrice(selectedProduct),
@@ -96,9 +103,9 @@ export function ProductPurchasePanel({
             {formatRegularPrice(selectedProduct)}
           </span>
         ) : null}
-        {discountPercent > 0 ? (
+        {savingsDisplay ? (
           <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-extrabold text-emerald-700 ring-1 ring-emerald-600/15 sm:text-sm">
-            {discountPercent}% OFF
+            You save {savingsDisplay}
           </span>
         ) : null}
       </div>

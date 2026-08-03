@@ -9,13 +9,16 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { RatingStars } from "@/components/rating-stars";
 import {
   getProductMetadata,
+  getCanonicalProductPath,
   getProductRouteData,
   getProductStaticParams,
   getProductViewModel,
 } from "./utils/product-route";
 import { SaleBadge } from "@/components/sale-badge";
 import { Badge } from "@/components/ui/badge";
-import { getProductVariations } from "@/lib/woocommerce";
+import { getProductPath } from "@/lib/product-route";
+import { absoluteUrl } from "@/lib/site-config";
+import { getProductVariations, getRawPrice } from "@/lib/woocommerce";
 
 export async function generateStaticParams() {
   return getProductStaticParams();
@@ -40,16 +43,83 @@ export default async function CategoryProductPage(
   const view = getProductViewModel(data);
   const variations =
     product.type === "variable" ? await getProductVariations(product) : [];
+  const canonicalPath =
+    getCanonicalProductPath(product) ??
+    getProductPath(category.slug, product.slug);
+  const canonicalCategory = product.categories[0] ?? category;
+  const aggregateRating = view.hasRating
+    ? {
+        "@type": "AggregateRating",
+        ratingValue: view.averageRating,
+        reviewCount: product.review_count,
+      }
+    : undefined;
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: product.images.map((image) => image.src),
+    description: view.description,
+    sku: product.sku || undefined,
+    brand: product.brands[0]
+      ? { "@type": "Brand", name: product.brands[0].name }
+      : undefined,
+    aggregateRating,
+    offers: {
+      "@type": "Offer",
+      url: absoluteUrl(canonicalPath),
+      priceCurrency: product.prices.currency_code,
+      price: getRawPrice(product).toFixed(product.prices.currency_minor_unit),
+      availability: product.is_in_stock
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+    },
+  };
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: absoluteUrl("/"),
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: canonicalCategory.name,
+        item: absoluteUrl(`/category/${canonicalCategory.slug}`),
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.name,
+        item: absoluteUrl(canonicalPath),
+      },
+    ],
+  };
 
   return (
-    <main className="mx-auto w-full max-w-[1440px] px-4 py-8 pb-24 sm:px-6 sm:py-12 lg:px-10 lg:py-16 lg:pb-16">
-      <Breadcrumbs
-        className="mb-6"
-        items={[
-          { label: category.name, href: `/category/${category.slug}` },
-          { label: product.name },
-        ]}
-      />
+    <main className="mx-auto w-full max-w-[1440px] px-4 pb-24 sm:px-6 sm:pb-12 lg:px-10 lg:pb-16">
+      {[productSchema, breadcrumbSchema].map((schema) => (
+        <script
+          key={schema["@type"]}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(schema).replace(/</g, "\\u003c"),
+          }}
+        />
+      ))}
+      <div className="py-4">
+        <Breadcrumbs
+          items={[
+            { label: category.name, href: `/category/${category.slug}` },
+            { label: product.name },
+          ]}
+        />
+      </div>
 
       <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
         <section className="min-w-0">
@@ -71,7 +141,7 @@ export default async function CategoryProductPage(
             {product.on_sale ? <SaleBadge /> : null}
           </div>
 
-          <h1 className="mt-4 font-heading text-3xl font-semibold capitalize tracking-tight sm:text-5xl">
+          <h1 className="mt-4 font-heading text-2xl font-semibold capitalize tracking-tight sm:text-4xl">
             {product.name}
           </h1>
 

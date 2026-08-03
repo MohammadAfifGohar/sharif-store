@@ -23,6 +23,22 @@ function getPrimaryCategory(product: WooProduct): RouteCategory | null {
   return product.categories[0] ?? null;
 }
 
+export function getCanonicalProductPath(product: WooProduct) {
+  const category = getPrimaryCategory(product);
+  return category ? getProductPath(category.slug, product.slug) : null;
+}
+
+function getMetadataDescription(product: WooProduct) {
+  const description =
+    textFromHtml(product.short_description) ||
+    textFromHtml(product.description) ||
+    `Shop ${product.name} at Sharif Store. Browse product details, pricing and availability.`;
+
+  return description.length > 160
+    ? `${description.slice(0, 157).trimEnd()}...`
+    : description;
+}
+
 type ProductSpec = {
   label: string;
   value: string;
@@ -82,10 +98,11 @@ export async function getProductMetadata(
   }
 
   const { product } = data;
-  const description = textFromHtml(product.short_description) || undefined;
+  const description = getMetadataDescription(product);
   // Canonicalise every category variant of this product to one stable URL.
-  const canonicalCategory = getPrimaryCategory(product) ?? data.category;
-  const canonical = getProductPath(canonicalCategory.slug, product.slug);
+  const canonical =
+    getCanonicalProductPath(product) ??
+    getProductPath(data.category.slug, product.slug);
   const image = product.images[0];
 
   return {
@@ -97,6 +114,12 @@ export async function getProductMetadata(
       description,
       url: canonical,
       images: image ? [{ url: image.src, alt: image.alt || product.name }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+      images: image ? [image.src] : undefined,
     },
   };
 }

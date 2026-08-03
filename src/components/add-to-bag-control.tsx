@@ -13,6 +13,7 @@ type AddToBagControlProps = {
   product: WooProduct;
   categorySlug: string;
   size?: "sm" | "lg";
+  label?: string;
   className?: string;
   quantityClassName?: string;
   /** Set when this control represents one specific variation of a variable product. */
@@ -23,6 +24,7 @@ export function AddToBagControl({
   product,
   categorySlug,
   size = "lg",
+  label = "Add to Bag",
   className,
   quantityClassName,
   variation = null,
@@ -60,7 +62,7 @@ export function AddToBagControl({
         disabled={disabled}
         onClick={() => addItem(product, categorySlug, 1, variation ?? undefined)}
         aria-label={`Add ${product.name} to bag`}
-        className={cn("shrink-0 sm:size-8", className)}
+        className={cn("size-10 shrink-0 rounded-lg", className)}
       >
         <ShoppingBagIcon />
       </Button>
@@ -75,7 +77,7 @@ export function AddToBagControl({
       className={cn(buttonVariants({ size: "lg" }), "w-full", className)}
     >
       <ShoppingBagIcon data-icon="inline-start" />
-      Add to Bag
+      {label}
     </button>
   );
 }

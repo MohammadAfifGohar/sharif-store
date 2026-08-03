@@ -64,8 +64,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const cardItems = await expandProductsForGrid(categorizedProducts);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
-      <Breadcrumbs className="mb-7 sm:mb-9" items={[{ label: "Search" }]} />
+    <main className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 sm:pb-14 lg:px-8 lg:pb-16">
+      <div className="py-4">
+        <Breadcrumbs items={[{ label: "Search" }]} />
+      </div>
       <div className="mb-7 flex items-end justify-between gap-5 sm:mb-9">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">

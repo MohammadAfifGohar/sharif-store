@@ -9,7 +9,7 @@ import { getNewArrivalProducts } from "@/lib/woocommerce";
 export const metadata: Metadata = {
   title: "New Arrivals",
   description:
-    "Explore the newest beauty, gifting and everyday products at The Shareef Store.",
+    "Explore the newest beauty, gifting and everyday products at Sharif Store.",
   alternates: {
     canonical: "/new-arrivals",
   },
