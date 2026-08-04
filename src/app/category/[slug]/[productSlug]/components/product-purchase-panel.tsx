@@ -7,7 +7,6 @@ import { ProductStickyCta } from "./product-sticky-cta";
 import { AddToBagControl } from "@/components/add-to-bag-control";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { buttonVariants } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { absoluteUrl } from "@/lib/site-config";
 import { getProductPath } from "@/lib/product-route";
 import { getWhatsAppOrderUrl } from "@/lib/whatsapp-order";
@@ -96,19 +95,32 @@ export function ProductPurchasePanel({
 
   return (
     <>
-      <div className="mt-5 flex items-baseline gap-3 text-lg sm:text-xl">
-        <span className="font-bold">{formatPrice(selectedProduct)}</span>
-        {selectedProduct.on_sale ? (
-          <span className="text-muted-foreground line-through">
-            {formatRegularPrice(selectedProduct)}
+      <fieldset className="mt-5 rounded-2xl border border-primary/20 bg-background px-4 pb-5 pt-3 sm:px-6 sm:pb-6">
+        <legend className="px-2 font-heading text-sm font-bold uppercase tracking-[0.08em] text-[#332e31] sm:text-base">
+          Price
+        </legend>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2 sm:gap-x-4">
+          {selectedProduct.on_sale ? (
+            <div className="flex items-center gap-2 text-sm sm:text-base">
+              <span className="font-medium text-[#5f585c]">MRP</span>
+              <span className="font-medium text-muted-foreground line-through">
+                {formatRegularPrice(selectedProduct)}
+              </span>
+            </div>
+          ) : null}
+          <span className="font-heading text-3xl font-extrabold tracking-tight text-[#272326] sm:text-4xl">
+            {formatPrice(selectedProduct)}
           </span>
-        ) : null}
-        {savingsDisplay ? (
-          <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-extrabold text-emerald-700 ring-1 ring-emerald-600/15 sm:text-sm">
-            You save {savingsDisplay}
-          </span>
-        ) : null}
-      </div>
+          {savingsDisplay ? (
+            <span className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white sm:text-sm">
+              Save {savingsDisplay}
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-1 text-xs font-medium text-muted-foreground sm:text-sm">
+          (incl. of all taxes)
+        </p>
+      </fieldset>
 
       {variations.length > 0 ? (
         <fieldset className="mt-5">
@@ -139,23 +151,31 @@ export function ProductPurchasePanel({
         </fieldset>
       ) : null}
 
-      <Separator className="my-6" />
-      <p
+      <div
         className={cn(
-          "my-6 flex items-center gap-2 text-sm font-semibold",
-          !isInStock && "text-destructive",
+          "my-5 flex w-fit items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold ring-1 ring-inset",
+          isInStock
+            ? "bg-emerald-50 text-emerald-800 ring-emerald-600/15"
+            : "bg-destructive/10 text-destructive ring-destructive/20",
         )}
       >
-        <CheckIcon className="size-4" />
+        <span
+          className={cn(
+            "grid size-5 place-items-center rounded-full",
+            isInStock ? "bg-emerald-600 text-white" : "bg-destructive text-white",
+          )}
+        >
+          <CheckIcon className="size-3.5" strokeWidth={3} />
+        </span>
         {isInStock
           ? selectedProduct.stock_availability?.text || "In stock"
           : "Currently out of stock"}
         {isInStock && selectedProduct.low_stock_remaining ? (
-          <span className="font-normal text-muted-foreground">
+          <span className="font-medium opacity-75">
             ({selectedProduct.low_stock_remaining} left)
           </span>
         ) : null}
-      </p>
+      </div>
 
       <div className="flex items-center gap-3">
         <AddToBagControl

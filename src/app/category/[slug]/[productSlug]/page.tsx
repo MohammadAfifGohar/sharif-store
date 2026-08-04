@@ -141,7 +141,7 @@ export default async function CategoryProductPage(
             {product.on_sale ? <SaleBadge /> : null}
           </div>
 
-          <h1 className="mt-4 font-heading text-2xl font-semibold capitalize tracking-tight sm:text-4xl">
+          <h1 className="mt-4 font-heading text-2xl font-semibold capitalize tracking-tight text-[#423b3f] sm:text-4xl">
             {product.name}
           </h1>
 
@@ -172,7 +172,7 @@ export default async function CategoryProductPage(
           />
 
           {view.specs.length > 0 ? (
-            <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-border pt-6 text-sm sm:grid-cols-2">
+            <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
               {view.specs.map((spec) => (
                 <div key={spec.label} className="flex justify-between gap-4">
                   <dt className="text-muted-foreground">{spec.label}</dt>
@@ -183,7 +183,7 @@ export default async function CategoryProductPage(
           ) : null}
 
           {product.tags.length > 0 ? (
-            <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-6">
+            <div className="mt-6 flex flex-wrap items-center gap-2">
               <span className="text-sm text-muted-foreground">Tags:</span>
               {product.tags.map((tag) => (
                 <Badge key={tag.id} variant="outline">

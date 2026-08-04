@@ -94,14 +94,14 @@ export default function ContactPage() {
         <Breadcrumbs items={[{ label: "Contact" }]} />
       </div>
 
-      <section className="px-4 pb-5 sm:px-6 sm:pb-8 lg:px-10">
-        <div className="relative mx-auto max-w-[1440px] overflow-hidden rounded-lg bg-[#2b1020] text-white">
+      <section className="pb-5 sm:pb-8">
+        <div className="relative w-full overflow-hidden bg-[#2b1020] text-white">
           <Image
             src="/contact-hero-background.avif"
             alt=""
             fill
             priority
-            sizes="(max-width: 1536px) 100vw, 1440px"
+            sizes="100vw"
             className="object-cover object-[78%_center] sm:object-center"
           />
           <div
@@ -109,7 +109,7 @@ export default function ContactPage() {
             className="absolute inset-0 bg-[linear-gradient(90deg,rgba(43,16,32,.9)_0%,rgba(43,16,32,.72)_52%,rgba(43,16,32,.46)_100%)]"
           />
 
-          <div className="relative flex min-h-[560px] items-center px-6 py-12 sm:px-10 sm:py-16 lg:px-16 lg:py-20">
+          <div className="relative mx-auto flex min-h-[560px] w-full max-w-[1440px] items-center px-4 py-12 sm:px-6 sm:py-16 lg:px-10 lg:py-20">
             <div>
               <p className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.24em] text-[#ff9fc9] sm:text-xs">
                 <span className="h-px w-9 bg-[#ff4d9b]" />
