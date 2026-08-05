@@ -10,7 +10,6 @@ import {
   PhoneIcon,
 } from "lucide-react";
 
-import { Breadcrumbs } from "@/components/breadcrumbs";
 import { buttonVariants } from "@/components/ui/button";
 import {
   absoluteUrl,
@@ -89,10 +88,6 @@ export default function ContactPage() {
           __html: JSON.stringify(localBusinessSchema).replace(/</g, "\\u003c"),
         }}
       />
-
-      <div className="mx-auto max-w-[1440px] px-4 py-4 sm:px-6 lg:px-10">
-        <Breadcrumbs items={[{ label: "Contact" }]} />
-      </div>
 
       <section className="pb-5 sm:pb-8">
         <div className="relative w-full overflow-hidden bg-[#2b1020] text-white">
