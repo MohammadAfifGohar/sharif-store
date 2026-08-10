@@ -86,44 +86,38 @@ export type ProductCardVariant = {
 export type ProductCardItem = {
   /** The parent product — id/name/slug/categories/routing. */
   product: WooProduct;
-  /** Set when this card represents one specific variation of a variable product. */
-  variant: ProductCardVariant | null;
+  /** Every resolved variation for a variable product; empty for a simple product. */
+  variants: ProductCardVariant[];
 };
 
 /**
- * Expands a product list into one card per purchasable thing: simple
- * products stay as a single card, variable products become one card per
- * resolved variation (each with its own price/stock/image). Pure — takes an
- * already-fetched variations lookup rather than fetching itself, so it's
- * unit-testable without network mocking.
+ * Builds one card per product: simple products carry no variants, variable
+ * products carry all of their resolved variations (each with its own
+ * price/stock/image) for the card to switch between via its size picker.
+ * Pure — takes an already-fetched variations lookup rather than fetching
+ * itself, so it's unit-testable without network mocking.
  */
 export function buildProductCardItems(
   products: WooProduct[],
   variationsByProductId: Map<number, WooProduct[]>,
 ): ProductCardItem[] {
-  return products.flatMap((product): ProductCardItem[] => {
-    if (!product.has_options) {
-      return [{ product, variant: null }];
-    }
+  return products.map((product): ProductCardItem => {
+    const variations = product.has_options
+      ? variationsByProductId.get(product.id) ?? []
+      : [];
 
-    const variations = variationsByProductId.get(product.id) ?? [];
-    if (variations.length === 0) {
-      return [{ product, variant: null }];
-    }
-
-    return variations.map((variation) => {
+    const variants = variations.map((variation) => {
       const selected = parseVariationSummary(variation.variation);
 
       return {
-        product,
-        variant: {
-          id: variation.id,
-          label: getVariationLabel(product, selected),
-          shortLabel: Object.values(selected).join(" / "),
-          data: variation,
-        },
+        id: variation.id,
+        label: getVariationLabel(product, selected),
+        shortLabel: Object.values(selected).join(" / "),
+        data: variation,
       };
     });
+
+    return { product, variants };
   });
 }
 

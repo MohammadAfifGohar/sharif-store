@@ -56,7 +56,10 @@ export default async function BestDealsPage({
     (product) => product.categories.length > 0,
   );
   const cardItems = (await expandProductsForGrid(categorizedProducts)).filter(
-    (item) => (item.variant ? item.variant.data.on_sale : item.product.on_sale),
+    (item) =>
+      item.variants.length > 0
+        ? item.variants.some((variant) => variant.data.on_sale)
+        : item.product.on_sale,
   );
 
   return (
@@ -94,10 +97,10 @@ export default async function BestDealsPage({
             <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
               {cardItems.map((item) => (
                 <ProductCard
-                  key={`${item.product.id}-${item.variant?.id ?? "base"}`}
+                  key={item.product.id}
                   product={item.product}
                   categorySlug={item.product.categories[0].slug}
-                  variant={item.variant}
+                  variants={item.variants}
                 />
               ))}
             </div>

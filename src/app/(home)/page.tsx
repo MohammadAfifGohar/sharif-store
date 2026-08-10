@@ -80,10 +80,10 @@ export default async function HomePage() {
             <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
               {trendingItems.map((item) => (
                 <ProductCard
-                  key={`${item.product.id}-${item.variant?.id ?? "base"}`}
+                  key={item.product.id}
                   product={item.product}
                   categorySlug={item.product.categories[0].slug}
-                  variant={item.variant}
+                  variants={item.variants}
                 />
               ))}
             </div>
