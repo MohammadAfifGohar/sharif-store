@@ -35,6 +35,11 @@ export default async function CategoryProductPage(
   props: PageProps<"/category/[slug]/[productSlug]">,
 ) {
   const { slug, productSlug } = await props.params;
+  const searchParams = await props.searchParams;
+  const variantParam = Array.isArray(searchParams?.variant)
+    ? searchParams.variant[0]
+    : searchParams?.variant;
+  const initialVariantId = variantParam ? Number(variantParam) : null;
   const data = await getProductRouteData(slug, productSlug);
 
   if (!data) notFound();
@@ -169,6 +174,9 @@ export default async function CategoryProductPage(
             categorySlug={category.slug}
             product={product}
             variations={variations}
+            initialVariantId={
+              Number.isFinite(initialVariantId) ? initialVariantId : null
+            }
           />
 
           {view.specs.length > 0 ? (

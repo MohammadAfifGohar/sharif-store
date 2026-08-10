@@ -23,6 +23,8 @@ type ProductPurchasePanelProps = {
   categorySlug: string;
   product: WooProduct;
   variations: WooProduct[];
+  /** Variation id deep-linked from the product grid (e.g. `?variant=123`), pre-selected on load. */
+  initialVariantId?: number | null;
 };
 
 function getVariationLabel(variation: WooProduct) {
@@ -40,9 +42,15 @@ export function ProductPurchasePanel({
   categorySlug,
   product,
   variations,
+  initialVariantId = null,
 }: ProductPurchasePanelProps) {
+  const deepLinkedVariation =
+    initialVariantId != null
+      ? variations.find((variation) => variation.id === initialVariantId)
+      : null;
   const [selectedId, setSelectedId] = useState(
-    variations.find((variation) => variation.is_in_stock)?.id ??
+    deepLinkedVariation?.id ??
+      variations.find((variation) => variation.is_in_stock)?.id ??
       variations[0]?.id ??
       null,
   );
