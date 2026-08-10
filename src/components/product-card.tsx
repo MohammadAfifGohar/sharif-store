@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -20,15 +23,26 @@ import { cn } from "@/lib/utils";
 type ProductCardProps = {
   product: WooProduct;
   categorySlug: string;
-  /** Set when this card represents one specific variation of a variable product. */
-  variant?: ProductCardVariant | null;
+  /** Every resolved variation for a variable product; empty for a simple product. */
+  variants?: ProductCardVariant[];
 };
 
-export function ProductCard({ product, categorySlug, variant = null }: ProductCardProps) {
-  const displayProduct = variant?.data ?? product;
+export function ProductCard({
+  product,
+  categorySlug,
+  variants = [],
+}: ProductCardProps) {
+  const [selectedVariantId, setSelectedVariantId] = useState(
+    variants.find((variant) => variant.data.is_in_stock)?.id ??
+      variants[0]?.id ??
+      null,
+  );
+  const selectedVariant =
+    variants.find((variant) => variant.id === selectedVariantId) ?? null;
+  const displayProduct = selectedVariant?.data ?? product;
   const image = displayProduct.images[0] ?? product.images[0];
-  const productHref = variant
-    ? `${getProductPath(categorySlug, product.slug)}?variant=${variant.id}`
+  const productHref = selectedVariant
+    ? `${getProductPath(categorySlug, product.slug)}?variant=${selectedVariant.id}`
     : getProductPath(categorySlug, product.slug);
   const averageRating = Number(product.average_rating);
   const hasRating = product.review_count > 0 && averageRating > 0;
@@ -120,10 +134,33 @@ export function ProductCard({ product, categorySlug, variant = null }: ProductCa
             </div>
           ) : null}
 
-          {variant ? (
-            <p className="mt-2 w-fit rounded-md bg-muted px-2 py-1 text-[10px] font-semibold text-muted-foreground sm:text-xs">
-              {variant.shortLabel}
-            </p>
+          {variants.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {variants.map((variant) => {
+                const isSelected = variant.id === selectedVariantId;
+
+                return (
+                  <button
+                    key={variant.id}
+                    type="button"
+                    disabled={!variant.data.is_in_stock}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setSelectedVariantId(variant.id);
+                    }}
+                    aria-pressed={isSelected}
+                    className={cn(
+                      "rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 sm:text-xs",
+                      isSelected
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background text-muted-foreground hover:border-primary/50",
+                    )}
+                  >
+                    {variant.shortLabel}
+                  </button>
+                );
+              })}
+            </div>
           ) : null}
 
           <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 sm:mt-3">
@@ -157,11 +194,11 @@ export function ProductCard({ product, categorySlug, variant = null }: ProductCa
           className="mt-3 h-10 rounded-lg border-primary/20 bg-primary px-3 text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary/90 sm:mt-4 sm:text-sm"
           quantityClassName="mt-3 h-10 w-full rounded- sm:mt-4"
           variation={
-            variant
+            selectedVariant
               ? {
-                  id: variant.id,
-                  label: variant.label,
-                  priceSource: variant.data,
+                  id: selectedVariant.id,
+                  label: selectedVariant.label,
+                  priceSource: selectedVariant.data,
                 }
               : null
           }

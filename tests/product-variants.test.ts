@@ -115,15 +115,15 @@ test("getVariationLabel builds a properly-cased label", () => {
   assert.equal(getVariationLabel(product, { size: "100 ml" }), "Size: 100 ml");
 });
 
-test("buildProductCardItems returns one item with no variant for a simple product", () => {
+test("buildProductCardItems returns one item with no variants for a simple product", () => {
   const product = makeSimpleProduct();
 
   const items = buildProductCardItems([product], new Map());
 
-  assert.deepEqual(items, [{ product, variant: null }]);
+  assert.deepEqual(items, [{ product, variants: [] }]);
 });
 
-test("buildProductCardItems returns one item per resolved variation for a variable product", () => {
+test("buildProductCardItems returns one item carrying every resolved variation for a variable product", () => {
   const product = makeProduct();
   const small = makeVariation({ id: 54, variation: "size: 100 ml" });
   const large = makeVariation({ id: 55, variation: "size: 150 ml" });
@@ -133,24 +133,23 @@ test("buildProductCardItems returns one item per resolved variation for a variab
     new Map([[product.id, [small, large]]]),
   );
 
-  assert.equal(items.length, 2);
+  assert.equal(items.length, 1);
   assert.equal(items[0].product, product);
-  assert.equal(items[1].product, product);
   assert.deepEqual(
-    items.map((item) => item.variant?.id),
+    items[0].variants.map((variant) => variant.id),
     [54, 55],
   );
-  assert.equal(items[0].variant?.label, "Size: 100 ml");
-  assert.equal(items[0].variant?.shortLabel, "100 ml");
-  assert.equal(items[0].variant?.data, small);
+  assert.equal(items[0].variants[0].label, "Size: 100 ml");
+  assert.equal(items[0].variants[0].shortLabel, "100 ml");
+  assert.equal(items[0].variants[0].data, small);
 });
 
-test("buildProductCardItems falls back to a single card when variations are missing", () => {
+test("buildProductCardItems falls back to no variants when variations are missing", () => {
   const product = makeProduct();
 
   const items = buildProductCardItems([product], new Map());
 
-  assert.deepEqual(items, [{ product, variant: null }]);
+  assert.deepEqual(items, [{ product, variants: [] }]);
 });
 
 test("buildProductCardItems preserves order across mixed simple and variable products", () => {
@@ -165,7 +164,7 @@ test("buildProductCardItems preserves order across mixed simple and variable pro
 
   assert.equal(items.length, 2);
   assert.equal(items[0].product.id, 1);
-  assert.equal(items[0].variant, null);
+  assert.deepEqual(items[0].variants, []);
   assert.equal(items[1].product.id, 12);
-  assert.equal(items[1].variant?.id, 54);
+  assert.equal(items[1].variants[0]?.id, 54);
 });
