@@ -135,7 +135,7 @@ export function ProductCard({
           ) : null}
 
           {variants.length > 0 ? (
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="no-scrollbar mt-2 flex snap-x snap-mandatory gap-1.5 overflow-x-auto pb-0.5">
               {variants.map((variant) => {
                 const isSelected = variant.id === selectedVariantId;
 
@@ -150,7 +150,7 @@ export function ProductCard({
                     }}
                     aria-pressed={isSelected}
                     className={cn(
-                      "rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 sm:text-xs",
+                      "shrink-0 snap-start rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 sm:text-xs",
                       isSelected
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-background text-muted-foreground hover:border-primary/50",
