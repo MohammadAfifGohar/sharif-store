@@ -27,7 +27,9 @@ type ProductCardProps = {
 export function ProductCard({ product, categorySlug, variant = null }: ProductCardProps) {
   const displayProduct = variant?.data ?? product;
   const image = displayProduct.images[0] ?? product.images[0];
-  const productHref = getProductPath(categorySlug, product.slug);
+  const productHref = variant
+    ? `${getProductPath(categorySlug, product.slug)}?variant=${variant.id}`
+    : getProductPath(categorySlug, product.slug);
   const averageRating = Number(product.average_rating);
   const hasRating = product.review_count > 0 && averageRating > 0;
   const discountPercent = getDiscountPercent(displayProduct);
