@@ -128,6 +128,49 @@ export type WooProduct = {
   }>;
 };
 
+export type CatalogSort =
+  | "relevance"
+  | "newest"
+  | "price-asc"
+  | "price-desc"
+  | "name-asc"
+  | "rating";
+
+export type CatalogAvailability = "all" | "in-stock" | "on-sale";
+
+export type CatalogListingOptions = {
+  sort?: CatalogSort;
+  availability?: CatalogAvailability;
+};
+
+function appendCatalogOptions(
+  params: URLSearchParams,
+  options: CatalogListingOptions,
+) {
+  const sort = options.sort ?? "newest";
+  const sortParams: Record<
+    Exclude<CatalogSort, "relevance">,
+    { orderby: string; order: "asc" | "desc" }
+  > = {
+    newest: { orderby: "date", order: "desc" },
+    "price-asc": { orderby: "price", order: "asc" },
+    "price-desc": { orderby: "price", order: "desc" },
+    "name-asc": { orderby: "title", order: "asc" },
+    rating: { orderby: "rating", order: "desc" },
+  };
+
+  if (sort !== "relevance") {
+    params.set("orderby", sortParams[sort].orderby);
+    params.set("order", sortParams[sort].order);
+  }
+  if (options.availability === "in-stock") {
+    params.set("stock_status", "instock");
+  }
+  if (options.availability === "on-sale") {
+    params.set("on_sale", "true");
+  }
+}
+
 async function fetchStoreApiResponse(path: string) {
   for (let attempt = 0; ; attempt++) {
     const response = await fetch(
@@ -183,6 +226,43 @@ export const getCategoryPageData = cache(async (slug: string) => {
 
   return { category, products, subcategories };
 });
+
+export const getCategoryListingData = cache(
+  async (
+    slug: string,
+    page: number,
+    perPage = 12,
+    options: CatalogListingOptions = {},
+  ) => {
+    const categories = await getStoreCategories();
+    const category = categories.find((item) => item.slug === slug);
+    if (!category) return null;
+
+    const safePage = Number.isInteger(page) && page > 0 ? page : 1;
+    const params = new URLSearchParams({
+      category: String(category.id),
+      page: String(safePage),
+      per_page: String(perPage),
+    });
+    appendCatalogOptions(params, options);
+
+    const response = await fetchStoreApiResponse(`products?${params}`);
+    const products = (await response.json()) as WooProduct[];
+    const subcategories = categories.filter(
+      (item) => item.parent === category.id,
+    );
+
+    return {
+      category,
+      products,
+      subcategories,
+      page: safePage,
+      perPage,
+      total: Number(response.headers.get("x-wp-total") ?? products.length),
+      totalPages: Number(response.headers.get("x-wp-totalpages") ?? 1),
+    };
+  },
+);
 
 export const getStoreProducts = cache(async () =>
   fetchStoreApi<WooProduct[]>("products?per_page=100"),
@@ -256,10 +336,21 @@ export const getSaleProducts = cache(async (page: number) => {
 });
 
 export const searchProducts = cache(
-  async (query: string, page: number, perPage = 24) => {
+  async (
+    query: string,
+    page: number,
+    perPage = 24,
+    options: CatalogListingOptions = {},
+  ) => {
     const safePage = Number.isInteger(page) && page > 0 ? page : 1;
+    const params = new URLSearchParams({
+      search: query,
+      page: String(safePage),
+      per_page: String(perPage),
+    });
+    appendCatalogOptions(params, options);
     const response = await fetchStoreApiResponse(
-      `products?search=${encodeURIComponent(query)}&page=${safePage}&per_page=${perPage}`,
+      `products?${params}`,
     );
     const products = (await response.json()) as WooProduct[];
 

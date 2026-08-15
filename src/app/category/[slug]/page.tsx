@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { Breadcrumbs } from "@/components/breadcrumbs";
+import { CatalogResults } from "@/components/catalog-results";
+import { parseCatalogQuery } from "@/lib/catalog-query";
 import { expandProductsForGrid } from "@/lib/product-variants";
-import { getCategoryPageData } from "@/lib/woocommerce";
-import { ProductGrid } from "./components/product-grid";
+import { getCategoryListingData } from "@/lib/woocommerce";
 import { SubcategoryList } from "./components/subcategory-list";
 import {
   getCategoryMetadata,
@@ -22,36 +22,48 @@ export async function generateMetadata(
   return getCategoryMetadata(slug);
 }
 
-export default async function CategoryPage(
-  props: PageProps<"/category/[slug]">,
-) {
+export default async function CategoryPage(props: PageProps<"/category/[slug]">) {
   const { slug } = await props.params;
-  const data = await getCategoryPageData(slug);
+  const query = await props.searchParams;
+  const { page: requestedPage, ...options } = parseCatalogQuery(
+    query,
+    "newest",
+  );
+  const data = await getCategoryListingData(
+    slug,
+    requestedPage,
+    12,
+    options,
+  );
 
   if (!data) notFound();
 
-  const { category, products, subcategories } = data;
+  const { category, products, subcategories, page, total, totalPages } = data;
   const items = await expandProductsForGrid(products);
 
   return (
     <main>
-      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-        <Breadcrumbs items={[{ label: category.name }]} />
-        <div className="pb-2 pt-5 sm:pt-7">
-          <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
-            {category.name}
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Shop {category.name.toLowerCase()} products selected for everyday
-            use, thoughtful gifting and easy local ordering.
-          </p>
-        </div>
-      </div>
       <SubcategoryList
         parentName={category.name}
         subcategories={subcategories}
       />
-      <ProductGrid items={items} categorySlug={category.slug} />
+      <CatalogResults
+        title={category.name}
+        hideHeader
+        items={items}
+        total={total}
+        page={page}
+        totalPages={totalPages}
+        basePath={`/category/${encodeURIComponent(category.slug)}`}
+        options={options}
+        defaultSort="newest"
+        categorySlug={category.slug}
+        toolbarStart={
+          <h2 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
+            Explore {category.name.replaceAll("&amp;", "&")}
+          </h2>
+        }
+      />
     </main>
   );
 }

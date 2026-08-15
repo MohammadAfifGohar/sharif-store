@@ -16,22 +16,12 @@ export function SubcategoryList({
   if (subcategories.length === 0) return null;
 
   return (
-    <section
-      aria-labelledby="subcategory-heading"
-      className="border-b border-border bg-background"
-    >
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-          Browse by type
-        </p>
-        <h2
-          id="subcategory-heading"
-          className="mt-2 font-heading text-2xl font-semibold sm:text-3xl"
-        >
-          Explore {parentName}
-        </h2>
-
-        <div className="no-scrollbar mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
+    <section className="border-b border-border bg-background">
+      <nav
+        aria-label={`${parentName} product types`}
+        className="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-8 lg:px-8"
+      >
+        <div className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
           {subcategories.map((subcategory) => {
             const name = subcategory.name.replaceAll("&amp;", "&");
 
@@ -39,19 +29,19 @@ export function SubcategoryList({
               <Link
                 key={subcategory.id}
                 href={`/category/${encodeURIComponent(subcategory.slug)}`}
-                className="group w-20 shrink-0 snap-start sm:w-32"
+                className="group w-20 shrink-0 snap-start sm:w-28"
               >
-                <span className="relative block size-20 overflow-hidden rounded-full border border-border bg-secondary sm:size-32">
+                <span className="relative block size-20 overflow-hidden rounded-full border border-border bg-secondary sm:size-28">
                   {subcategory.image ? (
                     <Image
                       src={subcategory.image.src}
                       alt={subcategory.image.alt || name}
                       fill
-                      sizes="(max-width: 639px) 80px, 128px"
+                      sizes="(max-width: 639px) 80px, 112px"
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <span className="grid h-full place-items-center bg-gradient-to-br from-secondary to-muted font-heading text-4xl font-semibold text-primary">
+                    <span className="grid h-full place-items-center bg-gradient-to-br from-secondary to-muted font-heading text-3xl font-semibold text-primary">
                       {name.charAt(0)}
                     </span>
                   )}
@@ -59,7 +49,7 @@ export function SubcategoryList({
                   {subcategory.count === 0 ? (
                     <Badge
                       variant="secondary"
-                      className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px]"
+                      className="absolute bottom-1.5 left-1/2 -translate-x-1/2 text-[10px]"
                     >
                       Coming soon
                     </Badge>
@@ -78,7 +68,7 @@ export function SubcategoryList({
             );
           })}
         </div>
-      </div>
+      </nav>
     </section>
   );
 }

@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
 import { CampaignHero } from "./components/campaign-hero";
 import { CategoryCarousel } from "./components/category-carousel";
 import { CategoryItem } from "./components/category-item";
+import { FeaturePanelImage } from "./components/feature-panel-image";
 import { Reveal } from "./components/reveal";
 import { heroSlides, promises } from "./utils/home-content";
 import { ProductCard } from "@/components/product-card";
@@ -15,24 +15,11 @@ import { getHomepageCommerceData } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
-  const { products, categories, featuredDiscoveryProduct } =
-    await getHomepageCommerceData();
+  const { products, categories } = await getHomepageCommerceData();
   const categorizedProducts = products.filter(
     (product) => product.categories.length > 0,
   );
   const trendingItems = await expandProductsForGrid(categorizedProducts);
-  const offerFeatureProduct =
-    products.find(
-      (product) =>
-        product.id > 1000 &&
-        product.on_sale &&
-        product.images[0] &&
-        product.id !== featuredDiscoveryProduct?.id,
-    ) ??
-    products.find(
-      (product) =>
-        product.images[0] && product.id !== featuredDiscoveryProduct?.id,
-    );
 
   return (
       <main className="flex-1">
@@ -90,93 +77,77 @@ export default async function HomePage() {
           </section>
         ) : null}
 
-        <section id="deals" className="bg-primary text-primary-foreground">
-          <div className="mx-auto grid max-w-[1440px] lg:grid-cols-2">
+        <section
+          id="deals"
+          className="border-y border-[#e5e7eb] bg-primary text-primary-foreground"
+        >
+          <div className="grid w-full lg:grid-cols-2">
             <Reveal className="flex flex-col justify-between gap-12 px-6 py-12 sm:min-h-[520px] sm:gap-0 sm:p-12 lg:p-16">
               <div className="flex items-center justify-between gap-6">
-                <Badge variant="secondary">The value edit</Badge>
+                <Badge variant="secondary">Skincare spotlight</Badge>
               </div>
               <div>
                 <p className="mb-5 max-w-md text-sm leading-6 text-primary-foreground/65">
-                  Everyday favourites, lighter prices. Explore skincare,
-                  fragrance and personal-care picks currently on offer.
+                  A gentle everyday cleanser for a fresh, comfortable start to
+                  your routine.
                 </p>
                 <h2 className="max-w-xl font-heading text-4xl font-semibold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
-                  Good things shouldn&apos;t feel out of reach.
+                  Fresh skin starts with one simple step.
                 </h2>
                 <Link
-                  href="/best-deals"
+                  href="/category/face-wash/mama-earth-face-wash"
                   className={cn(
                     buttonVariants({ variant: "secondary", size: "lg" }),
                     "mt-8 w-full sm:mt-9 sm:w-auto",
                   )}
                 >
-                  Shop live offers
+                  Shop face wash
                   <ArrowRightIcon data-icon="inline-end" />
                 </Link>
               </div>
             </Reveal>
 
-            <div className="relative aspect-[4/3] overflow-hidden bg-secondary sm:aspect-auto sm:min-h-[520px]">
-              {offerFeatureProduct?.images[0] ? (
-                <Image
-                  src={offerFeatureProduct.images[0].src}
-                  alt={
-                    offerFeatureProduct.images[0].alt ||
-                    offerFeatureProduct.name
-                  }
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover"
-                />
-              ) : null}
-            </div>
+            <FeaturePanelImage
+              src="/homepage-face-wash-panel.avif"
+              alt="Mamaearth Rice Dewy Bright Face Wash"
+            />
           </div>
         </section>
 
         <section
           id="new-finds"
-          className="border-b border-border bg-secondary text-secondary-foreground"
+          className="border-b border-[#e5e7eb] bg-secondary text-secondary-foreground"
         >
-          <div className="mx-auto grid max-w-[1440px] lg:grid-cols-2">
-            <div className="relative order-2 aspect-[4/3] overflow-hidden bg-muted sm:aspect-auto sm:min-h-[520px] lg:order-1">
-              {featuredDiscoveryProduct?.images[0] ? (
-                <Image
-                  src={featuredDiscoveryProduct.images[0].src}
-                  alt={
-                    featuredDiscoveryProduct.images[0].alt ||
-                    featuredDiscoveryProduct.name
-                  }
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover transition-transform duration-700 hover:scale-[1.02]"
-                />
-              ) : null}
-            </div>
+          <div className="grid w-full lg:grid-cols-2">
+            <FeaturePanelImage
+              src="/homepage-teddy.avif"
+              alt="Caramel teddy bear with a rose ribbon"
+              className="order-2 bg-muted lg:order-1"
+            />
 
             <Reveal className="order-1 flex flex-col justify-between gap-12 px-6 py-12 sm:min-h-[520px] sm:p-12 lg:order-2 lg:p-16">
               <Badge
                 variant="outline"
                 className="w-fit border-primary/25 bg-primary/10 text-primary"
               >
-                Freshly picked
+                Gift-ready favourite
               </Badge>
               <div>
                 <p className="mb-5 max-w-md text-sm leading-6 text-muted-foreground">
-                  New beauty, gifting and everyday-use discoveries selected to
-                  make browsing feel a little more rewarding.
+                  A soft, timeless surprise for birthdays, celebrations and
+                  just-because moments.
                 </p>
                 <h2 className="max-w-xl font-heading text-4xl font-semibold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
-                  Small finds. Everyday delight.
+                  A little comfort, wrapped with care.
                 </h2>
                 <Link
-                  href="/new-arrivals"
+                  href="/category/toys"
                   className={cn(
                     buttonVariants({ variant: "default", size: "lg" }),
                     "mt-8 w-full sm:mt-9 sm:w-auto",
                   )}
                 >
-                  Explore new finds
+                  Explore gifts
                   <ArrowRightIcon data-icon="inline-end" />
                 </Link>
               </div>
