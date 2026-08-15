@@ -12,6 +12,7 @@ import type {
   CatalogListingOptions,
   CatalogSort,
 } from "@/lib/woocommerce";
+import { cn } from "@/lib/utils";
 
 export function CatalogResults({
   title,
@@ -75,7 +76,12 @@ export function CatalogResults({
         </div>
       ) : null}
 
-      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        className={cn(
+          "flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between",
+          !hideHeader && "mt-6",
+        )}
+      >
         {toolbarStart ? <div className="shrink-0">{toolbarStart}</div> : null}
         <div className="min-w-0 sm:ml-auto sm:flex-none">
           <CatalogControls
