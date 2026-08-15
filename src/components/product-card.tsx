@@ -116,7 +116,7 @@ export function ProductCard({
         </div>
 
         <div className="mt-3 flex flex-1 flex-col sm:mt-4">
-          <h3 className="line-clamp-2 font-heading text-sm font-semibold capitalize leading-[1.2] text-foreground sm:text-lg">
+          <h3 className="line-clamp-2 min-h-[2.4em] font-heading text-sm font-semibold capitalize leading-[1.2] text-foreground sm:text-lg">
             <Link
               href={productHref}
               className="rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -125,17 +125,20 @@ export function ProductCard({
             </Link>
           </h3>
 
+          <div className="mt-1.5 flex min-h-5 items-center gap-1.5">
           {hasRating ? (
-            <div className="mt-1.5 flex items-center gap-1.5" aria-label={`${averageRating.toFixed(1)} out of 5 stars from ${product.review_count} reviews`}>
+            <div className="flex items-center gap-1.5" aria-label={`${averageRating.toFixed(1)} out of 5 stars from ${product.review_count} reviews`}>
               <RatingStars rating={averageRating} starClassName="size-3.5" />
               <span className="text-[11px] font-medium text-muted-foreground sm:text-xs">
                 ({product.review_count})
               </span>
             </div>
           ) : null}
+          </div>
 
+          <div className="mt-2 min-h-7">
           {variants.length > 0 ? (
-            <div className="no-scrollbar mt-2 flex snap-x snap-mandatory gap-1.5 overflow-x-auto pb-0.5">
+            <div className="no-scrollbar flex snap-x snap-mandatory gap-1.5 overflow-x-auto pb-0.5">
               {variants.map((variant) => {
                 const isSelected = variant.id === selectedVariantId;
 
@@ -162,6 +165,7 @@ export function ProductCard({
               })}
             </div>
           ) : null}
+          </div>
 
           <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 sm:mt-3">
             <span className="text-sm font-extrabold tabular-nums sm:text-base">
@@ -192,7 +196,7 @@ export function ProductCard({
           size="lg"
           label="Add to cart"
           className="mt-3 h-10 rounded-lg border-primary/20 bg-primary px-3 text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary/90 sm:mt-4 sm:text-sm"
-          quantityClassName="mt-3 h-10 w-full rounded- sm:mt-4"
+          quantityClassName="mt-3 h-10 w-full rounded-lg sm:mt-4"
           variation={
             selectedVariant
               ? {
