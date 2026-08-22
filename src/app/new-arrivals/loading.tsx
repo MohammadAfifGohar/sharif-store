@@ -2,7 +2,7 @@ export default function NewArrivalsLoading() {
   return (
     <main aria-busy="true" aria-label="Loading new arrivals">
       <div className="mx-auto h-[180px] w-full max-w-[1800px] animate-pulse bg-muted sm:h-[240px] lg:h-[300px] xl:h-[340px]" />
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-1 gap-y-4 px-4 py-10 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4 lg:px-8">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-1 px-4 py-10 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4 lg:px-8">
         {Array.from({ length: 8 }, (_, index) => (
           <div
             key={index}
@@ -19,3 +19,4 @@ export default function NewArrivalsLoading() {
     </main>
   );
 }
+

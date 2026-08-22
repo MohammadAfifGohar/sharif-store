@@ -16,7 +16,7 @@ function ProductGridSkeleton() {
     <div
       role="status"
       aria-label="Updating products"
-      className="-mx-3 mt-6 grid grid-cols-2 items-stretch gap-x-1 gap-y-4 sm:mx-0 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4"
+      className="-mx-3 mt-6 grid grid-cols-2 items-stretch gap-1 sm:mx-0 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4"
     >
       {Array.from({ length: 8 }).map((_, index) => (
         <div key={index} className="flex min-w-0 flex-col gap-3">
@@ -54,3 +54,4 @@ export function CatalogGridTransition({
 
   return isPending ? <ProductGridSkeleton /> : children;
 }
+
