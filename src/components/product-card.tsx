@@ -58,10 +58,10 @@ export function ProductCard({
     displayProduct.low_stock_remaining > 0;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/80 bg-background shadow-[0_1px_0_rgba(31,31,31,0.03)] transition-[border-color,box-shadow] duration-300 hover:border-primary/20 hover:shadow-[0_16px_42px_rgba(91,21,55,0.09)]">
+    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-border/80 bg-background shadow-[0_1px_0_rgba(31,31,31,0.03)] transition-[border-color,box-shadow] duration-300 hover:border-primary/20 hover:shadow-[0_16px_42px_rgba(91,21,55,0.09)] sm:rounded-2xl">
       <Link
         href={productHref}
-        className="relative block aspect-[4/5] overflow-hidden bg-[#f8f6f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        className="relative block aspect-[4/5] overflow-hidden border-b border-border/80 bg-[#f8f6f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
       >
         {image ? (
           <Image

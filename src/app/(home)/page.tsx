@@ -64,7 +64,7 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
+            <div className="-mx-3 grid grid-cols-2 gap-x-1 gap-y-4 sm:mx-0 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4">
               {trendingItems.map((item) => (
                 <ProductCard
                   key={item.product.id}

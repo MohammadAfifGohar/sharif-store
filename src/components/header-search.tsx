@@ -128,7 +128,48 @@ function SearchResultsDropdown({
 export function HeaderSearchBar({ className }: { className?: string }) {
   const { query, setQuery, results, isLoading, submitSearch } = useProductSearch();
   const [isOpen, setIsOpen] = useState(false);
+  const [placeholderText, setPlaceholderText] = useState("");
   const containerRef = useOutsideAndEscapeClose(isOpen, () => setIsOpen(false));
+
+  useEffect(() => {
+    const examples = [
+      "Search for face wash",
+      "Search for toys",
+      "Search for jewellery",
+    ];
+    let phraseIndex = 0;
+    let characterIndex = 0;
+    let deleting = false;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const tick = () => {
+      const phrase = examples[phraseIndex];
+
+      if (!deleting) {
+        characterIndex += 1;
+        setPlaceholderText(phrase.slice(0, characterIndex));
+        if (characterIndex === phrase.length) {
+          deleting = true;
+          timeoutId = setTimeout(tick, 1300);
+          return;
+        }
+      } else {
+        characterIndex -= 1;
+        setPlaceholderText(phrase.slice(0, characterIndex));
+        if (characterIndex === 0) {
+          deleting = false;
+          phraseIndex = (phraseIndex + 1) % examples.length;
+          timeoutId = setTimeout(tick, 350);
+          return;
+        }
+      }
+
+      timeoutId = setTimeout(tick, deleting ? 45 : 85);
+    };
+
+    timeoutId = setTimeout(tick, 500);
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
@@ -146,7 +187,9 @@ export function HeaderSearchBar({ className }: { className?: string }) {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => setIsOpen(true)}
-          placeholder="Search products, brands…"
+          placeholder={
+            query ? "Search products, brands" : `${placeholderText}`
+          }
           aria-label="Search for products"
           className="h-11 rounded-full border-border/70 bg-muted/55 pl-11 pr-4 shadow-inner shadow-black/[0.03] placeholder:text-muted-foreground/80 hover:bg-muted/70 focus-visible:border-primary/45 focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary/20"
         />
