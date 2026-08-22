@@ -15,7 +15,7 @@ export function ProductGrid({
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
       {items.length > 0 ? (
-        <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
+        <div className="-mx-3 grid grid-cols-2 gap-x-1 gap-y-4 sm:mx-0 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4">
           {items.map((item) => (
             <ProductCard
               key={item.product.id}
