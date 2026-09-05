@@ -10,14 +10,13 @@ import { SaleBadge } from "@/components/sale-badge";
 import { Badge } from "@/components/ui/badge";
 import type { ProductCardVariant } from "@/lib/product-variants";
 import {
-  formatMoneyAmount,
   formatPrice,
   formatRegularPrice,
   getDiscountPercent,
-  getSavingsAmount,
   type WooProduct,
 } from "@/lib/woocommerce";
 import { getProductPath } from "@/lib/product-route";
+import { textFromHtml } from "@/lib/html-text";
 import { cn } from "@/lib/utils";
 
 type ProductCardProps = {
@@ -47,11 +46,9 @@ export function ProductCard({
   const averageRating = Number(product.average_rating);
   const hasRating = product.review_count > 0 && averageRating > 0;
   const discountPercent = getDiscountPercent(displayProduct);
-  const savingsAmount = getSavingsAmount(displayProduct);
-  const savingsDisplay =
-    savingsAmount > 0
-      ? formatMoneyAmount(savingsAmount, displayProduct.prices.currency_code)
-      : null;
+  const description = textFromHtml(
+    product.short_description || product.description,
+  );
   const lowStock =
     displayProduct.is_in_stock &&
     typeof displayProduct.low_stock_remaining === "number" &&
@@ -103,20 +100,9 @@ export function ProductCard({
         ) : null}
       </Link>
 
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <div className="flex min-w-0">
-          <Badge
-            variant="secondary"
-            className="h-7 max-w-full rounded-full px-2.5 text-[10px] font-bold uppercase tracking-[0.06em] sm:text-xs"
-          >
-            <span className="truncate">
-              {product.categories[0]?.name ?? "Sharif selection"}
-            </span>
-          </Badge>
-        </div>
-
-        <div className="mt-3 flex flex-1 flex-col sm:mt-4">
-          <h3 className="line-clamp-2 font-heading text-sm font-semibold capitalize leading-[1.2] text-foreground sm:text-lg">
+      <div className="flex flex-1 flex-col p-3 sm:p-3.5">
+        <div className="flex flex-1 flex-col">
+          <h3 className="line-clamp-2 font-heading text-sm font-semibold capitalize leading-snug text-foreground">
             <Link
               href={productHref}
               className="rounded-sm transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -125,10 +111,16 @@ export function ProductCard({
             </Link>
           </h3>
 
+          {description ? (
+            <p className="mt-1 line-clamp-2 text-xs leading-snug text-muted-foreground">
+              {description}
+            </p>
+          ) : null}
+
           {hasRating ? (
-            <div className="mt-1.5 flex items-center gap-1.5" aria-label={`${averageRating.toFixed(1)} out of 5 stars from ${product.review_count} reviews`}>
-              <RatingStars rating={averageRating} starClassName="size-3.5" />
-              <span className="text-[11px] font-medium text-muted-foreground sm:text-xs">
+            <div className="mt-1.5 flex items-center gap-1" aria-label={`${averageRating.toFixed(1)} out of 5 stars from ${product.review_count} reviews`}>
+              <RatingStars rating={averageRating} starClassName="size-3" />
+              <span className="text-[10px] font-medium text-muted-foreground">
                 ({product.review_count})
               </span>
             </div>
@@ -163,24 +155,26 @@ export function ProductCard({
             </div>
           ) : null}
 
-          <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 sm:mt-3">
-            <span className="text-sm font-extrabold tabular-nums sm:text-base">
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <span className="text-lg font-bold leading-none tabular-nums text-foreground">
               {formatPrice(displayProduct)}
             </span>
             {displayProduct.on_sale ? (
-              <span className="text-[11px] font-medium tabular-nums text-muted-foreground line-through sm:text-xs">
-                {formatRegularPrice(displayProduct)}
-              </span>
-            ) : null}
-            {savingsDisplay ? (
-              <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-emerald-700 ring-1 ring-inset ring-emerald-600/10 sm:text-[11px]">
-                You save {savingsDisplay}
-              </span>
+              <>
+                <span className="text-[13px] font-normal leading-none tabular-nums text-muted-foreground line-through">
+                  {formatRegularPrice(displayProduct)}
+                </span>
+                {discountPercent > 0 ? (
+                  <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[12px] font-bold tabular-nums text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                    {discountPercent}% off
+                  </span>
+                ) : null}
+              </>
             ) : null}
           </div>
 
           {lowStock ? (
-            <p className="mt-2 text-[11px] font-semibold text-amber-700 sm:text-xs">
+            <p className="mt-1.5 text-[10px] font-semibold text-amber-700">
               Only {displayProduct.low_stock_remaining} left
             </p>
           ) : null}
