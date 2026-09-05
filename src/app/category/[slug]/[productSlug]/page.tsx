@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { ProductGallery } from "./components/product-gallery";
 import { ProductPurchasePanel } from "./components/product-purchase-panel";
+import { RelatedProducts } from "./components/product-related";
 import { ProductReviews, ProductReviewsSkeleton } from "./components/product-reviews";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { RatingStars } from "@/components/rating-stars";
@@ -202,6 +203,10 @@ export default async function CategoryProductPage(
           ) : null}
         </section>
       </div>
+
+      <Suspense fallback={null}>
+        <RelatedProducts product={product} />
+      </Suspense>
 
       <Suspense fallback={<ProductReviewsSkeleton />}>
         <ProductReviews

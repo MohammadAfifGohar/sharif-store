@@ -293,6 +293,25 @@ export const getProductById = cache(async (id: number) =>
 );
 
 /**
+ * Hydrates a list of product IDs into full Store API product objects, returned
+ * in the same order as `ids` (the Store API's `include` filter does not
+ * preserve order). Used to render WooCommerce's own related / up-sell products
+ * with the same pricing and variant data as the rest of the catalogue.
+ */
+export const getProductsByIds = cache(async (ids: number[]) => {
+  if (ids.length === 0) return [];
+
+  const products = await fetchStoreApi<WooProduct[]>(
+    `products?include=${ids.join(",")}&per_page=${ids.length}`,
+  );
+  const byId = new Map(products.map((product) => [product.id, product]));
+
+  return ids
+    .map((id) => byId.get(id))
+    .filter((product): product is WooProduct => Boolean(product));
+});
+
+/**
  * Resolves the full price/stock/image data for every variation of a variable
  * product. The Store API only embeds lightweight `{ id, attributes }` entries
  * on the parent — each variation must be fetched individually as its own
