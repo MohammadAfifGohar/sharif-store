@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --test tests/product-routing.test.mjs tests/review-submission.test.ts tests/html-text.test.ts tests/desktop-category-menu.test.mjs tests/breadcrumbs.test.mjs tests/bag.test.ts tests/bag-storage.test.ts tests/whatsapp-bag-order.test.ts tests/woocommerce-price.test.ts tests/product-search.test.ts tests/product-variants.test.ts"
