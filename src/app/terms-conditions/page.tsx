@@ -65,10 +65,10 @@ const sections = [
     id: "returns",
     title: "Returns, exchanges & refunds",
     points: [
-      "Damaged, defective, wrong or expired item: tell us on WhatsApp within 48 hours of delivery, with clear photos and preferably an unboxing video. We will replace the item or issue a full refund.",
-      "Other items (gifts, toys, accessories and similar): you can request a return or exchange within 7 days of delivery, as long as the item is unused, undamaged and in its original packaging with tags.",
-      "Beauty, skincare and personal-care products cannot be returned or exchanged once the seal or packaging has been opened, for hygiene reasons. This does not affect damaged, wrong or expired items.",
-      "For approved returns, we will tell you how to send the item back. Approved refunds are made to your UPI / bank account within 5–7 working days after we receive and check the item.",
+      "We accept returns only for items that arrive damaged, defective, wrong or expired. We do not accept returns or exchanges for any other reason, including change of mind.",
+      "To raise a request, message us on WhatsApp within 48 hours of delivery with clear photos and an unboxing video. The video must be continuous, start from the sealed parcel and clearly show the issue. Requests without an unboxing video cannot be accepted.",
+      "Once we verify the issue, we will replace the item or issue a full refund. If we need the item back, we will tell you how to send it; items that have been used or are not in their original packaging will not be accepted.",
+      "Approved refunds are made to your UPI / bank account within 5–7 working days.",
     ],
   },
   {
