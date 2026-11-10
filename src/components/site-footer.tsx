@@ -43,7 +43,7 @@ export function SiteFooter() {
             <div className="mt-5 flex flex-col gap-3 text-sm text-background/65">
               <Link href="/contact">Contact</Link>
               <a href={absoluteUrl("/my-account/")}>My account</a>
-              <a href={absoluteUrl("/terms-conditions/")}>Terms</a>
+              <Link href="/terms-conditions">Terms</Link>
             </div>
           </div>
         </div>
