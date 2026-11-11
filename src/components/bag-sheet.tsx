@@ -18,15 +18,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { getProductPath } from "@/lib/product-route";
-import { getWhatsAppChatUrl } from "@/lib/whatsapp-order";
 import { formatMoneyAmount } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
-
-const WHATSAPP_HELP_URL = getWhatsAppChatUrl(
-  "Hello Sharif Store, I need some help with my order.",
-);
 
 export function BagSheet() {
   const { items, removeItem, setQuantity, totalCount, subtotal } = useBag();
@@ -159,15 +153,6 @@ export function BagSheet() {
           >
             Checkout &amp; pay online
           </SheetClose>
-          <a
-            href={WHATSAPP_HELP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-1 flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <WhatsAppIcon className="size-4 text-[#25D366]" aria-hidden="true" />
-            Need help? Chat with us on WhatsApp
-          </a>
         </SheetFooter>
       </SheetContent>
     </Sheet>
