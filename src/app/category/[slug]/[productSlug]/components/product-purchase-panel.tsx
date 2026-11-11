@@ -6,10 +6,9 @@ import { CheckIcon } from "lucide-react";
 import { ProductStickyCta } from "./product-sticky-cta";
 import { AddToBagControl } from "@/components/add-to-bag-control";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
-import { buttonVariants } from "@/components/ui/button";
-import { absoluteUrl } from "@/lib/site-config";
 import { getProductPath } from "@/lib/product-route";
-import { getWhatsAppOrderUrl } from "@/lib/whatsapp-order";
+import { absoluteUrl } from "@/lib/site-config";
+import { getWhatsAppChatUrl } from "@/lib/whatsapp-order";
 import {
   formatMoneyAmount,
   formatPrice,
@@ -88,11 +87,6 @@ export function ProductPurchasePanel({
     savingsAmount > 0
       ? formatMoneyAmount(savingsAmount, selectedProduct.prices.currency_code)
       : null;
-  const whatsAppOrderUrl = getWhatsAppOrderUrl({
-    productName: selectedProduct.name,
-    price: formatPrice(selectedProduct),
-    productUrl: absoluteUrl(getProductPath(categorySlug, product.slug)),
-  });
   const bagVariation = selectedVariation
     ? {
         id: selectedVariation.id,
@@ -193,19 +187,19 @@ export function ProductPurchasePanel({
           className="h-11 min-w-0 flex-1 rounded-xl"
           quantityClassName="w-28 flex-none sm:w-44"
         />
-        <a
-          href={whatsAppOrderUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(
-            buttonVariants({ size: "lg" }),
-            "h-11 min-w-0 flex-1 rounded-xl bg-[#25D366] px-3 font-semibold text-white shadow-sm hover:bg-[#20bd5a]",
-          )}
-        >
-          <WhatsAppIcon data-icon="inline-start" className="text-white" />
-          Order on WhatsApp
-        </a>
       </div>
+
+      <a
+        href={getWhatsAppChatUrl(
+          `Hello Sharif Store, I have a question about this product:\n${selectedProduct.name}\n${absoluteUrl(getProductPath(categorySlug, product.slug))}`,
+        )}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <WhatsAppIcon className="size-4 text-[#25D366]" aria-hidden="true" />
+        Have a question? Chat with us on WhatsApp
+      </a>
 
       <ProductStickyCta
         product={product}

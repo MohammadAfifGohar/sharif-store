@@ -1,5 +1,10 @@
 import { WHATSAPP_NUMBER } from "@/lib/site-config";
 
+/** wa.me chat link with a pre-filled message, for "contact us" links. */
+export function getWhatsAppChatUrl(message: string) {
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
 type WhatsAppOrderDetails = {
   productName: string;
   price: string;

@@ -18,26 +18,20 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { getProductPath } from "@/lib/product-route";
-import { absoluteUrl } from "@/lib/site-config";
-import { getWhatsAppBagOrderUrl } from "@/lib/whatsapp-order";
+import { getWhatsAppChatUrl } from "@/lib/whatsapp-order";
 import { formatMoneyAmount } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
+
+const WHATSAPP_HELP_URL = getWhatsAppChatUrl(
+  "Hello Sharif Store, I need some help with my order.",
+);
 
 export function BagSheet() {
   const { items, removeItem, setQuantity, totalCount, subtotal } = useBag();
   const currencyCode = items[0]?.currencyCode ?? "INR";
   const subtotalDisplay = formatMoneyAmount(subtotal, currencyCode);
-
-  const whatsAppCheckoutUrl = getWhatsAppBagOrderUrl(
-    items.map((item) => ({
-      name: item.variationLabel ? `${item.name} (${item.variationLabel})` : item.name,
-      quantity: item.quantity,
-      unitPriceDisplay: formatMoneyAmount(item.unitPrice, item.currencyCode),
-      productUrl: absoluteUrl(getProductPath(item.categorySlug, item.slug)),
-    })),
-    subtotalDisplay,
-  );
 
   return (
     <Sheet>
@@ -166,17 +160,13 @@ export function BagSheet() {
             Checkout &amp; pay online
           </SheetClose>
           <a
-            href={whatsAppCheckoutUrl}
+            href={WHATSAPP_HELP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            aria-disabled={items.length === 0}
-            className={cn(
-              buttonVariants({ size: "lg", variant: "outline" }),
-              "w-full",
-              items.length === 0 && "pointer-events-none opacity-50",
-            )}
+            className="mt-1 flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
-            Order on WhatsApp
+            <WhatsAppIcon className="size-4 text-[#25D366]" aria-hidden="true" />
+            Need help? Chat with us on WhatsApp
           </a>
         </SheetFooter>
       </SheetContent>
