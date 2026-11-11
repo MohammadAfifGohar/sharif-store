@@ -25,7 +25,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   checkoutCustomerSchema,
   COD_FEE,
-  COD_FEE_LABEL,
   INDIAN_STATES,
   type CheckoutCustomer,
   type CheckoutSession,
@@ -334,7 +333,7 @@ export function CheckoutForm() {
           </div>
           {paymentMethod === "cod" ? (
             <div className="flex items-center justify-between">
-              <span>{COD_FEE_LABEL}</span>
+              <span>COD charges</span>
               <span>{formatMoneyAmount(COD_FEE, currencyCode)}</span>
             </div>
           ) : null}
