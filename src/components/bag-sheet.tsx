@@ -151,7 +151,7 @@ export function BagSheet() {
               />
             }
           >
-            Checkout &amp; pay online
+            Checkout
           </SheetClose>
         </SheetFooter>
       </SheetContent>
