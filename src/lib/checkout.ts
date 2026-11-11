@@ -81,6 +81,10 @@ export const checkoutItemSchema = z.object({
 export const PAYMENT_METHODS = ["razorpay", "cod"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
+/** Extra charge (₹) added to Cash on Delivery orders. */
+export const COD_FEE = 70;
+export const COD_FEE_LABEL = "Cash on Delivery charges";
+
 export const checkoutRequestSchema = z
   .object({
     paymentMethod: z.enum(PAYMENT_METHODS, "Choose a payment method."),

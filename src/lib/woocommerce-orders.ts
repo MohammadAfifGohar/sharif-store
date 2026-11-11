@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { CheckoutRequest } from "@/lib/checkout";
+import { COD_FEE, COD_FEE_LABEL, type CheckoutRequest } from "@/lib/checkout";
 import { getWordpressUrl } from "@/lib/site-config";
 
 const REQUEST_TIMEOUT_MS = 15_000;
@@ -43,6 +43,7 @@ export type WooOrder = {
     total: string;
     image?: { src?: string } | null;
   }>;
+  fee_lines: Array<{ id: number; name: string; total: string }>;
   meta_data: Array<{ key: string; value: unknown }>;
 };
 
@@ -148,6 +149,11 @@ export function createOrder({ customer, items, paymentMethod }: CheckoutRequest)
         ...(item.variationId ? { variation_id: item.variationId } : {}),
         quantity: item.quantity,
       })),
+      // Fee is set server-side so the client can't skip it.
+      fee_lines:
+        paymentMethod === "cod"
+          ? [{ name: COD_FEE_LABEL, total: COD_FEE.toFixed(2), tax_status: "none" }]
+          : [],
     },
   });
 }

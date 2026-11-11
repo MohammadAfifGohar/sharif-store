@@ -52,6 +52,7 @@ const sections = [
       "At checkout on this website you can pay online or choose Cash on Delivery (COD).",
       "Online payments are processed securely by Razorpay using UPI, debit/credit cards, net banking or wallets. Payment details are handled by Razorpay; we do not see or store your card or bank details.",
       "If money is debited but your order is not confirmed, please do not pay again. Message us on WhatsApp — the payment is either confirmed against your order or refunded automatically by Razorpay.",
+      "Cash on Delivery orders placed on this website carry an extra COD charge of ₹70, which is shown in the order total before you place the order.",
       "For COD orders, please keep the exact order amount ready in cash at the time of delivery. We may contact you to confirm a COD order before dispatch, and may cancel COD orders that cannot be confirmed or are repeatedly refused at delivery.",
       "For WhatsApp orders we accept UPI / online bank transfer and COD. Please pay only to the details shared by us on our official WhatsApp number and send the payment screenshot for confirmation.",
     ],

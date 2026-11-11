@@ -19,8 +19,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { getProductPath } from "@/lib/product-route";
-import { absoluteUrl } from "@/lib/site-config";
-import { getWhatsAppBagOrderUrl } from "@/lib/whatsapp-order";
 import { formatMoneyAmount } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
@@ -28,16 +26,6 @@ export function BagSheet() {
   const { items, removeItem, setQuantity, totalCount, subtotal } = useBag();
   const currencyCode = items[0]?.currencyCode ?? "INR";
   const subtotalDisplay = formatMoneyAmount(subtotal, currencyCode);
-
-  const whatsAppCheckoutUrl = getWhatsAppBagOrderUrl(
-    items.map((item) => ({
-      name: item.variationLabel ? `${item.name} (${item.variationLabel})` : item.name,
-      quantity: item.quantity,
-      unitPriceDisplay: formatMoneyAmount(item.unitPrice, item.currencyCode),
-      productUrl: absoluteUrl(getProductPath(item.categorySlug, item.slug)),
-    })),
-    subtotalDisplay,
-  );
 
   return (
     <Sheet>
@@ -163,21 +151,8 @@ export function BagSheet() {
               />
             }
           >
-            Checkout &amp; pay online
+            Checkout
           </SheetClose>
-          <a
-            href={whatsAppCheckoutUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-disabled={items.length === 0}
-            className={cn(
-              buttonVariants({ size: "lg", variant: "outline" }),
-              "w-full",
-              items.length === 0 && "pointer-events-none opacity-50",
-            )}
-          >
-            Order on WhatsApp
-          </a>
         </SheetFooter>
       </SheetContent>
     </Sheet>

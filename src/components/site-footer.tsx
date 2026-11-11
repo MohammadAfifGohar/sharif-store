@@ -1,8 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Separator } from "@/components/ui/separator";
 import { absoluteUrl, SITE_NAME } from "@/lib/site-config";
+import { getWhatsAppChatUrl } from "@/lib/whatsapp-order";
+
+const WHATSAPP_URL = getWhatsAppChatUrl(
+  "Hello Sharif Store, I would like to know more about your products.",
+);
 
 export function SiteFooter() {
   return (
@@ -42,6 +48,15 @@ export function SiteFooter() {
             </p>
             <div className="mt-5 flex flex-col gap-3 text-sm text-background/65">
               <Link href="/contact">Contact</Link>
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5"
+              >
+                <WhatsAppIcon className="size-4 text-[#25D366]" aria-hidden="true" />
+                WhatsApp us
+              </a>
               <a href={absoluteUrl("/my-account/")}>My account</a>
               <Link href="/terms-conditions">Terms</Link>
             </div>
