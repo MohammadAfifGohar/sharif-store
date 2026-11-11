@@ -10,6 +10,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -148,18 +149,34 @@ export function BagSheet() {
             <span>Subtotal</span>
             <span>{subtotalDisplay}</span>
           </div>
+          <SheetClose
+            nativeButton={false}
+            render={
+              <Link
+                href="/checkout"
+                aria-disabled={items.length === 0}
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  "w-full",
+                  items.length === 0 && "pointer-events-none opacity-50",
+                )}
+              />
+            }
+          >
+            Checkout &amp; pay online
+          </SheetClose>
           <a
             href={whatsAppCheckoutUrl}
             target="_blank"
             rel="noopener noreferrer"
             aria-disabled={items.length === 0}
             className={cn(
-              buttonVariants({ size: "lg" }),
+              buttonVariants({ size: "lg", variant: "outline" }),
               "w-full",
               items.length === 0 && "pointer-events-none opacity-50",
             )}
           >
-            Checkout on WhatsApp
+            Order on WhatsApp
           </a>
         </SheetFooter>
       </SheetContent>

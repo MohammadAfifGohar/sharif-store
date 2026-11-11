@@ -1,71 +1,17 @@
 import { NextResponse } from "next/server";
 
 import { reviewSubmissionSchema } from "@/lib/review-submission";
-import { getWordpressUrl, SITE_URL } from "@/lib/site-config";
+import {
+  createRateLimiter,
+  getClientIp,
+  isAllowedOrigin,
+} from "@/lib/request-guards";
+import { getWordpressUrl } from "@/lib/site-config";
 
 const MAX_BODY_SIZE = 10_000;
 const UPSTREAM_TIMEOUT_MS = 10_000;
 
-/**
- * Hosts allowed to submit reviews: the configured public site (and its www
- * variant) plus localhost for development. We validate the browser's `Origin`
- * against this list rather than against `new URL(request.url).origin`, because
- * behind a reverse proxy (e.g. Hostinger) the app sees an internal host and
- * http scheme — so the request URL never matches the public https origin.
- */
-function getAllowedHosts() {
-  const siteHost = new URL(SITE_URL).host.toLowerCase();
-  const wwwVariant = siteHost.startsWith("www.")
-    ? siteHost.slice(4)
-    : `www.${siteHost}`;
-
-  return new Set([siteHost, wwwVariant]);
-}
-
-function isLocalhost(host: string) {
-  const hostname = host.split(":")[0];
-  return hostname === "localhost" || hostname === "127.0.0.1";
-}
-
-function isAllowedOrigin(request: Request) {
-  const origin = request.headers.get("origin");
-  if (!origin) return false;
-
-  let originHost: string;
-  try {
-    const url = new URL(origin);
-    if (url.protocol !== "https:" && url.protocol !== "http:") return false;
-    originHost = url.host.toLowerCase();
-  } catch {
-    return false;
-  }
-
-  return isLocalhost(originHost) || getAllowedHosts().has(originHost);
-}
-
-// Lightweight in-memory rate limiting. Per serverless instance rather than
-// global, but enough to blunt scripted spam against this write endpoint.
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX = 5;
-const hits = new Map<string, { count: number; resetAt: number }>();
-
-function isRateLimited(ip: string) {
-  const now = Date.now();
-  const entry = hits.get(ip);
-
-  if (!entry || now > entry.resetAt) {
-    hits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return false;
-  }
-
-  entry.count += 1;
-  return entry.count > RATE_LIMIT_MAX;
-}
-
-function getClientIp(request: Request) {
-  const forwarded = request.headers.get("x-forwarded-for");
-  return forwarded?.split(",")[0]?.trim() || "unknown";
-}
+const isRateLimited = createRateLimiter(5, 60_000);
 
 export async function POST(request: Request) {
   if (!request.headers.get("content-type")?.includes("application/json")) {

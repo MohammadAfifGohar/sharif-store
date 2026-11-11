@@ -30,16 +30,18 @@ const sections = [
     id: "orders",
     title: "Orders",
     points: [
-      "Orders are placed by sending us the product details on WhatsApp. An order is confirmed only after we reply with the final price, availability and delivery details.",
+      "You can place an order in two ways: online through checkout on this website, or by sending us the product details on WhatsApp.",
+      "Online orders are confirmed once your payment is successful, or straight away when you choose Cash on Delivery. You will see an order confirmation page and receive a confirmation email with your order number.",
+      "WhatsApp orders are confirmed only after we reply with the final price, availability and delivery details.",
       "We may decline or cancel an order if a product is out of stock, the price was listed incorrectly, or the delivery address cannot be served. Any amount already paid for a cancelled order is refunded in full.",
-      "You can cancel an order free of charge before it is packed or dispatched by messaging us on WhatsApp.",
+      "You can cancel an order free of charge before it is packed or dispatched by messaging us on WhatsApp with your order number.",
     ],
   },
   {
     id: "pricing",
     title: "Prices & product information",
     points: [
-      "All prices are in Indian Rupees (₹). Delivery charges, if any, are shared with you before the order is confirmed.",
+      "All prices are in Indian Rupees (₹). For online orders, the final amount, including any delivery charges, is shown in the payment window before you pay. For WhatsApp orders, delivery charges, if any, are shared with you before the order is confirmed.",
       "We try to show products as accurately as possible, but colours, packaging and sizes may vary slightly from the photos.",
     ],
   },
@@ -47,9 +49,11 @@ const sections = [
     id: "payment",
     title: "Payment",
     points: [
-      "We accept UPI / online bank transfer and Cash on Delivery (COD).",
-      "For UPI payments, please pay only to the details shared by us on our official WhatsApp number and send the payment screenshot for confirmation.",
-      "COD may not be available for every location or order value; we will let you know when you place the order.",
+      "At checkout on this website you can pay online or choose Cash on Delivery (COD).",
+      "Online payments are processed securely by Razorpay using UPI, debit/credit cards, net banking or wallets. Payment details are handled by Razorpay; we do not see or store your card or bank details.",
+      "If money is debited but your order is not confirmed, please do not pay again. Message us on WhatsApp — the payment is either confirmed against your order or refunded automatically by Razorpay.",
+      "For COD orders, please keep the exact order amount ready in cash at the time of delivery. We may contact you to confirm a COD order before dispatch, and may cancel COD orders that cannot be confirmed or are repeatedly refused at delivery.",
+      "For WhatsApp orders we accept UPI / online bank transfer and COD. Please pay only to the details shared by us on our official WhatsApp number and send the payment screenshot for confirmation.",
     ],
   },
   {
@@ -58,7 +62,7 @@ const sections = [
     points: [
       "We offer local delivery in and around Deglur, and courier delivery across India.",
       "Local orders are usually delivered within 1–2 days. Courier orders usually arrive within 3–8 working days depending on your location. These are estimates and delays by the courier are outside our control.",
-      "Please make sure the address and phone number you share are correct. Orders returned because of a wrong address or an unanswered delivery may need to be re-shipped at extra cost.",
+      "Please make sure the address, PIN code and phone number you enter at checkout or share with us are correct. Orders returned because of a wrong address or an unanswered delivery may need to be re-shipped at extra cost.",
     ],
   },
   {
@@ -68,7 +72,7 @@ const sections = [
       "We accept returns only for items that arrive damaged, defective, wrong or expired. We do not accept returns or exchanges for any other reason, including change of mind.",
       "To raise a request, message us on WhatsApp within 48 hours of delivery with clear photos and an unboxing video. The video must be continuous, start from the sealed parcel and clearly show the issue. Requests without an unboxing video cannot be accepted.",
       "Once we verify the issue, we will replace the item or issue a full refund. If we need the item back, we will tell you how to send it; items that have been used or are not in their original packaging will not be accepted.",
-      "Approved refunds are made to your UPI / bank account within 5–7 working days.",
+      "Approved refunds for online orders are made to the original payment method (UPI, card, bank or wallet) through Razorpay within 5–7 working days. Refunds for COD and WhatsApp orders are made to your UPI / bank account within 5–7 working days.",
     ],
   },
   {
