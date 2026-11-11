@@ -24,6 +24,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   checkoutCustomerSchema,
+  COD_FEE,
+  COD_FEE_LABEL,
   INDIAN_STATES,
   type CheckoutCustomer,
   type CheckoutSession,
@@ -53,7 +55,7 @@ const PAYMENT_OPTIONS: Array<{
   {
     value: "cod",
     label: "Cash on Delivery",
-    description: "Pay in cash when your order arrives",
+    description: `Pay in cash when your order arrives (+${formatMoneyAmount(COD_FEE, "INR")} COD charges)`,
   },
 ];
 
@@ -86,6 +88,7 @@ export function CheckoutForm() {
   } | null>(null);
 
   const currencyCode = items[0]?.currencyCode ?? "INR";
+  const total = subtotal + (paymentMethod === "cod" ? COD_FEE : 0);
   const busy = status !== "idle";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -324,13 +327,27 @@ export function CheckoutForm() {
           ))}
         </ul>
 
-        <div className="mt-5 flex items-center justify-between border-t border-border/70 pt-4 font-semibold">
-          <span>Total</span>
-          <span>{formatMoneyAmount(subtotal, currencyCode)}</span>
+        <div className="mt-5 flex flex-col gap-2 border-t border-border/70 pt-4 text-sm">
+          <div className="flex items-center justify-between">
+            <span>Subtotal</span>
+            <span>{formatMoneyAmount(subtotal, currencyCode)}</span>
+          </div>
+          {paymentMethod === "cod" ? (
+            <div className="flex items-center justify-between">
+              <span>{COD_FEE_LABEL}</span>
+              <span>{formatMoneyAmount(COD_FEE, currencyCode)}</span>
+            </div>
+          ) : null}
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">
-          The final amount is confirmed in the payment window.
-        </p>
+        <div className="mt-3 flex items-center justify-between border-t border-border/70 pt-3 font-semibold">
+          <span>Total</span>
+          <span>{formatMoneyAmount(total, currencyCode)}</span>
+        </div>
+        {paymentMethod === "razorpay" ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            The final amount is confirmed in the payment window.
+          </p>
+        ) : null}
 
         <fieldset className="mt-6" disabled={busy}>
           <legend className="text-sm font-semibold">Payment method</legend>

@@ -121,6 +121,13 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
             ))}
           </ul>
 
+          {order.fee_lines.map((fee) => (
+            <div key={fee.id} className="mt-3 flex justify-between text-sm">
+              <span>{fee.name}</span>
+              <span>{formatMoneyAmount(Number(fee.total), order.currency)}</span>
+            </div>
+          ))}
+
           {Number(order.shipping_total) > 0 ? (
             <div className="mt-3 flex justify-between text-sm">
               <span>Shipping</span>
