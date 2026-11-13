@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { decodeSlug } from "@/lib/product-route";
 import { selectFirstProductWithImage } from "@/lib/product-selection";
 import { getWordpressUrl } from "@/lib/site-config";
 
@@ -268,20 +269,29 @@ export const getStoreProducts = cache(async () =>
   fetchStoreApi<WooProduct[]>("products?per_page=100"),
 );
 
+async function findStoreProductBySlug(slug: string) {
+  const wanted = decodeSlug(slug);
+  const products = await getStoreProducts();
+  return (
+    products.find((product) => decodeSlug(product.slug) === wanted) ?? null
+  );
+}
+
 export const getProductBySlug = cache(async (slug: string) => {
   try {
     const products = await fetchStoreApi<WooProduct[]>(
       `products?slug=${encodeURIComponent(slug)}`,
     );
 
-    return products[0] ?? null;
+    // The Store API `slug` filter never matches slugs WordPress stored
+    // percent-encoded (emoji / non-ASCII), so fall back to the bulk listing.
+    return products[0] ?? (await findStoreProductBySlug(slug));
   } catch (error) {
     // The single-product lookup can 500 even when the bulk listing (already
     // fetched for generateStaticParams) is healthy. Fall back to it instead
     // of failing the whole build over one flaky product endpoint.
     if (error instanceof WooCommerceError && error.status >= 500) {
-      const products = await getStoreProducts();
-      return products.find((product) => product.slug === slug) ?? null;
+      return findStoreProductBySlug(slug);
     }
 
     throw error;

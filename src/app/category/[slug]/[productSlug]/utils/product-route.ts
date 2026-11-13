@@ -8,7 +8,7 @@ import {
   type WooProduct,
 } from "@/lib/woocommerce";
 import { textFromHtml } from "@/lib/html-text";
-import { getProductPath } from "@/lib/product-route";
+import { decodeSlug, getProductPath } from "@/lib/product-route";
 import { absoluteUrl } from "@/lib/site-config";
 import { getWhatsAppOrderUrl } from "@/lib/whatsapp-order";
 
@@ -135,7 +135,7 @@ export async function getProductStaticParams() {
     .map((product) => {
       const category = getPrimaryCategory(product);
       return category
-        ? { slug: category.slug, productSlug: product.slug }
+        ? { slug: category.slug, productSlug: decodeSlug(product.slug) }
         : null;
     })
     .filter((params): params is { slug: string; productSlug: string } =>
