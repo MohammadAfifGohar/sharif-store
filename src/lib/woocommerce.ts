@@ -203,9 +203,37 @@ async function fetchStoreApi<T>(path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+/**
+ * Keeps only categories that have products, either directly or through a
+ * subcategory, so empty ones (including WooCommerce's placeholder
+ * "Uncategorized") never appear in menus, the homepage or the sitemap. A
+ * category reappears on its own as soon as a product is added to it.
+ */
+export function withoutEmptyCategories(categories: WooCategory[]) {
+  const childrenByParent = new Map<number, WooCategory[]>();
+  for (const category of categories) {
+    const siblings = childrenByParent.get(category.parent) ?? [];
+    siblings.push(category);
+    childrenByParent.set(category.parent, siblings);
+  }
+
+  const hasProducts = (category: WooCategory, seen = new Set<number>()): boolean => {
+    if (category.count > 0) return true;
+    if (seen.has(category.id)) return false;
+    seen.add(category.id);
+    return (childrenByParent.get(category.id) ?? []).some((child) =>
+      hasProducts(child, seen),
+    );
+  };
+
+  return categories.filter((category) => hasProducts(category));
+}
+
 export const getStoreCategories = cache(async () =>
-  fetchStoreApi<WooCategory[]>(
-    "products/categories?hide_empty=false&per_page=100",
+  withoutEmptyCategories(
+    await fetchStoreApi<WooCategory[]>(
+      "products/categories?hide_empty=false&per_page=100",
+    ),
   ),
 );
 
