@@ -23,6 +23,12 @@ type Busy = "google" | "send-otp" | "verify-otp" | null;
 
 const inputClassName = "h-12 rounded-sm focus-visible:ring-1!";
 
+/**
+ * Mobile OTP sends a paid SMS per login, so it stays off until
+ * NEXT_PUBLIC_PHONE_LOGIN_ENABLED=true; Google login is always offered.
+ */
+const isPhoneLoginEnabled = process.env.NEXT_PUBLIC_PHONE_LOGIN_ENABLED === "true";
+
 /** Maps Firebase error codes to messages a shopper can act on. */
 function getErrorMessage(error: unknown) {
   const code = (error as { code?: string })?.code ?? "";
@@ -133,7 +139,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
 
   return (
     <div className="mt-8 flex flex-col gap-6">
-      {confirmation ? (
+      {!isPhoneLoginEnabled ? null : confirmation ? (
         <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
           <Field>
             <FieldLabel htmlFor="otp">
@@ -197,7 +203,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
         </form>
       )}
 
-      <div id="recaptcha-container" />
+      {isPhoneLoginEnabled ? <div id="recaptcha-container" /> : null}
 
       {errorMessage ? (
         <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -205,11 +211,13 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
         </p>
       ) : null}
 
-      <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        <span className="h-px flex-1 bg-border" />
-        or
-        <span className="h-px flex-1 bg-border" />
-      </div>
+      {isPhoneLoginEnabled ? (
+        <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          or
+          <span className="h-px flex-1 bg-border" />
+        </div>
+      ) : null}
 
       <Button
         type="button"

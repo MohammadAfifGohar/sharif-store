@@ -8,7 +8,7 @@ import { LoginForm } from "./components/login-form";
 
 export const metadata: Metadata = {
   title: "Log in",
-  description: "Log in with your mobile number or Google to see your orders and check out faster.",
+  description: "Log in to see your orders and check out faster.",
   robots: { index: false, follow: false },
 };
 
