@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
 import {
   checkoutRequestSchema,
@@ -8,7 +8,9 @@ import {
   type CheckoutSession,
   type CodOrderResult,
 } from "@/lib/checkout";
+import { getSessionUser } from "@/lib/auth-session";
 import { createRazorpayOrder, getRazorpayConfig } from "@/lib/razorpay";
+import { saveCheckoutDetailsToCustomer } from "@/lib/woocommerce-customers";
 import {
   createRateLimiter,
   getClientIp,
@@ -42,10 +44,28 @@ function orderFailure(cause: unknown) {
   return error("We couldn't place your order. Please try again.", 502);
 }
 
+/**
+ * Remembers the checkout details on the logged-in customer's WooCommerce
+ * profile for next time. Never blocks or fails the order.
+ */
+function rememberCustomerDetails(
+  customerId: number | null,
+  request: CheckoutRequest,
+) {
+  if (!customerId) return;
+  // after(): runs once the response is sent, so it doesn't slow down checkout.
+  after(() =>
+    saveCheckoutDetailsToCustomer(customerId, request.customer).catch((cause) => {
+      console.error("[checkout] could not save customer details", cause);
+    }),
+  );
+}
+
 /** Cash on Delivery: no payment step, the order is placed straight away. */
-async function placeCodOrder(request: CheckoutRequest) {
+async function placeCodOrder(request: CheckoutRequest, customerId: number | null) {
   try {
-    const order = await createOrder(request);
+    const order = await createOrder(request, customerId);
+    rememberCustomerDetails(customerId, request);
     const body: CodOrderResult = {
       kind: "cod",
       redirectUrl: getOrderConfirmationPath(order.id, order.order_key),
@@ -80,8 +100,10 @@ export async function POST(request: Request) {
     return error(result.error.issues[0]?.message ?? "Invalid order details.", 400);
   }
 
+  const customerId = (await getSessionUser())?.customerId ?? null;
+
   if (result.data.paymentMethod === "cod") {
-    return placeCodOrder(result.data);
+    return placeCodOrder(result.data, customerId);
   }
 
   const razorpay = getRazorpayConfig();
@@ -91,8 +113,9 @@ export async function POST(request: Request) {
 
   let wcOrderId: number | null = null;
   try {
-    const order = await createOrder(result.data);
+    const order = await createOrder(result.data, customerId);
     wcOrderId = order.id;
+    rememberCustomerDetails(customerId, result.data);
 
     const amount = toMinorUnits(order.total);
     if (!Number.isInteger(amount) || amount < 100) {

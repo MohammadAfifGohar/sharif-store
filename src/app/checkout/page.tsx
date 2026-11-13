@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 
+import { getSessionUser } from "@/lib/auth-session";
+import {
+  getCheckoutDefaults,
+  getWooCustomer,
+} from "@/lib/woocommerce-customers";
+
 import { CheckoutForm } from "./components/checkout-form";
 
 export const metadata: Metadata = {
@@ -8,7 +14,20 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function CheckoutPage() {
+/** Saved details for a logged-in customer; guests get an empty form. */
+async function loadCheckoutDefaults() {
+  const user = await getSessionUser();
+  if (!user) return null;
+
+  const customer = user.customerId
+    ? await getWooCustomer(user.customerId).catch(() => null)
+    : null;
+  return getCheckoutDefaults(customer, user);
+}
+
+export default async function CheckoutPage() {
+  const defaults = await loadCheckoutDefaults();
+
   return (
     <main className="flex-1 bg-[#fffdfb]">
       <div className="mx-auto w-full max-w-[1100px] px-4 py-10 sm:px-6 sm:py-14 lg:px-10">
@@ -20,7 +39,7 @@ export default function CheckoutPage() {
           Checkout
         </h1>
 
-        <CheckoutForm />
+        <CheckoutForm defaults={defaults ?? {}} isLoggedIn={defaults !== null} />
       </div>
     </main>
   );

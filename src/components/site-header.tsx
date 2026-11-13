@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { UserRoundIcon } from "lucide-react";
 
 import { BagSheet } from "@/components/bag-sheet";
 import { DesktopCategoryMenu } from "@/components/desktop-category-menu";
@@ -9,7 +10,9 @@ import {
   type NavigationItem,
 } from "@/components/mobile-navigation-sheet";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { buildCategoryNavigation } from "@/lib/category-navigation";
+import { cn } from "@/lib/utils";
 import { getStoreCategories } from "@/lib/woocommerce";
 
 const navItems = [
@@ -75,6 +78,19 @@ export async function SiteHeader() {
                 </Link>
               ))}
             </nav>
+
+            {/* Static link: /account sends guests to /login, so the header
+                never reads cookies and pages stay statically cached. */}
+            <Link
+              href="/account"
+              aria-label="My account"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon-lg" }),
+                "size-11",
+              )}
+            >
+              <UserRoundIcon />
+            </Link>
 
             <BagSheet />
 

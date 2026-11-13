@@ -7,13 +7,15 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test tests/product-routing.test.mjs tests/review-submission.test.ts tests/html-text.test.ts tests/desktop-category-menu.test.mjs tests/breadcrumbs.test.mjs tests/bag.test.ts tests/bag-storage.test.ts tests/whatsapp-bag-order.test.ts tests/woocommerce-price.test.ts tests/product-search.test.ts tests/product-variants.test.ts tests/checkout.test.ts tests/category-visibility.test.ts"
+    "test": "tsx --test tests/product-routing.test.mjs tests/review-submission.test.ts tests/html-text.test.ts tests/desktop-category-menu.test.mjs tests/breadcrumbs.test.mjs tests/bag.test.ts tests/bag-storage.test.ts tests/whatsapp-bag-order.test.ts tests/woocommerce-price.test.ts tests/product-search.test.ts tests/product-variants.test.ts tests/checkout.test.ts tests/category-visibility.test.ts tests/auth.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
+    "firebase": "^13.3.0",
+    "jose": "^6.2.17",
     "lucide-react": "^1.25.0",
     "motion": "^12.42.2",
     "next": "16.2.10",

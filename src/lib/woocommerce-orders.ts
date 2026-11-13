@@ -1,5 +1,6 @@
 import "server-only";
 
+import { orderBelongsToUser, type SessionUser } from "@/lib/auth";
 import { COD_FEE, COD_FEE_LABEL, type CheckoutRequest } from "@/lib/checkout";
 import { getWordpressUrl } from "@/lib/site-config";
 
@@ -26,7 +27,17 @@ export type WooOrder = {
   shipping_total: string;
   date_created: string;
   transaction_id: string;
-  billing: { first_name: string; last_name: string; email: string; phone: string };
+  billing: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    address_1?: string;
+    address_2?: string;
+    city?: string;
+    state?: string;
+    postcode?: string;
+  };
   shipping: {
     first_name: string;
     last_name: string;
@@ -70,7 +81,7 @@ export function isWooOrdersConfigured() {
   return getAuthHeader() !== null;
 }
 
-async function orderRequest<T>(
+export async function orderRequest<T>(
   path: string,
   init: { method?: string; body?: unknown } = {},
 ): Promise<T> {
@@ -123,7 +134,11 @@ const PAYMENT_METHOD_FIELDS = {
  * Creates the order. Only product IDs and quantities are sent — WooCommerce
  * prices the lines itself, so a tampered bag can't change totals.
  */
-export function createOrder({ customer, items, paymentMethod }: CheckoutRequest) {
+export function createOrder(
+  { customer, items, paymentMethod }: CheckoutRequest,
+  /** Logged-in customer's WooCommerce id; guests place orders without one. */
+  customerId: number | null = null,
+) {
   const address = {
     first_name: customer.firstName,
     last_name: customer.lastName,
@@ -141,6 +156,7 @@ export function createOrder({ customer, items, paymentMethod }: CheckoutRequest)
       ...PAYMENT_METHOD_FIELDS[paymentMethod],
       set_paid: false,
       created_via: "headless-storefront",
+      ...(customerId ? { customer_id: customerId } : {}),
       billing: { ...address, email: customer.email, phone: customer.phone },
       shipping: { ...address, phone: customer.phone },
       customer_note: customer.note,
@@ -174,6 +190,44 @@ export function cancelOrder(orderId: number) {
     method: "PUT",
     body: { status: "cancelled" },
   });
+}
+
+/** Statuses that are internal to WooCommerce and never shown to customers. */
+const HIDDEN_ORDER_STATUSES = new Set(["checkout-draft", "trash"]);
+
+/**
+ * The logged-in customer's orders, newest first. WooCommerce's order search
+ * covers billing phone and email, so this also finds orders placed as a guest
+ * before the customer ever logged in; exact matching then drops fuzzy hits.
+ */
+export async function listOrdersForUser(user: SessionUser) {
+  const terms = [user.phone, user.email].filter(
+    (term): term is string => Boolean(term),
+  );
+  const query = "per_page=50&orderby=date&order=desc";
+  const [linked, ...searched] = await Promise.all([
+    user.customerId
+      ? orderRequest<WooOrder[]>(`orders?customer=${user.customerId}&${query}`)
+      : Promise.resolve([]),
+    ...terms.map((term) =>
+      orderRequest<WooOrder[]>(`orders?search=${encodeURIComponent(term)}&${query}`),
+    ),
+  ]);
+
+  const byId = new Map<number, WooOrder>();
+  const add = (order: WooOrder) => {
+    if (!HIDDEN_ORDER_STATUSES.has(order.status)) byId.set(order.id, order);
+  };
+  // Orders linked to the customer account are theirs by definition.
+  linked.forEach(add);
+  searched
+    .flat()
+    .filter((order) => orderBelongsToUser(order.billing, user))
+    .forEach(add);
+
+  return [...byId.values()].sort((a, b) =>
+    b.date_created.localeCompare(a.date_created),
+  );
 }
 
 export function getLinkedRazorpayOrderId(order: WooOrder) {

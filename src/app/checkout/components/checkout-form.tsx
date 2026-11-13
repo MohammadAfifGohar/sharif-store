@@ -73,7 +73,14 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
   return data;
 }
 
-export function CheckoutForm() {
+export function CheckoutForm({
+  defaults = {},
+  isLoggedIn = false,
+}: {
+  /** Saved details of a logged-in customer, pre-filled into the form. */
+  defaults?: Partial<CheckoutCustomer>;
+  isLoggedIn?: boolean;
+}) {
   const router = useRouter();
   const { items, subtotal, totalCount, clear } = useBag();
   const [status, setStatus] = useState<Status>("idle");
@@ -236,38 +243,50 @@ export function CheckoutForm() {
         <FieldLegend className="font-heading text-xl font-semibold">
           Delivery details
         </FieldLegend>
+        {isLoggedIn ? null : (
+          <p className="-mt-1 text-sm text-muted-foreground">
+            Ordered before?{" "}
+            <Link
+              href="/login?next=/checkout"
+              className="font-semibold text-foreground underline underline-offset-4"
+            >
+              Log in
+            </Link>{" "}
+            to fill your saved address and track orders. Or continue as a guest.
+          </p>
+        )}
         <FieldGroup className="grid gap-5 sm:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="firstName">First name</FieldLabel>
-            <Input id="firstName" name="firstName" autoComplete="given-name" maxLength={60} required className={inputClassName} />
+            <Input id="firstName" name="firstName" defaultValue={defaults.firstName} autoComplete="given-name" maxLength={60} required className={inputClassName} />
           </Field>
           <Field>
             <FieldLabel htmlFor="lastName">Last name</FieldLabel>
-            <Input id="lastName" name="lastName" autoComplete="family-name" maxLength={60} required className={inputClassName} />
+            <Input id="lastName" name="lastName" defaultValue={defaults.lastName} autoComplete="family-name" maxLength={60} required className={inputClassName} />
           </Field>
           <Field>
             <FieldLabel htmlFor="phone">Mobile number</FieldLabel>
-            <Input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="10-digit mobile" maxLength={14} required className={inputClassName} />
+            <Input id="phone" name="phone" defaultValue={defaults.phone} type="tel" inputMode="tel" autoComplete="tel-national" placeholder="10-digit mobile" maxLength={14} required className={inputClassName} />
           </Field>
           <Field>
             <FieldLabel htmlFor="email">Email</FieldLabel>
-            <Input id="email" name="email" type="email" autoComplete="email" maxLength={254} required className={inputClassName} />
+            <Input id="email" name="email" defaultValue={defaults.email} type="email" autoComplete="email" maxLength={254} required className={inputClassName} />
           </Field>
           <Field className="sm:col-span-2">
             <FieldLabel htmlFor="address1">Address</FieldLabel>
-            <Input id="address1" name="address1" autoComplete="address-line1" placeholder="House no., building, street" maxLength={200} required className={inputClassName} />
+            <Input id="address1" name="address1" defaultValue={defaults.address1} autoComplete="address-line1" placeholder="House no., building, street" maxLength={200} required className={inputClassName} />
           </Field>
           <Field className="sm:col-span-2">
             <FieldLabel htmlFor="address2">Landmark / area (optional)</FieldLabel>
-            <Input id="address2" name="address2" autoComplete="address-line2" maxLength={200} className={inputClassName} />
+            <Input id="address2" name="address2" defaultValue={defaults.address2} autoComplete="address-line2" maxLength={200} className={inputClassName} />
           </Field>
           <Field>
             <FieldLabel htmlFor="city">City</FieldLabel>
-            <Input id="city" name="city" autoComplete="address-level2" maxLength={80} required className={inputClassName} />
+            <Input id="city" name="city" defaultValue={defaults.city} autoComplete="address-level2" maxLength={80} required className={inputClassName} />
           </Field>
           <Field>
             <FieldLabel htmlFor="postcode">PIN code</FieldLabel>
-            <Input id="postcode" name="postcode" inputMode="numeric" autoComplete="postal-code" pattern="[1-9][0-9]{5}" maxLength={6} required className={inputClassName} />
+            <Input id="postcode" name="postcode" defaultValue={defaults.postcode} inputMode="numeric" autoComplete="postal-code" pattern="[1-9][0-9]{5}" maxLength={6} required className={inputClassName} />
           </Field>
           <Field className="sm:col-span-2">
             <FieldLabel htmlFor="state">State</FieldLabel>
@@ -276,7 +295,7 @@ export function CheckoutForm() {
               name="state"
               autoComplete="address-level1"
               required
-              defaultValue="MH"
+              defaultValue={defaults.state ?? "MH"}
               className={cn(
                 inputClassName,
                 "w-full border border-input bg-transparent px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-ring/50 md:text-sm",
