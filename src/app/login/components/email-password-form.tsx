@@ -33,6 +33,39 @@ function getVerificationSettings() {
 }
 
 /**
+ * Sends an account email through our own server (branded, with a button).
+ * Returns false when the server isn't set up for it (503), so the caller can
+ * fall back to Firebase's built-in email.
+ */
+async function sendViaServer(path: string, body: Record<string, string>) {
+  const response = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (response.status === 503) return false;
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data.message || "We couldn't send the email. Please try again.");
+  }
+  return true;
+}
+
+async function sendVerification(user: User) {
+  const sent = await sendViaServer("/api/auth/email-verification", {
+    idToken: await user.getIdToken(true),
+  });
+  if (!sent) await sendEmailVerification(user, getVerificationSettings());
+}
+
+async function sendPasswordReset(email: string) {
+  const sent = await sendViaServer("/api/auth/password-reset", { email });
+  if (!sent) {
+    await sendPasswordResetEmail(getFirebaseAuth(), email, getVerificationSettings());
+  }
+}
+
+/**
  * Email + password login. Accounts must verify their email before they can
  * log in: the account page shows past orders matched by email, so an
  * unverified address must never be trusted (the server enforces this too).
@@ -81,7 +114,7 @@ export function EmailPasswordForm({
   }
 
   async function askToVerify(user: User) {
-    await sendEmailVerification(user, getVerificationSettings());
+    await sendVerification(user);
     setPendingUser(user);
     setCooldown(RESEND_COOLDOWN_SECONDS);
     setMode("verify");
@@ -137,7 +170,7 @@ export function EmailPasswordForm({
   function handleResend() {
     if (!pendingUser || cooldown > 0) return;
     void run(async () => {
-      await sendEmailVerification(pendingUser, getVerificationSettings());
+      await sendVerification(pendingUser);
       setCooldown(RESEND_COOLDOWN_SECONDS);
       setNotice("We sent a new link. Check your inbox and spam folder.");
     });
@@ -152,7 +185,7 @@ export function EmailPasswordForm({
   function handleReset(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void run(async () => {
-      await sendPasswordResetEmail(getFirebaseAuth(), email.trim(), getVerificationSettings());
+      await sendPasswordReset(email.trim());
       setMode("reset-sent");
     });
   }
