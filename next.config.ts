@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   htmlLimitedBots: /.*/,
   experimental: {
     staticGenerationRetryCount: 2,
+    // The persistent Turbopack dev cache grew past 800 MB and its writes
+    // (minutes long on this machine) stalled `next dev`. Keep dev in-memory.
+    turbopackFileSystemCacheForDev: false,
   },
   images: {
     qualities: [75, 85],
