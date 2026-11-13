@@ -19,6 +19,9 @@ import { Input } from "@/components/ui/input";
 import { normalizeIndianPhone } from "@/lib/auth";
 import { getFirebaseAuth } from "@/lib/firebase-client";
 
+import { getAuthErrorMessage } from "./auth-error";
+import { EmailPasswordForm } from "./email-password-form";
+
 type Busy = "google" | "send-otp" | "verify-otp" | null;
 
 const inputClassName = "h-12 rounded-sm focus-visible:ring-1!";
@@ -28,21 +31,6 @@ const inputClassName = "h-12 rounded-sm focus-visible:ring-1!";
  * NEXT_PUBLIC_PHONE_LOGIN_ENABLED=true; Google login is always offered.
  */
 const isPhoneLoginEnabled = process.env.NEXT_PUBLIC_PHONE_LOGIN_ENABLED === "true";
-
-/** Maps Firebase error codes to messages a shopper can act on. */
-function getErrorMessage(error: unknown) {
-  const code = (error as { code?: string })?.code ?? "";
-  if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
-    return "";
-  }
-  if (code === "auth/invalid-verification-code") return "That OTP is incorrect. Please check and try again.";
-  if (code === "auth/code-expired") return "That OTP has expired. Please request a new one.";
-  if (code === "auth/too-many-requests") return "Too many attempts. Please wait a while and try again.";
-  if (code === "auth/invalid-phone-number") return "Enter a valid 10-digit mobile number.";
-  if (code === "auth/popup-blocked") return "Your browser blocked the Google window. Please allow pop-ups and try again.";
-  if (code === "auth/network-request-failed") return "Network problem. Check your connection and try again.";
-  return error instanceof Error && !code ? error.message : "Something went wrong. Please try again.";
-}
 
 export function LoginForm({ redirectTo }: { redirectTo: string }) {
   const router = useRouter();
@@ -81,7 +69,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
     try {
       await action();
     } catch (error) {
-      setErrorMessage(getErrorMessage(error));
+      setErrorMessage(getAuthErrorMessage(error));
       setBusy(null);
       return;
     }
@@ -205,19 +193,19 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
 
       {isPhoneLoginEnabled ? <div id="recaptcha-container" /> : null}
 
+      <EmailPasswordForm disabled={busy !== null} onSignedIn={finishLogin} />
+
       {errorMessage ? (
         <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {errorMessage}
         </p>
       ) : null}
 
-      {isPhoneLoginEnabled ? (
-        <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <span className="h-px flex-1 bg-border" />
-          or
-          <span className="h-px flex-1 bg-border" />
-        </div>
-      ) : null}
+      <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        or
+        <span className="h-px flex-1 bg-border" />
+      </div>
 
       <Button
         type="button"

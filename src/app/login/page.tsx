@@ -33,8 +33,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
           Log in
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Track your orders and check out faster with your saved address. No
-          password needed.
+          Track your orders and check out faster with your saved address.
         </p>
 
         {isLoginConfigured() ? (
