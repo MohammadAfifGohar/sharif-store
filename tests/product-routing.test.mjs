@@ -16,3 +16,10 @@ test("encodes category and product path segments", () => {
     "/category/skin%20%26%20care/rose%20oud%20%2F%2050ml",
   );
 });
+
+test("decodes WordPress percent-encoded slugs before encoding the path", () => {
+  assert.equal(
+    getProductPath("face-wash", "gel-face-wash-100ml-%f0%9f%8d%89"),
+    "/category/face-wash/gel-face-wash-100ml-%F0%9F%8D%89",
+  );
+});
