@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
-import { ProductGallery } from "./components/product-gallery";
 import { ProductPurchasePanel } from "./components/product-purchase-panel";
+import { ProductVariantProvider } from "./components/product-variant-context";
+import { ProductVariantGallery } from "./components/product-variant-gallery";
 import { RelatedProducts } from "./components/product-related";
-import { ProductReviews, ProductReviewsSkeleton } from "./components/product-reviews";
+import {
+  ProductReviews,
+  ProductReviewsSkeleton,
+} from "./components/product-reviews";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { RatingStars } from "@/components/rating-stars";
 import {
@@ -127,82 +131,85 @@ export default async function CategoryProductPage(
         />
       </div>
 
-      <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
-        <section className="min-w-0">
-          <ProductGallery
-            images={product.images}
-            productName={product.name}
-            discountPercent={view.discountPercent}
-          />
-        </section>
+      <ProductVariantProvider
+        variations={variations}
+        initialVariantId={
+          Number.isFinite(initialVariantId) ? initialVariantId : null
+        }
+      >
+        <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
+          <section className="min-w-0">
+            <ProductVariantGallery
+              images={product.images}
+              productName={product.name}
+              discountPercent={view.discountPercent}
+            />
+          </section>
 
-        <section className="flex min-w-0 flex-col lg:sticky lg:top-28">
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">{category.name}</Badge>
-            {product.brands.map((brand) => (
-              <Badge key={brand.id} variant="outline">
-                {brand.name}
-              </Badge>
-            ))}
-            {product.on_sale ? <SaleBadge /> : null}
-          </div>
-
-          <h1 className="mt-4 font-heading text-2xl font-semibold capitalize tracking-tight text-[#423b3f] sm:text-4xl">
-            {product.name}
-          </h1>
-
-          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-            {view.description}
-          </p>
-
-          {view.hasRating ? (
-            <div className="mt-3 flex items-center gap-2 text-sm">
-              <RatingStars rating={view.averageRating} />
-              <span className="font-semibold">
-                {view.averageRating.toFixed(1)}
-              </span>
-              <a
-                href="#product-reviews-heading"
-                className="text-muted-foreground transition-colors hover:text-foreground"
-              >
-                ({product.review_count}{" "}
-                {product.review_count === 1 ? "review" : "reviews"})
-              </a>
-            </div>
-          ) : null}
-
-          <ProductPurchasePanel
-            categorySlug={category.slug}
-            product={product}
-            variations={variations}
-            initialVariantId={
-              Number.isFinite(initialVariantId) ? initialVariantId : null
-            }
-          />
-
-          {view.specs.length > 0 ? (
-            <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
-              {view.specs.map((spec) => (
-                <div key={spec.label} className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">{spec.label}</dt>
-                  <dd className="text-right font-medium">{spec.value}</dd>
-                </div>
-              ))}
-            </dl>
-          ) : null}
-
-          {product.tags.length > 0 ? (
-            <div className="mt-6 flex flex-wrap items-center gap-2">
-              <span className="text-sm text-muted-foreground">Tags:</span>
-              {product.tags.map((tag) => (
-                <Badge key={tag.id} variant="outline">
-                  {tag.name}
+          <section className="flex min-w-0 flex-col lg:sticky lg:top-28">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary">{category.name}</Badge>
+              {product.brands.map((brand) => (
+                <Badge key={brand.id} variant="outline">
+                  {brand.name}
                 </Badge>
               ))}
+              {product.on_sale ? <SaleBadge /> : null}
             </div>
-          ) : null}
-        </section>
-      </div>
+
+            <h1 className="mt-4 font-heading text-2xl font-semibold capitalize tracking-tight text-[#423b3f] sm:text-4xl">
+              {product.name}
+            </h1>
+
+            <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+              {view.description}
+            </p>
+
+            {view.hasRating ? (
+              <div className="mt-3 flex items-center gap-2 text-sm">
+                <RatingStars rating={view.averageRating} />
+                <span className="font-semibold">
+                  {view.averageRating.toFixed(1)}
+                </span>
+                <a
+                  href="#product-reviews-heading"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  ({product.review_count}{" "}
+                  {product.review_count === 1 ? "review" : "reviews"})
+                </a>
+              </div>
+            ) : null}
+
+            <ProductPurchasePanel
+              categorySlug={category.slug}
+              product={product}
+            />
+
+            {view.specs.length > 0 ? (
+              <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
+                {view.specs.map((spec) => (
+                  <div key={spec.label} className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">{spec.label}</dt>
+                    <dd className="text-right font-medium">{spec.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+
+            {product.tags.length > 0 ? (
+              <div className="mt-6 flex flex-wrap items-center gap-2">
+                <span className="text-sm text-muted-foreground">Tags:</span>
+                {product.tags.map((tag) => (
+                  <Badge key={tag.id} variant="outline">
+                    {tag.name}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        </div>
+      </ProductVariantProvider>
 
       <Suspense fallback={null}>
         <RelatedProducts product={product} />

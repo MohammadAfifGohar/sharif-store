@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { CheckIcon } from "lucide-react";
 
 import { ProductStickyCta } from "./product-sticky-cta";
+import { useProductVariant } from "./product-variant-context";
 import { AddToBagControl } from "@/components/add-to-bag-control";
 import {
   formatMoneyAmount,
@@ -17,9 +17,6 @@ import { cn } from "@/lib/utils";
 type ProductPurchasePanelProps = {
   categorySlug: string;
   product: WooProduct;
-  variations: WooProduct[];
-  /** Variation id deep-linked from the product grid (e.g. `?variant=123`), pre-selected on load. */
-  initialVariantId?: number | null;
 };
 
 function getVariationLabel(variation: WooProduct) {
@@ -36,21 +33,9 @@ function getVariationLabel(variation: WooProduct) {
 export function ProductPurchasePanel({
   categorySlug,
   product,
-  variations,
-  initialVariantId = null,
 }: ProductPurchasePanelProps) {
-  const deepLinkedVariation =
-    initialVariantId != null
-      ? variations.find((variation) => variation.id === initialVariantId)
-      : null;
-  const [selectedId, setSelectedId] = useState(
-    deepLinkedVariation?.id ??
-      variations.find((variation) => variation.is_in_stock)?.id ??
-      variations[0]?.id ??
-      null,
-  );
-  const selectedVariation =
-    variations.find((variation) => variation.id === selectedId) ?? null;
+  const { variations, selectedId, setSelectedId, selectedVariation } =
+    useProductVariant();
   const selectedLabel = selectedVariation
     ? getVariationLabel(selectedVariation)
     : "";
