@@ -39,6 +39,19 @@ export async function POST(request: Request) {
   if (!result?.success) return error("Enter a valid email address.", 400);
   const email = result.data.email.trim().toLowerCase();
 
+  // With email enumeration protection on, Firebase reports an unknown email
+  // as a vague internal error when creating the link, so look the user up
+  // first and quietly do nothing when there is no account.
+  try {
+    await getAdminAuth().getUserByEmail(email);
+  } catch (cause) {
+    if ((cause as { code?: string })?.code === "auth/user-not-found") {
+      return NextResponse.json({ ok: true });
+    }
+    console.error("[auth] could not look up account for password reset", cause);
+    return error("We couldn't send the email. Please try again.", 502);
+  }
+
   try {
     // isAllowedOrigin guarantees this is our own site (or localhost).
     const origin = request.headers.get("origin") as string;
@@ -47,11 +60,8 @@ export async function POST(request: Request) {
     });
     await sendMail({ to: email, ...buildPasswordResetEmail({ email, link }) });
   } catch (cause) {
-    const code = (cause as { code?: string })?.code;
-    if (code !== "auth/user-not-found" && code !== "auth/email-not-found") {
-      console.error("[auth] could not send password reset email", cause);
-      return error("We couldn't send the email. Please try again.", 502);
-    }
+    console.error("[auth] could not send password reset email", cause);
+    return error("We couldn't send the email. Please try again.", 502);
   }
 
   return NextResponse.json({ ok: true });
