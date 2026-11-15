@@ -68,7 +68,7 @@ export function SiteFooter() {
               <a href={absoluteUrl("/my-account/")}>My account</a>
               <Link href="/terms-conditions#returns">Returns &amp; refunds</Link>
               <Link href="/terms-conditions#delivery">Shipping</Link>
-              <Link href="/terms-conditions">Terms</Link>
+              <Link href="/terms-conditions">Terms &amp; Conditions</Link>
               <Link href="/privacy-policy">Privacy policy</Link>
             </div>
           </div>
