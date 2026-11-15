@@ -26,6 +26,8 @@ export type WooOrder = {
   total: string;
   shipping_total: string;
   date_created: string;
+  /** Set by WooCommerce when the order is marked Completed (= delivered). UTC, no zone suffix. */
+  date_completed_gmt?: string | null;
   transaction_id: string;
   billing: {
     first_name: string;

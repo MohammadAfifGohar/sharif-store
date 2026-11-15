@@ -1,8 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CircleCheckIcon, ClockIcon, CircleXIcon } from "lucide-react";
+import {
+  CircleCheckIcon,
+  ClockIcon,
+  CircleXIcon,
+  MessageCircleIcon,
+  TriangleAlertIcon,
+} from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import {
+  getOpenProblemReportDeadline,
+  getProblemReportWhatsAppUrl,
+} from "@/lib/order-problem-report";
 import { getOrder, isOrderPaid, type WooOrder } from "@/lib/woocommerce-orders";
 import { WHATSAPP_NUMBER } from "@/lib/site-config";
 import { formatMoneyAmount } from "@/lib/woocommerce";
@@ -11,6 +21,14 @@ export const metadata: Metadata = {
   title: "Order confirmation",
   robots: { index: false, follow: false },
 };
+
+const deadlineFormatter = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+  month: "short",
+  hour: "numeric",
+  minute: "2-digit",
+  timeZone: "Asia/Kolkata",
+});
 
 type PageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -89,6 +107,7 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
   }
 
   const { Icon, iconClass, title, body } = getStatusView(order);
+  const reportDeadline = getOpenProblemReportDeadline(order);
   const shipping = order.shipping;
 
   return (
@@ -151,6 +170,51 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
             </p>
           </div>
         </section>
+
+        {reportDeadline ? (
+          <section
+            aria-labelledby="report-problem-heading"
+            className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/60 p-5 sm:p-6"
+          >
+            <div className="flex items-start gap-3">
+              <TriangleAlertIcon
+                aria-hidden="true"
+                className="mt-0.5 size-5 shrink-0 text-amber-600"
+              />
+              <div className="min-w-0">
+                <h2
+                  id="report-problem-heading"
+                  className="font-heading text-lg font-semibold"
+                >
+                  Problem with your order?
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Damaged, wrong or expired item? Report it by{" "}
+                  <span className="font-semibold text-foreground">
+                    {deadlineFormatter.format(reportDeadline)}
+                  </span>{" "}
+                  with clear photos and, if possible, an unboxing video. Requests
+                  with a video are approved fastest.{" "}
+                  <Link
+                    href="/terms-conditions#returns"
+                    className="underline underline-offset-2 hover:text-foreground"
+                  >
+                    Return policy
+                  </Link>
+                </p>
+                <a
+                  href={getProblemReportWhatsAppUrl(order)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${buttonVariants({ variant: "outline" })} mt-4 bg-background`}
+                >
+                  <MessageCircleIcon aria-hidden="true" />
+                  Report a problem on WhatsApp
+                </a>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/" className={buttonVariants({ size: "lg" })}>
