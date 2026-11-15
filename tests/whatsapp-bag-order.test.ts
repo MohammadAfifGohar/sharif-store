@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { WHATSAPP_NUMBER } from "../src/lib/site-config";
 import { getWhatsAppBagOrderUrl } from "../src/lib/whatsapp-order";
 
 test("builds a wa.me url encoding every bag item and the subtotal", () => {
@@ -22,7 +23,7 @@ test("builds a wa.me url encoding every bag item and the subtotal", () => {
     "₹1,297",
   );
 
-  assert.match(url, /^https:\/\/wa\.me\/917020878764\?text=/);
+  assert.ok(url.startsWith(`https://wa.me/${WHATSAPP_NUMBER}?text=`));
 
   const message = decodeURIComponent(url.split("?text=")[1]);
 
