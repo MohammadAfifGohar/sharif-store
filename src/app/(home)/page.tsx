@@ -11,11 +11,16 @@ import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { expandProductsForGrid } from "@/lib/product-variants";
+import { getHomeBannerSlides } from "@/lib/home-banners";
 import { getHomepageCommerceData } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
-  const { products, categories } = await getHomepageCommerceData();
+  const [{ products, categories }, wordpressBanners] = await Promise.all([
+    getHomepageCommerceData(),
+    getHomeBannerSlides(),
+  ]);
+  const bannerSlides = wordpressBanners ?? heroSlides;
   const categorizedProducts = products.filter(
     (product) => product.categories.length > 0,
   );
@@ -26,7 +31,7 @@ export default async function HomePage() {
         <h1 className="sr-only">
           Beauty, gifts and everyday essentials at The Sharif Store
         </h1>
-        <CampaignHero slides={heroSlides} />
+        <CampaignHero slides={bannerSlides} />
 
         <section id="categories" className="border-y border-border bg-background">
           <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 sm:py-10 lg:px-10">

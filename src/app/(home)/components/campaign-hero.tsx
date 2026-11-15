@@ -23,7 +23,8 @@ export type CampaignSlide = {
   alt: string;
   desktopImage: CampaignImage;
   href: string;
-  mobileImage: CampaignImage;
+  /** Optional portrait art for phones. Without it the desktop banner is used everywhere. */
+  mobileImage?: CampaignImage;
 };
 
 type CampaignHeroProps = {
@@ -59,13 +60,13 @@ export function CampaignHero({ slides }: CampaignHeroProps) {
             quality: 85,
             sizes: "100vw",
           };
-          const {
-            props: { srcSet: desktopSrcSet },
-          } = getImageProps({ ...common, ...slide.desktopImage });
-          const { props: mobileProps } = getImageProps({
+          const { props: desktopProps } = getImageProps({
             ...common,
-            ...slide.mobileImage,
+            ...slide.desktopImage,
           });
+          const mobileProps = slide.mobileImage
+            ? getImageProps({ ...common, ...slide.mobileImage }).props
+            : null;
 
           return (
             <CarouselItem
@@ -78,23 +79,33 @@ export function CampaignHero({ slides }: CampaignHeroProps) {
                 aria-label={`Shop ${slide.alt}`}
                 className="block cursor-pointer overflow-hidden"
               >
-                <picture className="block">
-                  <source
-                    media="(min-width: 651px)"
-                    srcSet={desktopSrcSet}
-                    width={slide.desktopImage.width}
-                    height={slide.desktopImage.height}
-                  />
+                {mobileProps ? (
+                  <picture className="block">
+                    <source
+                      media="(min-width: 651px)"
+                      srcSet={desktopProps.srcSet}
+                      width={slide.desktopImage.width}
+                      height={slide.desktopImage.height}
+                    />
+                    <img
+                      {...mobileProps}
+                      alt={slide.alt}
+                      // Portrait phone art keeps its headline and button at
+                      // the top. Showing it at 4:5 (capped at 65% of the
+                      // screen) keeps them and most products visible while
+                      // leaving room below for the categories.
+                      className="block h-[min(125vw,65svh)] w-full object-cover object-top min-[651px]:h-auto"
+                    />
+                  </picture>
+                ) : (
+                  // Already optimised: the props come from getImageProps.
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    {...mobileProps}
+                    {...desktopProps}
                     alt={slide.alt}
-                    // Mobile art is 768×1200 with the headline and button at
-                    // the top. Showing it at 4:5 (capped at 65% of the screen)
-                    // keeps the headline, button and most products visible
-                    // while leaving room below for the categories.
-                    className="block h-[min(125vw,65svh)] w-full object-cover object-top min-[651px]:h-auto"
+                    className="block h-auto w-full"
                   />
-                </picture>
+                )}
               </Link>
             </CarouselItem>
           );
