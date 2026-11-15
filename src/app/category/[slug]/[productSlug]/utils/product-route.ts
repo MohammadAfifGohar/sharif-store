@@ -9,7 +9,7 @@ import {
 } from "@/lib/woocommerce";
 import { textFromHtml } from "@/lib/html-text";
 import { decodeSlug, getProductPath } from "@/lib/product-route";
-import { absoluteUrl } from "@/lib/site-config";
+import { absoluteUrl, SELLER } from "@/lib/site-config";
 import { getWhatsAppOrderUrl } from "@/lib/whatsapp-order";
 
 type RouteCategory = WooProduct["categories"][number];
@@ -32,7 +32,7 @@ function getMetadataDescription(product: WooProduct) {
   const description =
     textFromHtml(product.short_description) ||
     textFromHtml(product.description) ||
-    `Shop ${product.name} at Sharif Store. Browse product details, pricing and availability.`;
+    `Shop ${product.name} at The Sharif Store. Browse product details, pricing and availability.`;
 
   return description.length > 160
     ? `${description.slice(0, 157).trimEnd()}...`
@@ -143,8 +143,45 @@ export async function getProductStaticParams() {
     );
 }
 
+/**
+ * Pack declarations required by the Legal Metrology (Packaged Commodities)
+ * Rules. They come from plain (non-variation) WooCommerce attributes, so the
+ * store owner adds them in WordPress under Product data → Attributes. These
+ * names are listed first, in this order; any other plain attribute follows.
+ */
+const DECLARATION_ORDER = [
+  "manufactured by",
+  "manufacturer",
+  "marketed by",
+  "imported by",
+  "importer",
+  "packed by",
+  "net quantity",
+  "country of origin",
+  "best before",
+  "expiry",
+  "customer care",
+];
+
+function getDeclarationRank(label: string) {
+  const rank = DECLARATION_ORDER.indexOf(label.trim().toLowerCase());
+  return rank === -1 ? DECLARATION_ORDER.length : rank;
+}
+
+function getAttributeSpecs(product: WooProduct): ProductSpec[] {
+  return product.attributes
+    .filter((attribute) => !attribute.has_variations)
+    .map((attribute) => ({
+      label: attribute.name,
+      value: attribute.terms.map((term) => term.name).join(", "),
+    }))
+    .filter((spec) => spec.label.trim() && spec.value.trim())
+    .sort((a, b) => getDeclarationRank(a.label) - getDeclarationRank(b.label));
+}
+
 function getProductSpecs(product: WooProduct): ProductSpec[] {
   const specs: Array<ProductSpec | null> = [
+    ...getAttributeSpecs(product),
     product.sku ? { label: "SKU", value: product.sku } : null,
     product.formatted_weight && product.formatted_weight !== "N/A"
       ? { label: "Weight", value: product.formatted_weight }
@@ -152,6 +189,7 @@ function getProductSpecs(product: WooProduct): ProductSpec[] {
     product.formatted_dimensions && product.formatted_dimensions !== "N/A"
       ? { label: "Dimensions", value: product.formatted_dimensions }
       : null,
+    { label: "Sold by", value: SELLER.shopName },
   ];
 
   return specs.filter((spec): spec is ProductSpec => spec !== null);

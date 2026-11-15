@@ -16,27 +16,27 @@ const urbanist = Urbanist({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Sharif Beauty & Gift Collection",
+    default: "The Sharif Store – Beauty & Gift Collection",
     template: `%s | ${SITE_NAME}`,
   },
   description:
-    "Shop premium beauty products and unique gifts at Sharif Beauty & Gift Collection. Trusted quality, elegant collections, and a refined shopping experience.",
+    "Shop premium beauty products and unique gifts at The Sharif Store. Trusted quality, elegant collections, and a refined shopping experience.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "en_IN",
     url: "/",
     siteName: SITE_NAME,
-    title: "Sharif Beauty & Gift Collection",
+    title: "The Sharif Store – Beauty & Gift Collection",
     description:
-      "Shop beauty, gifting and everyday essentials from Sharif Store in Deglur.",
-    images: [{ url: "/sharif-store-logo-transparent.png", alt: "Sharif Store" }],
+      "Shop beauty, gifting and everyday essentials from The Sharif Store in Deglur.",
+    images: [{ url: "/sharif-store-logo-transparent.png", alt: "The Sharif Store" }],
   },
   twitter: {
     card: "summary",
-    title: "Sharif Beauty & Gift Collection",
+    title: "The Sharif Store – Beauty & Gift Collection",
     description:
-      "Shop beauty, gifting and everyday essentials from Sharif Store in Deglur.",
+      "Shop beauty, gifting and everyday essentials from The Sharif Store in Deglur.",
     images: ["/sharif-store-logo-transparent.png"],
   },
   icons: {

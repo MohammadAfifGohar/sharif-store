@@ -3,11 +3,16 @@ import Link from "next/link";
 
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Separator } from "@/components/ui/separator";
-import { absoluteUrl, SITE_NAME } from "@/lib/site-config";
+import {
+  absoluteUrl,
+  SELLER,
+  SITE_NAME,
+  SUPPORT_EMAIL,
+} from "@/lib/site-config";
 import { getWhatsAppChatUrl } from "@/lib/whatsapp-order";
 
 const WHATSAPP_URL = getWhatsAppChatUrl(
-  "Hello Sharif Store, I would like to know more about your products.",
+  "Hello The Sharif Store, I would like to know more about your products.",
 );
 
 export function SiteFooter() {
@@ -57,16 +62,29 @@ export function SiteFooter() {
                 <WhatsAppIcon className="size-4 text-[#25D366]" aria-hidden="true" />
                 WhatsApp us
               </a>
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="break-all">
+                {SUPPORT_EMAIL}
+              </a>
               <a href={absoluteUrl("/my-account/")}>My account</a>
+              <Link href="/terms-conditions#returns">Returns &amp; refunds</Link>
+              <Link href="/terms-conditions#delivery">Shipping</Link>
               <Link href="/terms-conditions">Terms</Link>
+              <Link href="/privacy-policy">Privacy policy</Link>
             </div>
           </div>
         </div>
 
         <Separator className="bg-background/15" />
 
-        <div className="flex flex-col items-center justify-between gap-2 pt-6 text-center text-xs text-background/50 sm:flex-row sm:gap-3 sm:pt-7 sm:text-left">
-          <p>© {new Date().getFullYear()} Sharif Beauty & Gift Collection</p>
+        <div className="flex flex-col items-center justify-between gap-2 pt-6 text-center text-xs leading-5 text-background/50 sm:flex-row sm:items-start sm:gap-6 sm:pt-7 sm:text-left">
+          <p className="shrink-0">
+            © {new Date().getFullYear()} {SITE_NAME}
+          </p>
+          <p className="max-w-2xl sm:text-right">
+            Sold by {SELLER.shopName}, operated by {SELLER.operatorName},{" "}
+            {SELLER.address}.
+            {SELLER.gstin ? ` GSTIN: ${SELLER.gstin}.` : null}
+          </p>
         </div>
       </div>
     </footer>

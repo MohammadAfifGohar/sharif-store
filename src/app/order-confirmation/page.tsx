@@ -69,7 +69,7 @@ export default async function OrderConfirmationPage({ searchParams }: PageProps)
   const order = await loadOrder(params.order, params.key);
 
   const whatsAppUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-    order ? `Hello Sharif Store, I have a question about order #${order.number}.` : "Hello Sharif Store, I have a question about my order.",
+    order ? `Hello The Sharif Store, I have a question about order #${order.number}.` : "Hello The Sharif Store, I have a question about my order.",
   )}`;
 
   if (!order) {

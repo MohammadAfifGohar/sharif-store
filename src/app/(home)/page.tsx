@@ -24,7 +24,7 @@ export default async function HomePage() {
   return (
       <main className="flex-1">
         <h1 className="sr-only">
-          Beauty, gifts and everyday essentials at Sharif Store
+          Beauty, gifts and everyday essentials at The Sharif Store
         </h1>
         <CampaignHero slides={heroSlides} />
 

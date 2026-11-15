@@ -44,7 +44,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
         <NotFoundState
           eyebrow="Search"
-          title="Search Sharif Store"
+          title="Search The Sharif Store"
           description="Use the search bar above to find products by name."
         />
       </>

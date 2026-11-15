@@ -35,7 +35,7 @@ export async function SiteHeader() {
           <Link
             href="/"
             className="relative h-10 w-28 shrink-0 sm:h-12 sm:w-40"
-            aria-label="Sharif Store home"
+            aria-label="The Sharif Store home"
           >
             <Image
               src="/sharif-store-logo-transparent.png"

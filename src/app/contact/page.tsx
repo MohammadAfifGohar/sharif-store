@@ -3,6 +3,7 @@ import Image from "next/image";
 import {
   ArrowUpRightIcon,
   ExternalLinkIcon,
+  MailIcon,
   MapIcon,
   MapPinIcon,
   MessageCircleIcon,
@@ -13,7 +14,11 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import {
   absoluteUrl,
+  GRIEVANCE_OFFICER,
+  SELLER,
+  SITE_NAME,
   SITE_URL,
+  SUPPORT_EMAIL,
   WHATSAPP_NUMBER,
 } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
@@ -23,7 +28,7 @@ const MAP_EMBED_URL =
   "https://www.google.com/maps?q=Sharif%20Gift%20Center%2C%20Old%20Sarafa%2C%20Lohiya%20Maidan%2C%20near%20Dunda%20Maharaj%20Math%2C%20Deglur%2C%20Maharashtra%20431717&output=embed";
 const PHONE_URL = `tel:+${WHATSAPP_NUMBER}`;
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-  "Hello Sharif Store, I would like to know more about your products.",
+  "Hello The Sharif Store, I would like to know more about your products.",
 )}`;
 
 export const metadata: Metadata = {
@@ -48,6 +53,7 @@ const localBusinessSchema = {
     addressCountry: "IN",
   },
   telephone: `+${WHATSAPP_NUMBER}`,
+  email: SUPPORT_EMAIL,
   hasMap: MAPS_URL,
   priceRange: "₹₹",
 };
@@ -67,6 +73,14 @@ const contactOptions = [
     description: "Talk directly with our team before planning your visit.",
     href: PHONE_URL,
     icon: PhoneIcon,
+    external: false,
+  },
+  {
+    eyebrow: "Write to us",
+    title: "Email support",
+    description: SUPPORT_EMAIL,
+    href: `mailto:${SUPPORT_EMAIL}`,
+    icon: MailIcon,
     external: false,
   },
   {
@@ -152,7 +166,7 @@ export default function ContactPage() {
       </section>
 
       <section className="mx-auto max-w-[1440px] px-4 py-10 sm:px-6 sm:py-14 lg:px-10">
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {contactOptions.map((option) => {
             const Icon = option.icon;
 
@@ -179,12 +193,55 @@ export default function ContactPage() {
                 <h2 className="mt-2 font-heading text-2xl font-semibold tracking-tight">
                   {option.title}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                <p className="mt-2 break-words text-sm leading-6 text-muted-foreground">
                   {option.description}
                 </p>
               </a>
             );
           })}
+        </div>
+
+        <div
+          id="grievance"
+          className="mt-3 scroll-mt-28 rounded-lg border border-[#2b1020]/10 bg-white p-6 text-sm leading-6 sm:p-7"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e80071]">
+            Complaints
+          </p>
+          <h2 className="mt-2 font-heading text-2xl font-semibold tracking-tight">
+            Grievance Officer
+          </h2>
+          <dl className="mt-4 grid gap-x-8 gap-y-2 text-muted-foreground sm:grid-cols-[auto_minmax(0,1fr)]">
+            <dt className="font-semibold text-foreground">Name</dt>
+            <dd>
+              {GRIEVANCE_OFFICER.name}, {GRIEVANCE_OFFICER.designation}
+            </dd>
+            <dt className="font-semibold text-foreground">Email</dt>
+            <dd className="break-all">
+              <a
+                href={`mailto:${GRIEVANCE_OFFICER.email}`}
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                {GRIEVANCE_OFFICER.email}
+              </a>
+            </dd>
+            <dt className="font-semibold text-foreground">Phone</dt>
+            <dd>
+              <a href={PHONE_URL} className="hover:text-foreground">
+                {GRIEVANCE_OFFICER.phone}
+              </a>
+            </dd>
+            <dt className="font-semibold text-foreground">Seller</dt>
+            <dd>
+              {SITE_NAME} is the online store of {SELLER.shopName},{" "}
+              {SELLER.address}, operated by {SELLER.operatorName}.
+              {SELLER.gstin ? ` GSTIN: ${SELLER.gstin}.` : null}
+            </dd>
+          </dl>
+          <p className="mt-4 text-muted-foreground">
+            We acknowledge complaints within 48 hours and resolve them within
+            one month.
+          </p>
         </div>
       </section>
 

@@ -12,10 +12,35 @@ export const SITE_URL =
   "https://thesharifstore.in";
 
 /** Display brand name. Keep spelling consistent everywhere. */
-export const SITE_NAME = "Sharif Store";
+export const SITE_NAME = "The Sharif Store";
 
 /** WhatsApp business number in wa.me format (country code + number, no `+`). */
 export const WHATSAPP_NUMBER = "918421804744";
+
+/** Customer care mailbox shown on Contact, Terms, Privacy and the footer. */
+export const SUPPORT_EMAIL = "support@thesharifstore.in";
+
+/**
+ * Seller identity required by the Consumer Protection (E-Commerce) Rules,
+ * 2020. The online brand is run by the person below for the physical shop.
+ * Add the GSTIN here once registration is done and it will appear wherever
+ * the seller details are shown.
+ */
+export const SELLER = {
+  operatorName: "Mohammad Afif Gohar",
+  shopName: "Sharif Gift Center",
+  address:
+    "Old Sarafa, Lohiya Maidan, near Dunda Maharaj Math, Deglur, Nanded, Maharashtra 431717",
+  gstin: null as string | null,
+} as const;
+
+/** Grievance Officer, as required by the E-Commerce Rules and IT Rules. */
+export const GRIEVANCE_OFFICER = {
+  name: "Mohammad Afif Gohar",
+  designation: "Grievance Officer",
+  email: SUPPORT_EMAIL,
+  phone: `+${WHATSAPP_NUMBER}`,
+} as const;
 
 /**
  * WooCommerce / WordPress origin. Reads `WORDPRESS_URL` and normalises the

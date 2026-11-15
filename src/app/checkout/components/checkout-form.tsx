@@ -419,6 +419,26 @@ export function CheckoutForm({
               : "Pay securely"}
         </Button>
 
+        <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">
+          By placing this order you agree to our{" "}
+          <Link
+            href="/terms-conditions"
+            target="_blank"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            Terms &amp; Conditions
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/privacy-policy"
+            target="_blank"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            Privacy Policy
+          </Link>
+          .
+        </p>
+
         <p
           role="alert"
           aria-live="assertive"

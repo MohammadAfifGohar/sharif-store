@@ -34,12 +34,12 @@ export async function generateMetadata({
   return {
     title,
     description:
-      "Shop current sale products and limited-time offers from Sharif Store.",
+      "Shop current sale products and limited-time offers from The Sharif Store.",
     alternates: { canonical },
     openGraph: {
       title,
       description:
-        "Shop current sale products and limited-time offers from Sharif Store.",
+        "Shop current sale products and limited-time offers from The Sharif Store.",
       url: canonical,
     },
   };

@@ -2,18 +2,24 @@ import type { Metadata } from "next";
 import { MessageCircleIcon } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
-import { SITE_NAME, WHATSAPP_NUMBER } from "@/lib/site-config";
+import {
+  GRIEVANCE_OFFICER,
+  SELLER,
+  SITE_NAME,
+  SUPPORT_EMAIL,
+  WHATSAPP_NUMBER,
+} from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 
-const LAST_UPDATED = "11 November 2026";
+const LAST_UPDATED = "16 November 2026";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-  "Hello Sharif Store, I have a question about an order.",
+  "Hello The Sharif Store, I have a question about an order.",
 )}`;
 
 export const metadata: Metadata = {
   title: "Terms & Conditions",
   description:
-    "Ordering, payment, delivery, return and exchange terms for shopping with Sharif Store.",
+    "Ordering, payment, delivery, return and exchange terms for shopping with The Sharif Store.",
   alternates: { canonical: "/terms-conditions" },
 };
 
@@ -22,7 +28,9 @@ const sections = [
     id: "about",
     title: "About these terms",
     points: [
-      `These terms apply to all orders placed with ${SITE_NAME} (Sharif Gift Center, Old Sarafa, Lohiya Maidan, Deglur, Maharashtra 431717) through this website, WhatsApp or phone.`,
+      `These terms apply to all orders placed with ${SITE_NAME} through this website, WhatsApp or phone.`,
+      `${SITE_NAME} is the online store of ${SELLER.shopName}, ${SELLER.address}, and is operated by ${SELLER.operatorName}. All products are sold by ${SELLER.shopName}.${SELLER.gstin ? ` GSTIN: ${SELLER.gstin}.` : ""}`,
+      `Customer care: ${SUPPORT_EMAIL} or +${WHATSAPP_NUMBER} (call or WhatsApp).`,
       "By placing an order you agree to these terms. We may update them from time to time; the version on this page at the time of your order applies.",
     ],
   },
@@ -43,6 +51,8 @@ const sections = [
     points: [
       "All prices are in Indian Rupees (₹). For online orders, the final amount, including any delivery charges, is shown in the payment window before you pay. For WhatsApp orders, delivery charges, if any, are shared with you before the order is confirmed.",
       "We try to show products as accurately as possible, but colours, packaging and sizes may vary slightly from the photos.",
+      "Product prices are shown inclusive of all taxes and are never above the MRP printed on the pack. Manufacturer, net quantity, country of origin and expiry details are shown on the product page where available, and are always printed on the product packaging.",
+      "We sell genuine products bought from the brands' distributors and wholesalers. We are not the brand owner or an official brand store unless a product page says so.",
     ],
   },
   {
@@ -71,8 +81,9 @@ const sections = [
     title: "Returns, exchanges & refunds",
     points: [
       "We accept returns only for items that arrive damaged, defective, wrong or expired. We do not accept returns or exchanges for any other reason, including change of mind.",
-      "To raise a request, message us on WhatsApp within 48 hours of delivery with clear photos and an unboxing video. The video must be continuous, start from the sealed parcel and clearly show the issue. Requests without an unboxing video cannot be accepted.",
-      "Once we verify the issue, we will replace the item or issue a full refund. If we need the item back, we will tell you how to send it; items that have been used or are not in their original packaging will not be accepted.",
+      "To raise a request, message us on WhatsApp within 48 hours of delivery with clear photos of the issue and, if possible, a continuous unboxing video that starts from the sealed parcel. Requests with an unboxing video are approved fastest. Without a video, we will check your photos and order details, and may decline the request if the issue cannot be verified.",
+      "Once we verify the issue, we will replace the item or issue a full refund. If we need the item back, we will tell you how to send it.",
+      "When an item is sent back, the refund or replacement is processed only after we receive and inspect it. The item must be the same product we delivered, with a matching batch number and, where applied, our store sticker, and must be unused and in its original packaging. If it does not match, we will decline the request and send the item back to you.",
       "Approved refunds for online orders are made to the original payment method (UPI, card, bank or wallet) through Razorpay within 5–7 working days. Refunds for COD and WhatsApp orders are made to your UPI / bank account within 5–7 working days.",
     ],
   },
@@ -81,6 +92,15 @@ const sections = [
     title: "Reviews",
     points: [
       "Reviews you submit on this website may be shown publicly. Please do not include personal details. We may remove reviews that are abusive, misleading or unrelated to the product.",
+    ],
+  },
+  {
+    id: "grievance",
+    title: "Complaints & Grievance Officer",
+    points: [
+      `If you have a complaint about a product, order, payment or delivery, please contact our Grievance Officer: ${GRIEVANCE_OFFICER.name}, ${GRIEVANCE_OFFICER.designation}, ${SITE_NAME}. Email: ${GRIEVANCE_OFFICER.email}. Phone / WhatsApp: ${GRIEVANCE_OFFICER.phone}. Address: ${SELLER.shopName}, ${SELLER.address}.`,
+      "We will acknowledge your complaint within 48 hours and resolve it within one month of receiving it.",
+      "You can also reach the National Consumer Helpline on 1915 or at consumerhelpline.gov.in.",
     ],
   },
   {
