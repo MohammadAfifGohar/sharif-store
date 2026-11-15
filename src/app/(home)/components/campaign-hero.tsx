@@ -88,7 +88,11 @@ export function CampaignHero({ slides }: CampaignHeroProps) {
                   <img
                     {...mobileProps}
                     alt={slide.alt}
-                    className="block h-[min(156.25vw,80svh)] w-full object-cover object-top min-[651px]:h-auto"
+                    // Mobile art is 768×1200 with the headline and button at
+                    // the top. Showing it at 4:5 (capped at 65% of the screen)
+                    // keeps the headline, button and most products visible
+                    // while leaving room below for the categories.
+                    className="block h-[min(125vw,65svh)] w-full object-cover object-top min-[651px]:h-auto"
                   />
                 </picture>
               </Link>
