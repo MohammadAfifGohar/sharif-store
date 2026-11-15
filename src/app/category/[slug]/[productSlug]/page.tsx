@@ -23,7 +23,12 @@ import { SaleBadge } from "@/components/sale-badge";
 import { Badge } from "@/components/ui/badge";
 import { getProductPath } from "@/lib/product-route";
 import { absoluteUrl } from "@/lib/site-config";
-import { getProductVariations, getRawPrice } from "@/lib/woocommerce";
+import { textFromHtml } from "@/lib/html-text";
+import {
+  getProductReviews,
+  getProductVariations,
+  getRawPrice,
+} from "@/lib/woocommerce";
 
 export async function generateStaticParams() {
   return getProductStaticParams();
@@ -57,13 +62,35 @@ export default async function CategoryProductPage(
     getCanonicalProductPath(product) ??
     getProductPath(category.slug, product.slug);
   const canonicalCategory = product.categories[0] ?? category;
+  // Ratings markup only ever reflects real, approved WooCommerce reviews.
+  // Products without reviews intentionally omit both fields — Google flags
+  // that as a non-critical suggestion, and inventing ratings would violate
+  // its review-snippet policy. getProductReviews is cache()d, so the
+  // ProductReviews section below reuses this same request.
   const aggregateRating = view.hasRating
     ? {
         "@type": "AggregateRating",
         ratingValue: view.averageRating,
         reviewCount: product.review_count,
+        bestRating: 5,
+        worstRating: 1,
       }
     : undefined;
+  const reviews = view.hasRating ? await getProductReviews(product.id) : [];
+  const reviewSchema = reviews
+    .filter((review) => review.rating > 0)
+    .slice(0, 10)
+    .map((review) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: review.reviewer || "Customer" },
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: review.rating,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      reviewBody: textFromHtml(review.review) || undefined,
+    }));
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -75,6 +102,7 @@ export default async function CategoryProductPage(
       ? { "@type": "Brand", name: product.brands[0].name }
       : undefined,
     aggregateRating,
+    review: reviewSchema.length > 0 ? reviewSchema : undefined,
     offers: {
       "@type": "Offer",
       url: absoluteUrl(canonicalPath),
@@ -187,7 +215,12 @@ export default async function CategoryProductPage(
             />
 
             {view.specs.length > 0 ? (
-              <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
+              <h2 className="mt-8 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                Product details
+              </h2>
+            ) : null}
+            {view.specs.length > 0 ? (
+              <dl className="mt-3 grid grid-cols-1 gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
                 {view.specs.map((spec) => (
                   <div key={spec.label} className="flex justify-between gap-4">
                     <dt className="text-muted-foreground">{spec.label}</dt>
