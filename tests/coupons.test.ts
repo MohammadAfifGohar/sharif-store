@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { evaluateCoupon, getCouponOffers, type CouponLine, type WooCoupon } from "../src/lib/coupons";
+import { evaluateCoupon, getCouponOffers, rankOffers, type CouponLine, type WooCoupon } from "../src/lib/coupons";
 
 const coupon = (overrides: Partial<WooCoupon> = {}): WooCoupon => ({
   id: 1,
@@ -122,8 +122,27 @@ test("lists only published, usable coupons marked [show] as offers", () => {
     coupon({ code: "OLD", description: "[show]", usage_limit: 1, usage_count: 1 }),
     coupon({ code: "VIP", description: "[show]", email_restrictions: ["a@b.com"] }),
   ]);
-  assert.deepEqual(offers, [
-    { code: "welcome", title: "10% off your first order", minimumAmount: 0 },
-    { code: "big", title: "₹150 off on orders of ₹999 or more", minimumAmount: 999 },
-  ]);
+  assert.deepEqual(
+    offers.map(({ code, title, minimumAmount }) => ({ code, title, minimumAmount })),
+    [
+      { code: "welcome", title: "10% off your first order", minimumAmount: 0 },
+      { code: "big", title: "₹150 off on orders of ₹999 or more", minimumAmount: 999 },
+    ],
+  );
+});
+
+test("recommends the biggest saving the bag qualifies for", () => {
+  const offer = (code: string, amount: number, minimumAmount: number) => ({
+    code,
+    title: code,
+    minimumAmount,
+    discountType: "percent",
+    amount,
+    freeShipping: false,
+  });
+  const offers = [offer("sharif5", 5, 500), offer("sharif10", 10, 1000)];
+
+  assert.deepEqual(rankOffers(offers, 1200, 2).map((o) => o.code), ["sharif10", "sharif5"]);
+  assert.deepEqual(rankOffers(offers, 700, 1).map((o) => o.code), ["sharif5", "sharif10"]);
+  assert.deepEqual(rankOffers(offers, 300, 1).map((o) => o.code), ["sharif5", "sharif10"]);
 });

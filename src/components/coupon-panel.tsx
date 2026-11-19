@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCoupon } from "@/hooks/use-coupon";
 import type { BagItem } from "@/lib/bag";
-import type { CouponOffer } from "@/lib/coupons";
+import { estimateOfferDiscount, rankOffers, type CouponOffer } from "@/lib/coupons";
 import {
   applyCoupon,
   clearCouponError,
@@ -65,9 +65,19 @@ export function CouponPanel({
     }
   }
 
-  const availableOffers = offers ?? [];
-  const topOffer =
-    availableOffers.find((offer) => offer.minimumAmount <= subtotal) ?? availableOffers[0];
+  const quantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  // Best saving the bag qualifies for first, so the recommended offer is the best one.
+  const availableOffers = rankOffers(offers ?? [], subtotal, quantity);
+  const topOffer = availableOffers[0];
+  // With a coupon applied, point out a usable offer that saves clearly more.
+  const betterOffer =
+    coupon &&
+    topOffer &&
+    topOffer.code !== coupon.code &&
+    topOffer.minimumAmount <= subtotal &&
+    estimateOfferDiscount(topOffer, subtotal, quantity) >= coupon.discount + 1
+      ? topOffer
+      : null;
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
@@ -95,7 +105,26 @@ export function CouponPanel({
             Remove
           </button>
         </div>
-      ) : (
+      ) : null}
+
+      {betterOffer ? (
+        <div className="rounded-xl border border-dashed border-emerald-600/50 bg-background">
+          <p className="px-4 pt-3 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+            Better offer available
+          </p>
+          <OfferRow
+            offer={betterOffer}
+            subtotal={subtotal}
+            currencyCode={currencyCode}
+            pendingCode={pendingCode}
+            disabled={busy}
+            onApply={apply}
+            className="px-4 pb-3 pt-1"
+          />
+        </div>
+      ) : null}
+
+      {coupon ? null : (
         <div className="rounded-xl border border-border bg-background">
           {topOffer ? (
             <OfferRow

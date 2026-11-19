@@ -50,7 +50,40 @@ export type CouponOffer = {
   code: string;
   title: string;
   minimumAmount: number;
+  discountType: string;
+  amount: number;
+  freeShipping: boolean;
 };
+
+/**
+ * Rough discount an offer gives on a bag, for choosing which offer to
+ * recommend; product and category restrictions are left to the real check.
+ */
+export function estimateOfferDiscount(
+  offer: CouponOffer,
+  subtotal: number,
+  quantity: number,
+) {
+  if (offer.discountType === "percent") return (subtotal * offer.amount) / 100;
+  if (offer.discountType === "fixed_product") return offer.amount * quantity;
+  return Math.min(offer.amount, subtotal);
+}
+
+/**
+ * Offers in the order to show them: the ones the bag qualifies for, biggest
+ * saving first, then the rest, nearest to qualifying first.
+ */
+export function rankOffers(offers: CouponOffer[], subtotal: number, quantity: number) {
+  const usable = offers
+    .filter((offer) => offer.minimumAmount <= subtotal)
+    .map((offer) => ({ offer, saving: estimateOfferDiscount(offer, subtotal, quantity) }))
+    .sort((a, b) => b.saving - a.saving)
+    .map(({ offer }) => offer);
+  const locked = offers
+    .filter((offer) => offer.minimumAmount > subtotal)
+    .sort((a, b) => a.minimumAmount - b.minimumAmount);
+  return [...usable, ...locked];
+}
 
 /** Marker in a coupon's description that lists it as an offer in the bag. */
 export const OFFER_MARKER = "[show]";
@@ -93,6 +126,9 @@ export function getCouponOffers(coupons: WooCoupon[], now = new Date()): CouponO
         code: normalizeCouponCode(coupon.code),
         title: title || describeCoupon(coupon),
         minimumAmount: Number(coupon.minimum_amount) || 0,
+        discountType: coupon.discount_type,
+        amount: Number(coupon.amount) || 0,
+        freeShipping: coupon.free_shipping,
       };
     })
     .sort((a, b) => a.minimumAmount - b.minimumAmount);
