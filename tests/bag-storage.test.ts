@@ -13,6 +13,7 @@ const validItem: BagItem = {
   name: "Rose Oud Attar",
   image: { src: "/rose-oud.jpg", alt: "Rose Oud" },
   unitPrice: 499,
+  regularUnitPrice: null,
   currencyCode: "INR",
   quantity: 2,
   maxQuantity: null,

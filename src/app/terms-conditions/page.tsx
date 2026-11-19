@@ -3,6 +3,12 @@ import { MessageCircleIcon } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import {
+  FREE_SHIPPING_MIN,
+  PREPAID_DISCOUNT_MAX,
+  PREPAID_DISCOUNT_PERCENT,
+  SHIPPING_FEE,
+} from "@/lib/checkout";
+import {
   GRIEVANCE_OFFICER,
   SELLER,
   SITE_NAME,
@@ -11,7 +17,7 @@ import {
 } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 
-const LAST_UPDATED = "16 November 2026";
+const LAST_UPDATED = "20 November 2026";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
   "Hello The Sharif Store, I have a question about an order.",
 )}`;
@@ -62,7 +68,7 @@ const sections = [
       "At checkout on this website you can pay online or choose Cash on Delivery (COD).",
       "Online payments are processed securely by Razorpay using UPI, debit/credit cards, net banking or wallets. Payment details are handled by Razorpay; we do not see or store your card or bank details.",
       "If money is debited but your order is not confirmed, please do not pay again. Message us on WhatsApp — the payment is either confirmed against your order or refunded automatically by Razorpay.",
-      "Cash on Delivery orders placed on this website carry an extra COD charge of ₹70, which is shown in the order total before you place the order.",
+      `Orders placed on this website and paid online get a ${PREPAID_DISCOUNT_PERCENT}% discount on the items total, up to ₹${PREPAID_DISCOUNT_MAX} per order. The discount does not apply to shipping or to Cash on Delivery orders, and is shown in the order total before you pay. Cash on Delivery has no extra charge.`,
       "For COD orders, please keep the exact order amount ready in cash at the time of delivery. We may contact you to confirm a COD order before dispatch, and may cancel COD orders that cannot be confirmed or are repeatedly refused at delivery.",
       "For WhatsApp orders we accept UPI / online bank transfer and COD. Please pay only to the details shared by us on our official WhatsApp number and send the payment screenshot for confirmation.",
     ],
@@ -72,6 +78,7 @@ const sections = [
     title: "Delivery",
     points: [
       "We offer local delivery in and around Deglur, and courier delivery across India.",
+      `For orders placed on this website, shipping is free when your items total ₹${FREE_SHIPPING_MIN} or more. Orders below ₹${FREE_SHIPPING_MIN} carry a shipping charge of ₹${SHIPPING_FEE}, which is shown in the order total before you place the order.`,
       "Local orders are usually delivered within 1–2 days. Courier orders usually arrive within 3–8 working days depending on your location. These are estimates and delays by the courier are outside our control.",
       "Please make sure the address, PIN code and phone number you enter at checkout or share with us are correct. Orders returned because of a wrong address or an unanswered delivery may need to be re-shipped at extra cost.",
     ],

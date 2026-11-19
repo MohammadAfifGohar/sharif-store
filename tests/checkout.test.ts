@@ -5,8 +5,26 @@ import test from "node:test";
 import {
   checkoutRequestSchema,
   getOrderConfirmationPath,
+  getOrderTotals,
+  getPrepaidDiscount,
+  getShippingFee,
   toMinorUnits,
 } from "../src/lib/checkout";
+
+test("gives 5% off online payments, rounded to the rupee and capped at ₹50", () => {
+  assert.equal(getPrepaidDiscount(300), 15);
+  assert.equal(getPrepaidDiscount(499), 25);
+  assert.equal(getPrepaidDiscount(999), 50);
+  assert.equal(getPrepaidDiscount(1500), 50);
+  assert.equal(getPrepaidDiscount(5), 0);
+});
+
+test("charges ₹59 shipping below ₹499 and ships free from ₹499", () => {
+  assert.equal(getShippingFee(120), 59);
+  assert.equal(getShippingFee(498.99), 59);
+  assert.equal(getShippingFee(499), 0);
+  assert.equal(getShippingFee(1250), 0);
+});
 import {
   isValidPaymentSignature,
   isValidWebhookSignature,
@@ -88,4 +106,26 @@ test("requires a known payment method", () => {
   assert.equal(checkoutRequestSchema.safeParse({ ...order, paymentMethod: "cod" }).success, true);
   assert.equal(checkoutRequestSchema.safeParse({ ...order, paymentMethod: "paypal" }).success, false);
   assert.equal(checkoutRequestSchema.safeParse(order).success, false);
+});
+
+test("order totals apply the coupon before shipping and the online discount", () => {
+  const totals = getOrderTotals({
+    subtotal: 550,
+    regularTotal: 650,
+    coupon: { discount: 100, freeShipping: false },
+    prepaid: true,
+  });
+  assert.equal(totals.itemsTotal, 450);
+  assert.equal(totals.shippingFee, 59);
+  assert.equal(totals.appliedPrepaidDiscount, 23);
+  assert.equal(totals.total, 486);
+  assert.equal(totals.totalSavings, 223);
+
+  const freeShip = getOrderTotals({
+    subtotal: 200,
+    regularTotal: 200,
+    coupon: { discount: 0, freeShipping: true },
+    prepaid: false,
+  });
+  assert.equal(freeShip.total, 200);
 });

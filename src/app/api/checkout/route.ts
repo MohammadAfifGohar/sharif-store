@@ -9,6 +9,7 @@ import {
   type CodOrderResult,
 } from "@/lib/checkout";
 import { getSessionUser } from "@/lib/auth-session";
+import { checkCoupon } from "@/lib/coupon-check";
 import { createRazorpayOrder, getRazorpayConfig } from "@/lib/razorpay";
 import { saveCheckoutDetailsToCustomer } from "@/lib/woocommerce-customers";
 import {
@@ -33,6 +34,9 @@ function error(message: string, status: number) {
 }
 
 function orderFailure(cause: unknown) {
+  if (cause instanceof WooOrderError && cause.code?.includes("coupon")) {
+    return error("This coupon can't be used on this order. Remove it and try again.", 409);
+  }
   // WooCommerce rejects unknown/unpurchasable products with a 400.
   if (cause instanceof WooOrderError && cause.status === 400) {
     return error(
@@ -62,9 +66,13 @@ function rememberCustomerDetails(
 }
 
 /** Cash on Delivery: no payment step, the order is placed straight away. */
-async function placeCodOrder(request: CheckoutRequest, customerId: number | null) {
+async function placeCodOrder(
+  request: CheckoutRequest,
+  customerId: number | null,
+  freeShipping: boolean,
+) {
   try {
-    const order = await createOrder(request, customerId);
+    const order = await createOrder(request, customerId, { freeShipping });
     rememberCustomerDetails(customerId, request);
     const body: CodOrderResult = {
       kind: "cod",
@@ -102,8 +110,25 @@ export async function POST(request: Request) {
 
   const customerId = (await getSessionUser())?.customerId ?? null;
 
+  // Re-check the coupon here: the browser's preview is only a preview.
+  let freeShipping = false;
+  if (result.data.couponCode) {
+    try {
+      const coupon = await checkCoupon(
+        result.data.couponCode,
+        result.data.items,
+        result.data.customer.email,
+      );
+      if (!coupon.ok) return error(coupon.message, 409);
+      freeShipping = coupon.freeShipping;
+    } catch (cause) {
+      console.error("[checkout] could not check coupon", cause);
+      return error("We couldn't check your coupon. Please try again.", 502);
+    }
+  }
+
   if (result.data.paymentMethod === "cod") {
-    return placeCodOrder(result.data, customerId);
+    return placeCodOrder(result.data, customerId, freeShipping);
   }
 
   const razorpay = getRazorpayConfig();
@@ -113,7 +138,7 @@ export async function POST(request: Request) {
 
   let wcOrderId: number | null = null;
   try {
-    const order = await createOrder(result.data, customerId);
+    const order = await createOrder(result.data, customerId, { freeShipping });
     wcOrderId = order.id;
     rememberCustomerDetails(customerId, result.data);
 

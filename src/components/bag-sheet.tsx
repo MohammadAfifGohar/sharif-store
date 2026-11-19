@@ -5,6 +5,11 @@ import Link from "next/link";
 import { ShoppingBagIcon, Trash2Icon } from "lucide-react";
 
 import { useBag } from "@/components/bag-provider";
+import { CouponPanel } from "@/components/coupon-panel";
+import { FreeShippingProgress } from "@/components/free-shipping-progress";
+import { LinePrice } from "@/components/line-price";
+import { OrderTotalRow, SavingsBanner } from "@/components/order-total";
+import { ShippingSummary } from "@/components/shipping-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
@@ -18,14 +23,19 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useCoupon } from "@/hooks/use-coupon";
+import { getBagRegularTotal } from "@/lib/bag";
+import { getOrderTotals } from "@/lib/checkout";
 import { getProductPath } from "@/lib/product-route";
 import { formatMoneyAmount } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
 export function BagSheet() {
   const { items, removeItem, setQuantity, totalCount, subtotal } = useBag();
+  const { coupon } = useCoupon(items);
   const currencyCode = items[0]?.currencyCode ?? "INR";
-  const subtotalDisplay = formatMoneyAmount(subtotal, currencyCode);
+  const regularTotal = getBagRegularTotal(items);
+  const totals = getOrderTotals({ subtotal, regularTotal, coupon, prepaid: false });
 
   return (
     <Sheet>
@@ -41,12 +51,17 @@ export function BagSheet() {
         <span className="sr-only">Open bag</span>
       </SheetTrigger>
 
-      <SheetContent side="right" className="!w-full gap-0 p-0 sm:!max-w-sm">
-        <SheetHeader className="border-b border-border/70 px-6 py-6">
+      <SheetContent side="right" className="!w-full gap-0 p-0 sm:!max-w-md">
+        <SheetHeader className="border-b border-border/70 px-6 py-5">
           <SheetTitle className="font-heading text-2xl font-semibold">
             Your bag
+            {totalCount > 0 ? (
+              <span className="ml-2 text-base font-normal text-muted-foreground">
+                ({totalCount} item{totalCount === 1 ? "" : "s"})
+              </span>
+            ) : null}
           </SheetTitle>
-          <SheetDescription>
+          <SheetDescription className={cn(totalCount > 0 && "sr-only")}>
             {totalCount > 0
               ? `${totalCount} item${totalCount === 1 ? "" : "s"} in your bag`
               : "Add products to see them here."}
@@ -59,84 +74,131 @@ export function BagSheet() {
             <p className="text-sm">Your bag is empty.</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto px-4 py-4">
-            <ul className="flex flex-col gap-4">
-              {items.map((item) => (
-                <li
-                  key={`${item.productId}-${item.variationId ?? "base"}`}
-                  className="flex gap-3"
-                >
-                  <Link
-                    href={getProductPath(item.categorySlug, item.slug)}
-                    className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted"
+          <>
+            <div className="border-b border-border/70 bg-muted/30 px-6 py-4">
+              <FreeShippingProgress
+                itemsTotal={totals.itemsTotal}
+                currencyCode={currencyCode}
+                freeShipping={coupon?.freeShipping}
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              <ul className="flex flex-col gap-3">
+                {items.map((item) => (
+                  <li
+                    key={`${item.productId}-${item.variationId ?? "base"}`}
+                    className="flex gap-3 rounded-xl border border-border/70 p-3"
                   >
-                    {item.image ? (
-                      <Image
-                        src={item.image.src}
-                        alt={item.image.alt}
-                        fill
-                        sizes="64px"
-                        className="object-cover"
-                      />
-                    ) : null}
-                  </Link>
+                    <Link
+                      href={getProductPath(item.categorySlug, item.slug)}
+                      className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted"
+                    >
+                      {item.image ? (
+                        <Image
+                          src={item.image.src}
+                          alt={item.image.alt}
+                          fill
+                          sizes="80px"
+                          className="object-cover"
+                        />
+                      ) : null}
+                    </Link>
 
-                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <Link
-                          href={getProductPath(item.categorySlug, item.slug)}
-                          className="block truncate text-sm font-semibold capitalize"
-                        >
-                          {item.name}
-                        </Link>
-                        {item.variationLabel ? (
-                          <p className="truncate text-xs text-muted-foreground">
-                            {item.variationLabel}
-                          </p>
-                        ) : null}
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <Link
+                            href={getProductPath(item.categorySlug, item.slug)}
+                            className="line-clamp-2 text-sm font-semibold capitalize"
+                          >
+                            {item.name}
+                          </Link>
+                          {item.variationLabel ? (
+                            <p className="truncate text-xs text-muted-foreground">
+                              {item.variationLabel}
+                            </p>
+                          ) : null}
+                        </div>
+                        <LinePrice item={item} className="shrink-0" />
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={() => removeItem(item.productId, item.variationId)}
-                        aria-label={`Remove ${item.name} from bag`}
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    </div>
 
-                    <div className="flex items-center justify-between gap-2">
-                      <QuantityStepper
-                        size="sm"
-                        quantity={item.quantity}
-                        onIncrement={() =>
-                          setQuantity(item.productId, item.variationId, item.quantity + 1)
-                        }
-                        onDecrement={() =>
-                          setQuantity(item.productId, item.variationId, item.quantity - 1)
-                        }
-                      />
-                      <span className="text-sm font-bold">
-                        {formatMoneyAmount(
-                          item.unitPrice * item.quantity,
-                          item.currencyCode,
-                        )}
-                      </span>
+                      <div className="mt-auto flex items-center justify-between gap-2">
+                        <QuantityStepper
+                          size="sm"
+                          quantity={item.quantity}
+                          onIncrement={() =>
+                            setQuantity(item.productId, item.variationId, item.quantity + 1)
+                          }
+                          onDecrement={() =>
+                            setQuantity(item.productId, item.variationId, item.quantity - 1)
+                          }
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={() => removeItem(item.productId, item.variationId)}
+                          aria-label={`Remove ${item.name} from bag`}
+                        >
+                          <Trash2Icon />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+                  </li>
+                ))}
+              </ul>
+
+              <CouponPanel
+                items={items}
+                subtotal={subtotal}
+                currencyCode={currencyCode}
+                className="mt-4"
+              />
+            </div>
+          </>
         )}
 
-        <SheetFooter className="border-t border-border/70 px-6 py-6">
-          <div className="mb-3 flex items-center justify-between text-sm font-semibold">
-            <span>Subtotal</span>
-            <span>{subtotalDisplay}</span>
-          </div>
+        <SheetFooter className="relative border-t border-border/70 px-6 pb-6 pt-5">
+          {items.length > 0 ? (
+            <>
+              <SavingsBanner
+                amount={totals.totalSavings}
+                currencyCode={currencyCode}
+                className="absolute inset-x-6 -top-3.5"
+              />
+              <div className="mb-3 flex flex-col gap-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatMoneyAmount(subtotal, currencyCode)}</span>
+                </div>
+                {totals.couponDiscount ? (
+                  <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400">
+                    <span>Coupon ({coupon?.code.toUpperCase()})</span>
+                    <span>−{formatMoneyAmount(totals.couponDiscount, currencyCode)}</span>
+                  </div>
+                ) : null}
+                <ShippingSummary
+                  subtotal={totals.itemsTotal}
+                  currencyCode={currencyCode}
+                  freeShipping={coupon?.freeShipping}
+                  showHint={false}
+                />
+                <OrderTotalRow
+                  label="Total"
+                  total={totals.total}
+                  regularTotal={regularTotal + totals.shippingFee}
+                  currencyCode={currencyCode}
+                />
+                {totals.prepaidDiscount ? (
+                  <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                    Pay online at checkout and save{" "}
+                    {formatMoneyAmount(totals.prepaidDiscount, currencyCode)} more.
+                  </p>
+                ) : null}
+              </div>
+            </>
+          ) : null}
           <SheetClose
             nativeButton={false}
             render={

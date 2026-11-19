@@ -13,6 +13,7 @@ const bagItemSchema = z.object({
   name: z.string(),
   image: z.object({ src: z.string(), alt: z.string() }).nullable(),
   unitPrice: z.number(),
+  regularUnitPrice: z.number().nullable().default(null),
   currencyCode: z.string(),
   quantity: z.number().int().positive(),
   maxQuantity: z.number().int().positive().nullable(),

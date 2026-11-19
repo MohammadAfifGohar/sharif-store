@@ -78,23 +78,96 @@ export const checkoutItemSchema = z.object({
   quantity: z.number().int().min(1).max(99),
 });
 
+const checkoutItemsSchema = z
+  .array(checkoutItemSchema)
+  .min(1, "Your bag is empty.")
+  .max(50, "Too many items in one order.");
+
+const couponCodeSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(1, "Enter a coupon code.")
+  .max(50, "Enter a valid coupon code.");
+
 export const PAYMENT_METHODS = ["razorpay", "cod"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
-/** Extra charge (₹) added to Cash on Delivery orders. */
-export const COD_FEE = 70;
-export const COD_FEE_LABEL = "Cash on Delivery charges";
+/** Discount on online (prepaid) orders: a share of the items total, capped. */
+export const PREPAID_DISCOUNT_PERCENT = 5;
+export const PREPAID_DISCOUNT_MAX = 50;
+export const PREPAID_DISCOUNT_LABEL = "Online payment discount";
+
+/** Whole-rupee discount (₹) for paying online. Shipping is not discounted. */
+export function getPrepaidDiscount(itemsTotal: number) {
+  const discount = Math.round((itemsTotal * PREPAID_DISCOUNT_PERCENT) / 100);
+  return Math.max(0, Math.min(discount, PREPAID_DISCOUNT_MAX));
+}
+
+/** Flat shipping charge (₹) on orders whose items total less than `FREE_SHIPPING_MIN`. */
+export const SHIPPING_FEE = 59;
+export const FREE_SHIPPING_MIN = 499;
+export const SHIPPING_LABEL = "Shipping";
+
+/** Shipping (₹) on the items total after any coupon; a free-shipping coupon waives it. */
+export function getShippingFee(itemsTotal: number, freeShipping = false) {
+  return !freeShipping && itemsTotal < FREE_SHIPPING_MIN ? SHIPPING_FEE : 0;
+}
+
+/**
+ * Order totals in the order they apply: coupon first, then shipping and the
+ * online discount on what is left. `regularTotal` is the bag at MRP.
+ */
+export function getOrderTotals({
+  subtotal,
+  regularTotal,
+  coupon,
+  prepaid,
+}: {
+  subtotal: number;
+  regularTotal: number;
+  coupon: Pick<AppliedCoupon, "discount" | "freeShipping"> | null;
+  prepaid: boolean;
+}) {
+  const couponDiscount = coupon ? Math.min(coupon.discount, subtotal) : 0;
+  const itemsTotal = subtotal - couponDiscount;
+  const shippingFee = getShippingFee(itemsTotal, coupon?.freeShipping);
+  const prepaidDiscount = getPrepaidDiscount(itemsTotal);
+  const appliedPrepaidDiscount = prepaid ? prepaidDiscount : 0;
+  const mrpSavings = Math.max(0, regularTotal - subtotal);
+
+  return {
+    couponDiscount,
+    itemsTotal,
+    shippingFee,
+    prepaidDiscount,
+    appliedPrepaidDiscount,
+    mrpSavings,
+    totalSavings: mrpSavings + couponDiscount + appliedPrepaidDiscount,
+    total: itemsTotal + shippingFee - appliedPrepaidDiscount,
+  };
+}
 
 export const checkoutRequestSchema = z
   .object({
     paymentMethod: z.enum(PAYMENT_METHODS, "Choose a payment method."),
     customer: checkoutCustomerSchema,
-    items: z
-      .array(checkoutItemSchema)
-      .min(1, "Your bag is empty.")
-      .max(50, "Too many items in one order."),
+    items: checkoutItemsSchema,
+    couponCode: couponCodeSchema.optional(),
   })
   .strict();
+
+/** `/api/coupon` request: check a code against the bag before ordering. */
+export const couponRequestSchema = z
+  .object({
+    code: couponCodeSchema,
+    items: checkoutItemsSchema,
+    email: z.string().trim().max(254).optional(),
+  })
+  .strict();
+
+/** `/api/coupon` response for a code that applies. */
+export type AppliedCoupon = { code: string; discount: number; freeShipping: boolean };
 
 export type CheckoutCustomer = z.infer<typeof checkoutCustomerSchema>;
 export type CheckoutRequest = z.infer<typeof checkoutRequestSchema>;

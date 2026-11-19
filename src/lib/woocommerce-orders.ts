@@ -1,7 +1,13 @@
 import "server-only";
 
 import { orderBelongsToUser, type SessionUser } from "@/lib/auth";
-import { COD_FEE, COD_FEE_LABEL, type CheckoutRequest } from "@/lib/checkout";
+import {
+  getPrepaidDiscount,
+  getShippingFee,
+  PREPAID_DISCOUNT_LABEL,
+  SHIPPING_LABEL,
+  type CheckoutRequest,
+} from "@/lib/checkout";
 import { getWordpressUrl } from "@/lib/site-config";
 
 const REQUEST_TIMEOUT_MS = 15_000;
@@ -57,6 +63,8 @@ export type WooOrder = {
     image?: { src?: string } | null;
   }>;
   fee_lines: Array<{ id: number; name: string; total: string }>;
+  coupon_lines?: Array<{ id: number; code: string; discount: string }>;
+  discount_total?: string;
   meta_data: Array<{ key: string; value: unknown }>;
 };
 
@@ -118,15 +126,10 @@ export async function orderRequest<T>(
 
 const PAYMENT_METHOD_FIELDS = {
   razorpay: {
-    // Unpaid until Razorpay confirms the payment.
-    status: "pending",
     payment_method: "razorpay",
     payment_method_title: "Razorpay (UPI, Cards, NetBanking, Wallets)",
   },
   cod: {
-    // Matches WooCommerce's own COD behaviour: placed orders go straight to
-    // processing (which also reduces stock); payment is collected on delivery.
-    status: "processing",
     payment_method: "cod",
     payment_method_title: "Cash on delivery",
   },
@@ -135,11 +138,17 @@ const PAYMENT_METHOD_FIELDS = {
 /**
  * Creates the order. Only product IDs and quantities are sent — WooCommerce
  * prices the lines itself, so a tampered bag can't change totals.
+ *
+ * Shipping and the online payment discount depend on those WooCommerce
+ * prices, so the order is created as pending first and both are added once
+ * the lines are priced. Both are set server-side so the client can't change them.
  */
-export function createOrder(
-  { customer, items, paymentMethod }: CheckoutRequest,
+export async function createOrder(
+  { customer, items, paymentMethod, couponCode }: CheckoutRequest,
   /** Logged-in customer's WooCommerce id; guests place orders without one. */
   customerId: number | null = null,
+  /** Set when the (already checked) coupon waives shipping. */
+  { freeShipping = false }: { freeShipping?: boolean } = {},
 ) {
   const address = {
     first_name: customer.firstName,
@@ -152,10 +161,11 @@ export function createOrder(
     country: "IN",
   };
 
-  return orderRequest<WooOrder>("orders", {
+  const order = await orderRequest<WooOrder>("orders", {
     method: "POST",
     body: {
       ...PAYMENT_METHOD_FIELDS[paymentMethod],
+      status: "pending",
       set_paid: false,
       created_via: "headless-storefront",
       ...(customerId ? { customer_id: customerId } : {}),
@@ -167,13 +177,71 @@ export function createOrder(
         ...(item.variationId ? { variation_id: item.variationId } : {}),
         quantity: item.quantity,
       })),
-      // Fee is set server-side so the client can't skip it.
-      fee_lines:
-        paymentMethod === "cod"
-          ? [{ name: COD_FEE_LABEL, total: COD_FEE.toFixed(2), tax_status: "none" }]
-          : [],
+      // WooCommerce applies the coupon to the lines itself.
+      ...(couponCode ? { coupon_lines: [{ code: couponCode }] } : {}),
     },
   });
+
+  if (
+    couponCode &&
+    !order.coupon_lines?.some((line) => line.code.toLowerCase() === couponCode)
+  ) {
+    await cancelOrder(order.id).catch(() => undefined);
+    throw new WooOrderError(400, "coupon_not_applied", "The coupon could not be applied.");
+  }
+
+  // Line totals are after the coupon, so shipping and the online discount are too.
+  const itemsTotal = order.line_items.reduce((sum, line) => sum + Number(line.total), 0);
+  const shippingFee = getShippingFee(itemsTotal, freeShipping);
+  const discount = paymentMethod === "razorpay" ? getPrepaidDiscount(itemsTotal) : 0;
+  // COD matches WooCommerce's own behaviour: the order goes straight to
+  // processing (reducing stock and sending the order email) once fully priced.
+  // Online orders stay pending until Razorpay confirms the payment.
+  const status = paymentMethod === "cod" ? "processing" : null;
+  if (!shippingFee && !discount && !status) return order;
+
+  try {
+    // Changing shipping or fee lines makes WooCommerce recalculate the total.
+    const updated = await orderRequest<WooOrder>(`orders/${order.id}`, {
+      method: "PUT",
+      body: {
+        ...(shippingFee
+          ? {
+              shipping_lines: [
+                {
+                  method_id: "flat_rate",
+                  method_title: SHIPPING_LABEL,
+                  total: shippingFee.toFixed(2),
+                },
+              ],
+            }
+          : {}),
+        ...(discount
+          ? {
+              // A negative fee is how WooCommerce records an order-level discount.
+              fee_lines: [
+                {
+                  name: PREPAID_DISCOUNT_LABEL,
+                  total: (-discount).toFixed(2),
+                  tax_status: "none",
+                },
+              ],
+            }
+          : {}),
+        ...(status ? { status } : {}),
+      },
+    });
+    const appliedDiscount = -updated.fee_lines
+      .filter((fee) => fee.name === PREPAID_DISCOUNT_LABEL)
+      .reduce((sum, fee) => sum + Number(fee.total), 0);
+    if (Number(updated.shipping_total) !== shippingFee || appliedDiscount !== discount) {
+      throw new Error(`Shipping or discount was not applied to order ${order.id}`);
+    }
+    return updated;
+  } catch (cause) {
+    await cancelOrder(order.id).catch(() => undefined);
+    throw cause;
+  }
 }
 
 export function getOrder(orderId: number) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,11 +21,20 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { CouponPanel } from "@/components/coupon-panel";
+import { FreeShippingProgress } from "@/components/free-shipping-progress";
+import { LinePrice } from "@/components/line-price";
+import { OrderTotalRow, SavingsBanner } from "@/components/order-total";
+import { ShippingSummary } from "@/components/shipping-summary";
+import { useCoupon } from "@/hooks/use-coupon";
+import { getBagRegularTotal } from "@/lib/bag";
 import { Textarea } from "@/components/ui/textarea";
 import {
   checkoutCustomerSchema,
-  COD_FEE,
+  getOrderTotals,
   INDIAN_STATES,
+  PREPAID_DISCOUNT_MAX,
+  PREPAID_DISCOUNT_PERCENT,
   type CheckoutCustomer,
   type CheckoutSession,
   type CodOrderResult,
@@ -49,12 +58,12 @@ const PAYMENT_OPTIONS: Array<{
   {
     value: "razorpay",
     label: "Pay online",
-    description: "UPI, cards, net banking & wallets via Razorpay",
+    description: `UPI, cards, net banking & wallets via Razorpay. Save ${PREPAID_DISCOUNT_PERCENT}% (up to ${formatMoneyAmount(PREPAID_DISCOUNT_MAX, "INR")})`,
   },
   {
     value: "cod",
     label: "Cash on Delivery",
-    description: `Pay in cash when your order arrives (+${formatMoneyAmount(COD_FEE, "INR")} COD charges)`,
+    description: "Pay in cash when your order arrives",
   },
 ];
 
@@ -93,9 +102,33 @@ export function CheckoutForm({
     value: CheckoutSession;
   } | null>(null);
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const { coupon: activeCoupon, pendingCode } = useCoupon(items);
+
+  const orderItems = items.map((item) => ({
+    productId: item.productId,
+    variationId: item.variationId,
+    quantity: item.quantity,
+  }));
+
   const currencyCode = items[0]?.currencyCode ?? "INR";
-  const total = subtotal + (paymentMethod === "cod" ? COD_FEE : 0);
-  const busy = status !== "idle";
+  const regularTotal = getBagRegularTotal(items);
+  const totals = getOrderTotals({
+    subtotal,
+    regularTotal,
+    coupon: activeCoupon,
+    prepaid: paymentMethod === "razorpay",
+  });
+  const { couponDiscount, itemsTotal, prepaidDiscount, total } = totals;
+  const discount = totals.appliedPrepaidDiscount;
+  // Wait for a coupon being (re)checked so the order uses its current price.
+  const busy = status !== "idle" || pendingCode !== null;
+
+  function getTypedEmail() {
+    return formRef.current
+      ? String(new FormData(formRef.current).get("email") ?? "").trim()
+      : "";
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -109,11 +142,7 @@ export function CheckoutForm({
     }
 
     const customer = parsed.data;
-    const orderItems = items.map((item) => ({
-      productId: item.productId,
-      variationId: item.variationId,
-      quantity: item.quantity,
-    }));
+    const couponCode = activeCoupon?.code;
     if (paymentMethod === "cod") {
       try {
         setStatus("starting");
@@ -121,6 +150,7 @@ export function CheckoutForm({
           paymentMethod: "cod",
           customer,
           items: orderItems,
+          couponCode,
         });
         setStatus("done");
         clear();
@@ -132,7 +162,7 @@ export function CheckoutForm({
       return;
     }
 
-    const fingerprint = JSON.stringify({ customer, orderItems });
+    const fingerprint = JSON.stringify({ customer, orderItems, couponCode });
 
     try {
       setStatus("starting");
@@ -144,6 +174,7 @@ export function CheckoutForm({
               paymentMethod: "razorpay",
               customer,
               items: orderItems,
+              couponCode,
             }),
         loadRazorpay(),
       ]);
@@ -236,6 +267,7 @@ export function CheckoutForm({
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-14"
     >
@@ -338,28 +370,67 @@ export function CheckoutForm({
                 ) : null}
                 <p className="text-xs text-muted-foreground">Qty {item.quantity}</p>
               </div>
-              <span className="text-sm font-semibold">
-                {formatMoneyAmount(item.unitPrice * item.quantity, item.currencyCode)}
-              </span>
+              <LinePrice item={item} className="shrink-0" />
             </li>
           ))}
         </ul>
+
+        <div className="mt-5 border-t border-border/70 pt-4">
+          <FreeShippingProgress
+            itemsTotal={itemsTotal}
+            currencyCode={currencyCode}
+            freeShipping={activeCoupon?.freeShipping}
+          />
+        </div>
+
+        <CouponPanel
+          items={items}
+          subtotal={subtotal}
+          currencyCode={currencyCode}
+          getEmail={getTypedEmail}
+          disabled={status !== "idle"}
+          className="mt-4"
+        />
 
         <div className="mt-5 flex flex-col gap-2 border-t border-border/70 pt-4 text-sm">
           <div className="flex items-center justify-between">
             <span>Subtotal</span>
             <span>{formatMoneyAmount(subtotal, currencyCode)}</span>
           </div>
-          {paymentMethod === "cod" ? (
-            <div className="flex items-center justify-between">
-              <span>COD charges</span>
-              <span>{formatMoneyAmount(COD_FEE, currencyCode)}</span>
+          {couponDiscount ? (
+            <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400">
+              <span>Coupon ({activeCoupon?.code.toUpperCase()})</span>
+              <span>−{formatMoneyAmount(couponDiscount, currencyCode)}</span>
             </div>
           ) : null}
-        </div>
-        <div className="mt-3 flex items-center justify-between border-t border-border/70 pt-3 font-semibold">
-          <span>Total</span>
-          <span>{formatMoneyAmount(total, currencyCode)}</span>
+          <ShippingSummary
+            subtotal={itemsTotal}
+            currencyCode={currencyCode}
+            freeShipping={activeCoupon?.freeShipping}
+            showHint={false}
+          />
+          {discount ? (
+            <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400">
+              <span>Online payment discount</span>
+              <span>−{formatMoneyAmount(discount, currencyCode)}</span>
+            </div>
+          ) : null}
+          {paymentMethod === "cod" && prepaidDiscount ? (
+            <p className="text-xs text-muted-foreground">
+              Pay online instead and save {formatMoneyAmount(prepaidDiscount, currencyCode)}.
+            </p>
+          ) : null}
+          <OrderTotalRow
+            label="Total"
+            total={total}
+            regularTotal={regularTotal + totals.shippingFee}
+            currencyCode={currencyCode}
+          />
+          <SavingsBanner
+            amount={totals.totalSavings}
+            currencyCode={currencyCode}
+            className="mt-2"
+          />
         </div>
         {paymentMethod === "razorpay" ? (
           <p className="mt-1 text-xs text-muted-foreground">

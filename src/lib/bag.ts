@@ -1,4 +1,4 @@
-import { getRawPrice, type WooProduct } from "@/lib/woocommerce";
+import { getRawPrice, getSavingsAmount, type WooProduct } from "@/lib/woocommerce";
 
 export type BagItem = {
   productId: number;
@@ -9,6 +9,8 @@ export type BagItem = {
   name: string;
   image: { src: string; alt: string } | null;
   unitPrice: number;
+  /** Price before any sale (MRP); null on bags saved before this was tracked. */
+  regularUnitPrice: number | null;
   currencyCode: string;
   quantity: number;
   /** Upper bound on quantity: 1 for sold-individually products, stock count when known, otherwise uncapped. */
@@ -54,6 +56,7 @@ export function toBagItem(
     name: product.name,
     image: image ? { src: image.src, alt: image.alt || product.name } : null,
     unitPrice: getRawPrice(priceSource),
+    regularUnitPrice: getRawPrice(priceSource) + getSavingsAmount(priceSource),
     currencyCode: priceSource.prices.currency_code,
     quantity: clampQuantity(quantity, maxQuantity),
     maxQuantity,
@@ -107,4 +110,20 @@ export function getBagTotalCount(items: BagItem[]): number {
 
 export function getBagSubtotal(items: BagItem[]): number {
   return items.reduce((total, line) => total + line.unitPrice * line.quantity, 0);
+}
+
+/** A line's total at the regular price (MRP), never below what is charged. */
+export function getLineRegularTotal(line: BagItem): number {
+  return Math.max(line.regularUnitPrice ?? line.unitPrice, line.unitPrice) * line.quantity;
+}
+
+export function getBagRegularTotal(items: BagItem[]): number {
+  return items.reduce((total, line) => total + getLineRegularTotal(line), 0);
+}
+
+/** Whole-number percentage saved off `regular`; 0 when nothing is saved. */
+export function getPercentOff(regular: number, current: number): number {
+  return regular > current && regular > 0
+    ? Math.round(((regular - current) / regular) * 100)
+    : 0;
 }
