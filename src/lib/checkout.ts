@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { quoteShipping, type ShippingRules } from "@/lib/shipping";
+
 /** WooCommerce's state codes for India (woocommerce/i18n/states.php). */
 export const INDIAN_STATES = [
   { code: "AN", name: "Andaman and Nicobar Islands" },
@@ -104,34 +106,31 @@ export function getPrepaidDiscount(itemsTotal: number) {
   return Math.max(0, Math.min(discount, PREPAID_DISCOUNT_MAX));
 }
 
-/** Flat shipping charge (₹) on orders whose items total less than `FREE_SHIPPING_MIN`. */
-export const SHIPPING_FEE = 59;
-export const FREE_SHIPPING_MIN = 499;
-export const SHIPPING_LABEL = "Shipping";
-
-/** Shipping (₹) on the items total after any coupon; a free-shipping coupon waives it. */
-export function getShippingFee(itemsTotal: number, freeShipping = false) {
-  return !freeShipping && itemsTotal < FREE_SHIPPING_MIN ? SHIPPING_FEE : 0;
-}
-
 /**
- * Order totals in the order they apply: coupon first, then shipping and the
- * online discount on what is left. `regularTotal` is the bag at MRP.
+ * Order totals in the order they apply: coupon first, then shipping (from the
+ * WooCommerce shipping zone) and the online discount on what is left.
+ * `regularTotal` is the bag at MRP.
  */
 export function getOrderTotals({
   subtotal,
   regularTotal,
   coupon,
   prepaid,
+  shipping,
 }: {
   subtotal: number;
   regularTotal: number;
   coupon: Pick<AppliedCoupon, "discount" | "freeShipping"> | null;
   prepaid: boolean;
+  shipping: ShippingRules;
 }) {
   const couponDiscount = coupon ? Math.min(coupon.discount, subtotal) : 0;
   const itemsTotal = subtotal - couponDiscount;
-  const shippingFee = getShippingFee(itemsTotal, coupon?.freeShipping);
+  const shippingFee = quoteShipping(shipping, {
+    subtotal,
+    itemsTotal,
+    freeShippingCoupon: coupon?.freeShipping,
+  }).fee;
   const prepaidDiscount = getPrepaidDiscount(itemsTotal);
   const appliedPrepaidDiscount = prepaid ? prepaidDiscount : 0;
   const mrpSavings = Math.max(0, regularTotal - subtotal);

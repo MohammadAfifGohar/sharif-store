@@ -3,11 +3,11 @@ import { MessageCircleIcon } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import {
-  FREE_SHIPPING_MIN,
   PREPAID_DISCOUNT_MAX,
   PREPAID_DISCOUNT_PERCENT,
-  SHIPPING_FEE,
 } from "@/lib/checkout";
+import { describeShipping } from "@/lib/shipping";
+import { getShippingRules } from "@/lib/shipping-settings";
 import {
   GRIEVANCE_OFFICER,
   SELLER,
@@ -29,7 +29,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terms-conditions" },
 };
 
-const sections = [
+function getSections(shippingTerms: string) {
+  return [
   {
     id: "about",
     title: "About these terms",
@@ -78,7 +79,7 @@ const sections = [
     title: "Delivery",
     points: [
       "We offer local delivery in and around Deglur, and courier delivery across India.",
-      `For orders placed on this website, shipping is free when your items total ₹${FREE_SHIPPING_MIN} or more. Orders below ₹${FREE_SHIPPING_MIN} carry a shipping charge of ₹${SHIPPING_FEE}, which is shown in the order total before you place the order.`,
+      shippingTerms,
       "Local orders are usually delivered within 1–2 days. Courier orders usually arrive within 3–8 working days depending on your location. These are estimates and delays by the courier are outside our control.",
       "Please make sure the address, PIN code and phone number you enter at checkout or share with us are correct. Orders returned because of a wrong address or an unanswered delivery may need to be re-shipped at extra cost.",
     ],
@@ -117,9 +118,11 @@ const sections = [
       "These terms are governed by the laws of India. Any dispute is subject to the jurisdiction of the courts in Nanded district, Maharashtra.",
     ],
   },
-] as const;
+  ];
+}
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const sections = getSections(describeShipping(await getShippingRules()));
   return (
     <main className="flex-1 bg-[#fffdfb]">
       <section className="bg-[#2b1020] text-white">

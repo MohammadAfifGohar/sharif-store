@@ -1,22 +1,35 @@
 import { TruckIcon } from "lucide-react";
 
-import { FREE_SHIPPING_MIN } from "@/lib/checkout";
+import { getFreeShippingThreshold, type ShippingRules } from "@/lib/shipping";
 import { formatMoneyAmount } from "@/lib/woocommerce";
 
-/** "Add ₹X more for free shipping" with a progress bar towards the threshold. */
+/**
+ * "Add ₹X more for free shipping" with a progress bar towards the amount set
+ * on WooCommerce's Free shipping method. Hidden when free shipping doesn't
+ * depend on the order amount.
+ */
 export function FreeShippingProgress({
+  shipping,
+  subtotal,
   itemsTotal,
+  shippingFee,
   currencyCode,
-  freeShipping = false,
 }: {
-  /** Items total after any coupon. */
+  shipping: ShippingRules;
+  /** Items total before any coupon. */
+  subtotal: number;
+  /** Items total after the coupon. */
   itemsTotal: number;
+  shippingFee: number;
   currencyCode: string;
-  freeShipping?: boolean;
 }) {
-  const remaining = Math.max(0, FREE_SHIPPING_MIN - itemsTotal);
-  const unlocked = freeShipping || remaining === 0;
-  const progress = unlocked ? 100 : Math.min(100, (itemsTotal / FREE_SHIPPING_MIN) * 100);
+  const threshold = getFreeShippingThreshold(shipping);
+  if (threshold === null || !shipping.flatRate) return null;
+
+  const counted = shipping.freeShipping?.ignoreDiscounts ? subtotal : itemsTotal;
+  const unlocked = shippingFee === 0;
+  const remaining = Math.max(0, threshold - counted);
+  const progress = unlocked || !threshold ? 100 : Math.min(100, (counted / threshold) * 100);
 
   return (
     <div className="flex flex-col gap-2">

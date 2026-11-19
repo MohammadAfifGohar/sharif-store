@@ -10,6 +10,7 @@ import {
 } from "@/lib/checkout";
 import { getSessionUser } from "@/lib/auth-session";
 import { checkCoupon } from "@/lib/coupon-check";
+import { getShippingRules } from "@/lib/shipping-settings";
 import { createRazorpayOrder, getRazorpayConfig } from "@/lib/razorpay";
 import { saveCheckoutDetailsToCustomer } from "@/lib/woocommerce-customers";
 import {
@@ -69,10 +70,10 @@ function rememberCustomerDetails(
 async function placeCodOrder(
   request: CheckoutRequest,
   customerId: number | null,
-  freeShipping: boolean,
+  orderOptions: Parameters<typeof createOrder>[2],
 ) {
   try {
-    const order = await createOrder(request, customerId, { freeShipping });
+    const order = await createOrder(request, customerId, orderOptions);
     rememberCustomerDetails(customerId, request);
     const body: CodOrderResult = {
       kind: "cod",
@@ -110,8 +111,13 @@ export async function POST(request: Request) {
 
   const customerId = (await getSessionUser())?.customerId ?? null;
 
+  const shipping = await getShippingRules({
+    state: result.data.customer.state,
+    postcode: result.data.customer.postcode,
+  });
+
   // Re-check the coupon here: the browser's preview is only a preview.
-  let freeShipping = false;
+  let freeShippingCoupon = false;
   if (result.data.couponCode) {
     try {
       const coupon = await checkCoupon(
@@ -120,7 +126,7 @@ export async function POST(request: Request) {
         result.data.customer.email,
       );
       if (!coupon.ok) return error(coupon.message, 409);
-      freeShipping = coupon.freeShipping;
+      freeShippingCoupon = coupon.freeShipping;
     } catch (cause) {
       console.error("[checkout] could not check coupon", cause);
       return error("We couldn't check your coupon. Please try again.", 502);
@@ -128,7 +134,7 @@ export async function POST(request: Request) {
   }
 
   if (result.data.paymentMethod === "cod") {
-    return placeCodOrder(result.data, customerId, freeShipping);
+    return placeCodOrder(result.data, customerId, { shipping, freeShippingCoupon });
   }
 
   const razorpay = getRazorpayConfig();
@@ -138,7 +144,7 @@ export async function POST(request: Request) {
 
   let wcOrderId: number | null = null;
   try {
-    const order = await createOrder(result.data, customerId, { freeShipping });
+    const order = await createOrder(result.data, customerId, { shipping, freeShippingCoupon });
     wcOrderId = order.id;
     rememberCustomerDetails(customerId, result.data);
 

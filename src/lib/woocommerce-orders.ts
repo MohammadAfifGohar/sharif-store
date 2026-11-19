@@ -3,11 +3,10 @@ import "server-only";
 import { orderBelongsToUser, type SessionUser } from "@/lib/auth";
 import {
   getPrepaidDiscount,
-  getShippingFee,
   PREPAID_DISCOUNT_LABEL,
-  SHIPPING_LABEL,
   type CheckoutRequest,
 } from "@/lib/checkout";
+import { quoteShipping, type ShippingRules } from "@/lib/shipping";
 import { getWordpressUrl } from "@/lib/site-config";
 
 const REQUEST_TIMEOUT_MS = 15_000;
@@ -59,6 +58,9 @@ export type WooOrder = {
     id: number;
     name: string;
     quantity: number;
+    /** Before coupons. */
+    subtotal: string;
+    /** After coupons. */
     total: string;
     image?: { src?: string } | null;
   }>;
@@ -147,8 +149,15 @@ export async function createOrder(
   { customer, items, paymentMethod, couponCode }: CheckoutRequest,
   /** Logged-in customer's WooCommerce id; guests place orders without one. */
   customerId: number | null = null,
-  /** Set when the (already checked) coupon waives shipping. */
-  { freeShipping = false }: { freeShipping?: boolean } = {},
+  {
+    shipping,
+    freeShippingCoupon = false,
+  }: {
+    /** Rules of the WooCommerce shipping zone for this address. */
+    shipping: ShippingRules;
+    /** Set when the (already checked) coupon allows free shipping. */
+    freeShippingCoupon?: boolean;
+  },
 ) {
   const address = {
     first_name: customer.firstName,
@@ -191,26 +200,34 @@ export async function createOrder(
   }
 
   // Line totals are after the coupon, so shipping and the online discount are too.
+  const subtotal = order.line_items.reduce((sum, line) => sum + Number(line.subtotal), 0);
   const itemsTotal = order.line_items.reduce((sum, line) => sum + Number(line.total), 0);
-  const shippingFee = getShippingFee(itemsTotal, freeShipping);
+  const { fee: shippingFee, method: shippingMethod } = quoteShipping(shipping, {
+    subtotal,
+    itemsTotal,
+    freeShippingCoupon,
+  });
   const discount = paymentMethod === "razorpay" ? getPrepaidDiscount(itemsTotal) : 0;
   // COD matches WooCommerce's own behaviour: the order goes straight to
   // processing (reducing stock and sending the order email) once fully priced.
   // Online orders stay pending until Razorpay confirms the payment.
   const status = paymentMethod === "cod" ? "processing" : null;
-  if (!shippingFee && !discount && !status) return order;
+  if (!shippingMethod && !discount && !status) return order;
 
   try {
     // Changing shipping or fee lines makes WooCommerce recalculate the total.
     const updated = await orderRequest<WooOrder>(`orders/${order.id}`, {
       method: "PUT",
       body: {
-        ...(shippingFee
+        ...(shippingMethod
           ? {
+              // The WooCommerce shipping method that applies, so the order shows
+              // "Flat rate" or "Free shipping" as configured in Settings → Shipping.
               shipping_lines: [
                 {
-                  method_id: "flat_rate",
-                  method_title: SHIPPING_LABEL,
+                  method_id: shippingMethod.id,
+                  instance_id: String(shippingMethod.instanceId),
+                  method_title: shippingMethod.title,
                   total: shippingFee.toFixed(2),
                 },
               ],

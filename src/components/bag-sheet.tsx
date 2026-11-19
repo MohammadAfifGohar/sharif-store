@@ -24,9 +24,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useCoupon } from "@/hooks/use-coupon";
+import { useShippingRules } from "@/hooks/use-shipping-rules";
 import { getBagRegularTotal } from "@/lib/bag";
 import { getOrderTotals } from "@/lib/checkout";
 import { getProductPath } from "@/lib/product-route";
+import { getFreeShippingThreshold } from "@/lib/shipping";
 import { formatMoneyAmount } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +37,8 @@ export function BagSheet() {
   const { coupon } = useCoupon(items);
   const currencyCode = items[0]?.currencyCode ?? "INR";
   const regularTotal = getBagRegularTotal(items);
-  const totals = getOrderTotals({ subtotal, regularTotal, coupon, prepaid: false });
+  const shipping = useShippingRules();
+  const totals = getOrderTotals({ subtotal, regularTotal, coupon, prepaid: false, shipping });
 
   return (
     <Sheet>
@@ -75,13 +78,17 @@ export function BagSheet() {
           </div>
         ) : (
           <>
-            <div className="border-b border-border/70 bg-muted/30 px-6 py-4">
-              <FreeShippingProgress
-                itemsTotal={totals.itemsTotal}
-                currencyCode={currencyCode}
-                freeShipping={coupon?.freeShipping}
-              />
-            </div>
+            {getFreeShippingThreshold(shipping) !== null ? (
+              <div className="border-b border-border/70 bg-muted/30 px-6 py-4">
+                <FreeShippingProgress
+                  shipping={shipping}
+                  subtotal={subtotal}
+                  itemsTotal={totals.itemsTotal}
+                  shippingFee={totals.shippingFee}
+                  currencyCode={currencyCode}
+                />
+              </div>
+            ) : null}
 
             <div className="flex-1 overflow-y-auto px-4 py-4">
               <ul className="flex flex-col gap-3">
@@ -178,12 +185,7 @@ export function BagSheet() {
                     <span>−{formatMoneyAmount(totals.couponDiscount, currencyCode)}</span>
                   </div>
                 ) : null}
-                <ShippingSummary
-                  subtotal={totals.itemsTotal}
-                  currencyCode={currencyCode}
-                  freeShipping={coupon?.freeShipping}
-                  showHint={false}
-                />
+                <ShippingSummary fee={totals.shippingFee} currencyCode={currencyCode} />
                 <OrderTotalRow
                   label="Total"
                   total={totals.total}

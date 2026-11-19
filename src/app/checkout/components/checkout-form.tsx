@@ -27,6 +27,8 @@ import { LinePrice } from "@/components/line-price";
 import { OrderTotalRow, SavingsBanner } from "@/components/order-total";
 import { ShippingSummary } from "@/components/shipping-summary";
 import { useCoupon } from "@/hooks/use-coupon";
+import { useShippingRules } from "@/hooks/use-shipping-rules";
+import { getFreeShippingThreshold } from "@/lib/shipping";
 import { getBagRegularTotal } from "@/lib/bag";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -104,6 +106,12 @@ export function CheckoutForm({
 
   const formRef = useRef<HTMLFormElement>(null);
   const { coupon: activeCoupon, pendingCode } = useCoupon(items);
+  // The delivery address picks the WooCommerce shipping zone.
+  const [address, setAddress] = useState({
+    state: defaults.state ?? "MH",
+    postcode: defaults.postcode ?? "",
+  });
+  const shipping = useShippingRules(address);
 
   const orderItems = items.map((item) => ({
     productId: item.productId,
@@ -118,6 +126,7 @@ export function CheckoutForm({
     regularTotal,
     coupon: activeCoupon,
     prepaid: paymentMethod === "razorpay",
+    shipping,
   });
   const { couponDiscount, itemsTotal, prepaidDiscount, total } = totals;
   const discount = totals.appliedPrepaidDiscount;
@@ -318,7 +327,7 @@ export function CheckoutForm({
           </Field>
           <Field>
             <FieldLabel htmlFor="postcode">PIN code</FieldLabel>
-            <Input id="postcode" name="postcode" defaultValue={defaults.postcode} inputMode="numeric" autoComplete="postal-code" pattern="[1-9][0-9]{5}" maxLength={6} required className={inputClassName} />
+            <Input id="postcode" name="postcode" defaultValue={defaults.postcode} onChange={(event) => setAddress((current) => ({ ...current, postcode: event.target.value.trim() }))} inputMode="numeric" autoComplete="postal-code" pattern="[1-9][0-9]{5}" maxLength={6} required className={inputClassName} />
           </Field>
           <Field className="sm:col-span-2">
             <FieldLabel htmlFor="state">State</FieldLabel>
@@ -328,6 +337,9 @@ export function CheckoutForm({
               autoComplete="address-level1"
               required
               defaultValue={defaults.state ?? "MH"}
+              onChange={(event) =>
+                setAddress((current) => ({ ...current, state: event.target.value }))
+              }
               className={cn(
                 inputClassName,
                 "w-full border border-input bg-transparent px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-ring/50 md:text-sm",
@@ -375,13 +387,17 @@ export function CheckoutForm({
           ))}
         </ul>
 
-        <div className="mt-5 border-t border-border/70 pt-4">
-          <FreeShippingProgress
-            itemsTotal={itemsTotal}
-            currencyCode={currencyCode}
-            freeShipping={activeCoupon?.freeShipping}
-          />
-        </div>
+        {getFreeShippingThreshold(shipping) !== null ? (
+          <div className="mt-5 border-t border-border/70 pt-4">
+            <FreeShippingProgress
+              shipping={shipping}
+              subtotal={subtotal}
+              itemsTotal={itemsTotal}
+              shippingFee={totals.shippingFee}
+              currencyCode={currencyCode}
+            />
+          </div>
+        ) : null}
 
         <CouponPanel
           items={items}
@@ -403,12 +419,7 @@ export function CheckoutForm({
               <span>−{formatMoneyAmount(couponDiscount, currencyCode)}</span>
             </div>
           ) : null}
-          <ShippingSummary
-            subtotal={itemsTotal}
-            currencyCode={currencyCode}
-            freeShipping={activeCoupon?.freeShipping}
-            showHint={false}
-          />
+          <ShippingSummary fee={totals.shippingFee} currencyCode={currencyCode} />
           {discount ? (
             <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400">
               <span>Online payment discount</span>
