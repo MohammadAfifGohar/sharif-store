@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  BadgePercentIcon,
-} from "lucide-react";
+import { ArrowRightIcon, BadgePercentIcon } from "lucide-react";
 
 import { BestDealsBanner } from "./components/best-deals-banner";
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { ProductCard } from "@/components/product-card";
+import { InfiniteProductGrid } from "@/components/infinite-product-grid";
 import { buttonVariants } from "@/components/ui/button";
+import { filterSaleItems } from "@/lib/catalog-feed";
 import { expandProductsForGrid } from "@/lib/product-variants";
 import { getSaleProducts } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
@@ -55,11 +52,8 @@ export default async function BestDealsPage({
   const categorizedProducts = products.filter(
     (product) => product.categories.length > 0,
   );
-  const cardItems = (await expandProductsForGrid(categorizedProducts)).filter(
-    (item) =>
-      item.variants.length > 0
-        ? item.variants.some((variant) => variant.data.on_sale)
-        : item.product.on_sale,
+  const cardItems = filterSaleItems(
+    await expandProductsForGrid(categorizedProducts),
   );
 
   return (
@@ -86,52 +80,16 @@ export default async function BestDealsPage({
               </div>
               <p className="shrink-0 text-right text-sm text-muted-foreground">
                 {total} sale {total === 1 ? "product" : "products"}
-                {totalPages > 1 ? (
-                  <span className="block text-xs">
-                    Page {page} of {totalPages}
-                  </span>
-                ) : null}
               </p>
             </div>
 
-            <div className="-mx-3 grid grid-cols-2 gap-1 sm:mx-0 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4">
-              {cardItems.map((item) => (
-                <ProductCard
-                  key={item.product.id}
-                  product={item.product}
-                  categorySlug={item.product.categories[0].slug}
-                  variants={item.variants}
-                />
-              ))}
-            </div>
-
-            {totalPages > 1 ? (
-              <nav
-                aria-label="Best deals pagination"
-                className="mt-12 flex items-center justify-between gap-4 border-t border-border pt-7"
-              >
-                {page > 1 ? (
-                  <Link
-                    href={`/best-deals?page=${page - 1}`}
-                    className={buttonVariants({ variant: "outline" })}
-                  >
-                    <ArrowLeftIcon aria-hidden="true" />
-                    Previous
-                  </Link>
-                ) : (
-                  <span />
-                )}
-                {page < totalPages ? (
-                  <Link
-                    href={`/best-deals?page=${page + 1}`}
-                    className={buttonVariants({ variant: "outline" })}
-                  >
-                    Next
-                    <ArrowRightIcon aria-hidden="true" />
-                  </Link>
-                ) : null}
-              </nav>
-            ) : null}
+            <InfiniteProductGrid
+              key={page}
+              source={{ kind: "sale" }}
+              initialItems={cardItems}
+              initialPage={page}
+              totalPages={totalPages}
+            />
           </>
         ) : (
           <div className="rounded-3xl border border-border bg-background px-6 py-16 text-center shadow-sm sm:py-20">

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { NotFoundState } from "@/components/not-found-state";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { CatalogResults } from "@/components/catalog-results";
+import { CATALOG_PAGE_SIZE } from "@/lib/catalog-feed";
 import { parseCatalogQuery } from "@/lib/catalog-query";
 import { parseSearchQuery } from "@/lib/product-search";
 import { expandProductsForGrid } from "@/lib/product-variants";
@@ -54,7 +55,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const { products, total, totalPages, page } = await searchProducts(
     query,
     requestedPage,
-    12,
+    CATALOG_PAGE_SIZE,
     options,
   );
   const categorizedProducts = products.filter(
@@ -74,6 +75,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         total={total}
         page={page}
         totalPages={totalPages}
+        source={{ kind: "search", query, options }}
         basePath="/search"
         query={query}
         options={options}

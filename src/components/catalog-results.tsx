@@ -1,12 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 
 import { CatalogControls } from "@/components/catalog-controls";
 import { CatalogGridTransition } from "@/components/catalog-grid-transition";
-import { ProductCard } from "@/components/product-card";
+import { InfiniteProductGrid } from "@/components/infinite-product-grid";
 import { buttonVariants } from "@/components/ui/button";
-import { getCatalogPageHref } from "@/lib/catalog-query";
+import type { CatalogFeedSource } from "@/lib/catalog-feed";
 import type { ProductCardItem } from "@/lib/product-variants";
 import type {
   CatalogListingOptions,
@@ -21,6 +20,7 @@ export function CatalogResults({
   total,
   page,
   totalPages,
+  source,
   basePath,
   query,
   options,
@@ -35,6 +35,7 @@ export function CatalogResults({
   total: number;
   page: number;
   totalPages: number;
+  source: CatalogFeedSource;
   basePath: string;
   query?: string;
   options: CatalogListingOptions;
@@ -43,13 +44,7 @@ export function CatalogResults({
   hideHeader?: boolean;
   toolbarStart?: ReactNode;
 }) {
-  const hrefForPage = (targetPage: number) =>
-    getCatalogPageHref({
-      basePath,
-      page: targetPage,
-      query,
-      options,
-    });
+  const navigationKey = `${basePath}:${page}:${query ?? ""}:${options.sort ?? defaultSort}:${options.availability ?? "all"}`;
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-12 pt-7 sm:px-6 sm:pb-16 sm:pt-8 lg:px-8">
@@ -67,11 +62,6 @@ export function CatalogResults({
           </div>
           <p className="text-sm text-muted-foreground sm:text-right">
             {total} {total === 1 ? "product" : "products"}
-            {totalPages > 1 ? (
-              <span className="block text-xs">
-                Page {page} of {totalPages}
-              </span>
-            ) : null}
           </p>
         </div>
       ) : null}
@@ -93,52 +83,17 @@ export function CatalogResults({
         </div>
       </div>
 
-      <CatalogGridTransition
-        navigationKey={`${page}:${query ?? ""}:${options.sort ?? defaultSort}:${options.availability ?? "all"}`}
-      >
+      <CatalogGridTransition navigationKey={navigationKey}>
       {items.length > 0 ? (
-        <>
-          <div className="-mx-3 mt-6 grid grid-cols-2 items-stretch gap-1 sm:mx-0 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4">
-            {items.map((item) => (
-              <ProductCard
-                key={item.product.id}
-                product={item.product}
-                categorySlug={
-                  categorySlug ?? item.product.categories[0]?.slug ?? ""
-                }
-                variants={item.variants}
-              />
-            ))}
-          </div>
-
-          {totalPages > 1 ? (
-            <nav
-              aria-label={`${title} pagination`}
-              className="mt-12 flex items-center justify-between gap-4 border-t border-border pt-7"
-            >
-              {page > 1 ? (
-                <Link
-                  href={hrefForPage(page - 1)}
-                  className={buttonVariants({ variant: "outline" })}
-                >
-                  <ArrowLeftIcon aria-hidden="true" />
-                  Previous
-                </Link>
-              ) : (
-                <span />
-              )}
-              {page < totalPages ? (
-                <Link
-                  href={hrefForPage(page + 1)}
-                  className={buttonVariants({ variant: "outline" })}
-                >
-                  Next
-                  <ArrowRightIcon aria-hidden="true" />
-                </Link>
-              ) : null}
-            </nav>
-          ) : null}
-        </>
+        <InfiniteProductGrid
+          key={navigationKey}
+          source={source}
+          initialItems={items}
+          initialPage={page}
+          totalPages={totalPages}
+          categorySlug={categorySlug}
+          className="mt-6"
+        />
       ) : (
         <div className="mt-9 rounded-3xl border border-border bg-background px-6 py-16 text-center shadow-sm sm:py-20">
           <h2 className="font-heading text-2xl font-semibold sm:text-3xl">

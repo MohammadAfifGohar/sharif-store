@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CatalogResults } from "@/components/catalog-results";
+import { CATALOG_PAGE_SIZE } from "@/lib/catalog-feed";
 import { parseCatalogQuery } from "@/lib/catalog-query";
 import { expandProductsForGrid } from "@/lib/product-variants";
 import { getCategoryListingData } from "@/lib/woocommerce";
@@ -32,7 +33,7 @@ export default async function CategoryPage(props: PageProps<"/category/[slug]">)
   const data = await getCategoryListingData(
     slug,
     requestedPage,
-    12,
+    CATALOG_PAGE_SIZE,
     options,
   );
 
@@ -54,6 +55,7 @@ export default async function CategoryPage(props: PageProps<"/category/[slug]">)
         total={total}
         page={page}
         totalPages={totalPages}
+        source={{ kind: "category", slug: category.slug, options }}
         basePath={`/category/${encodeURIComponent(category.slug)}`}
         options={options}
         defaultSort="newest"
