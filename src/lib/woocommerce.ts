@@ -415,20 +415,63 @@ export const getAllProductsListing = cache(
   },
 );
 
+/** Products per batch on the Best Deals page. */
+const BEST_DEALS_PAGE_SIZE = 24;
+/** How many top discounts Best Deals shows while no product is starred. */
+const TOP_DISCOUNTS_WITHOUT_PICKS = 24;
+
+/** Every product matching a Store API filter, across all result pages. */
+async function fetchAllStoreProducts(filter: string) {
+  const products: WooProduct[] = [];
+  for (let page = 1; ; page++) {
+    const response = await fetchStoreApiResponse(
+      `products?${filter}&per_page=100&page=${page}`,
+    );
+    const batch = (await readStoreApiJson(response)) as WooProduct[];
+    products.push(...batch);
+    const totalPages = Number(response.headers.get("x-wp-totalpages") ?? 1);
+    if (batch.length === 0 || page >= totalPages) return products;
+  }
+}
+
+const byBiggestDiscount = (a: WooProduct, b: WooProduct) =>
+  getDiscountPercent(b) - getDiscountPercent(a);
+
+/**
+ * The Best Deals list, biggest discount first. The store owner picks deals by
+ * starring products ("Featured") in WooCommerce; until any are starred, the
+ * biggest discounts in the store are shown instead, so the page never lists
+ * the whole catalogue.
+ */
+const getBestDealsList = cache(async () => {
+  const picks = await fetchAllStoreProducts("featured=true");
+  if (picks.length > 0) {
+    return { products: picks.sort(byBiggestDiscount), handPicked: true };
+  }
+
+  const onSale = await fetchAllStoreProducts("on_sale=true");
+  return {
+    products: onSale
+      .filter((product) => product.on_sale)
+      .sort(byBiggestDiscount)
+      .slice(0, TOP_DISCOUNTS_WITHOUT_PICKS),
+    handPicked: false,
+  };
+});
+
 export const getSaleProducts = cache(async (page: number) => {
-  const perPage = 24;
+  const perPage = BEST_DEALS_PAGE_SIZE;
+  const { products, handPicked } = await getBestDealsList();
+  const totalPages = Math.max(1, Math.ceil(products.length / perPage));
   const safePage = Number.isInteger(page) && page > 0 ? page : 1;
-  const response = await fetchStoreApiResponse(
-    `products?on_sale=true&orderby=date&order=desc&page=${safePage}&per_page=${perPage}`,
-  );
-  const products = (await readStoreApiJson(response)) as WooProduct[];
 
   return {
-    products: products.filter((product) => product.on_sale),
+    products: products.slice((safePage - 1) * perPage, safePage * perPage),
+    handPicked,
     page: safePage,
     perPage,
-    total: Number(response.headers.get("x-wp-total") ?? products.length),
-    totalPages: Number(response.headers.get("x-wp-totalpages") ?? 1),
+    total: products.length,
+    totalPages,
   };
 });
 

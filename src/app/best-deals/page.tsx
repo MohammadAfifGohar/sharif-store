@@ -47,14 +47,13 @@ export default async function BestDealsPage({
 }: BestDealsPageProps) {
   const query = await searchParams;
   const requestedPage = parsePage(query.page);
-  const { products, page, total, totalPages } =
+  const { products, handPicked, page, total, totalPages } =
     await getSaleProducts(requestedPage);
   const categorizedProducts = products.filter(
     (product) => product.categories.length > 0,
   );
-  const cardItems = filterSaleItems(
-    await expandProductsForGrid(categorizedProducts),
-  );
+  const expandedItems = await expandProductsForGrid(categorizedProducts);
+  const cardItems = handPicked ? expandedItems : filterSaleItems(expandedItems);
 
   return (
     <main className="flex-1 bg-[#fffafc]">
@@ -72,14 +71,14 @@ export default async function BestDealsPage({
             <div className="mb-7 flex items-end justify-between gap-5 sm:mb-9">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-                  Current offers
+                  {handPicked ? "Handpicked offers" : "Current offers"}
                 </p>
                 <h2 className="mt-2 font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
-                  Shop the sale edit
+                  {handPicked ? "Our best deals" : "Biggest discounts right now"}
                 </h2>
               </div>
               <p className="shrink-0 text-right text-sm text-muted-foreground">
-                {total} sale {total === 1 ? "product" : "products"}
+                {total} {total === 1 ? "deal" : "deals"}
               </p>
             </div>
 

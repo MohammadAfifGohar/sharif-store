@@ -141,10 +141,11 @@ export async function getCatalogFeedPage(
     }
     case "sale": {
       const data = await getSaleProducts(page);
+      const items = await expandProductsForGrid(withCategories(data.products));
       return {
-        items: filterSaleItems(
-          await expandProductsForGrid(withCategories(data.products)),
-        ),
+        // Starred products are deals because the owner said so, even
+        // without a sale price.
+        items: data.handPicked ? items : filterSaleItems(items),
         page: data.page,
         totalPages: data.totalPages,
       };
