@@ -8,7 +8,7 @@ const breadcrumbSource = read("../src/components/breadcrumbs.tsx");
 const pageSources = [
   "../src/app/category/[slug]/page.tsx",
   "../src/app/category/[slug]/[productSlug]/page.tsx",
-  "../src/app/new-arrivals/page.tsx",
+  "../src/app/shop/page.tsx",
   "../src/app/best-deals/page.tsx",
   "../src/app/contact/page.tsx",
   "../src/app/search/page.tsx",

@@ -60,7 +60,6 @@ export type ProductViewModel = {
   hasRating: boolean;
   isInStock: boolean;
   stockLabel: string;
-  lowStockRemaining: number | null;
   specs: ProductSpec[];
   whatsAppOrderUrl: string;
 };
@@ -206,11 +205,6 @@ export function getProductViewModel({
   const productPath = getProductPath(category.slug, product.slug);
   const productPrice = formatPrice(product);
   const averageRating = Number(product.average_rating);
-  const lowStockRemaining =
-    typeof product.low_stock_remaining === "number" &&
-    product.low_stock_remaining > 0
-      ? product.low_stock_remaining
-      : null;
   const regularPriceAmount = Number(product.prices.regular_price);
   const currentPriceAmount = Number(product.prices.price);
   const discountPercent =
@@ -235,10 +229,7 @@ export function getProductViewModel({
     averageRating,
     hasRating: product.review_count > 0 && averageRating > 0,
     isInStock: product.is_in_stock,
-    stockLabel: product.is_in_stock
-      ? product.stock_availability?.text || "In stock"
-      : "Currently out of stock",
-    lowStockRemaining,
+    stockLabel: product.is_in_stock ? "In stock" : "Currently out of stock",
     specs: getProductSpecs(product),
     whatsAppOrderUrl: getWhatsAppOrderUrl({
       productName: product.name,

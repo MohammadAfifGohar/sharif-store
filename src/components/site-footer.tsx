@@ -41,7 +41,7 @@ export function SiteFooter() {
               Explore
             </p>
             <div className="mt-5 flex flex-col gap-3 text-sm text-background/65">
-              <Link href="/new-arrivals">New arrivals</Link>
+              <Link href="/shop">All products</Link>
               <Link href="/#categories">Categories</Link>
               <Link href="/best-deals">Offers</Link>
             </div>

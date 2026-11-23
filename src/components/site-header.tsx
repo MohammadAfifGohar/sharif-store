@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { UserRoundIcon } from "lucide-react";
 
+import { AnnouncementBar } from "@/components/announcement-bar";
 import { BagSheet } from "@/components/bag-sheet";
 import { DesktopCategoryMenu } from "@/components/desktop-category-menu";
 import { HeaderSearchBar } from "@/components/header-search";
@@ -14,21 +15,27 @@ import { buttonVariants } from "@/components/ui/button";
 import { buildCategoryNavigation } from "@/lib/category-navigation";
 import { cn } from "@/lib/utils";
 import { getStoreCategories } from "@/lib/woocommerce";
+import { getAdvertisedCouponOffers } from "@/lib/woocommerce-admin";
 
 const navItems = [
-  { label: "New arrivals", href: "/new-arrivals", badge: "New" },
+  { label: "All products", href: "/shop", badge: null },
   { label: "Best deals", href: "/best-deals", badge: null },
   { label: "Contact", href: "/contact", badge: null },
 ] satisfies readonly NavigationItem[];
 
 export async function SiteHeader() {
-  const categoryItems = buildCategoryNavigation(await getStoreCategories());
+  const [categories, offers] = await Promise.all([
+    getStoreCategories(),
+    getAdvertisedCouponOffers(),
+  ]);
+  const categoryItems = buildCategoryNavigation(categories);
 
   return (
     <>
-      <div className="bg-primary px-4 py-2 text-center text-[10px] font-semibold uppercase tracking-[0.15em] text-primary-foreground sm:text-xs sm:tracking-[0.18em]">
-        Summer edit &middot; Up to 40% off selected finds
-      </div>
+      <AnnouncementBar
+        offers={offers.map(({ code, title }) => ({ code, title }))}
+        fallback="Summer edit · Up to 40% off selected finds"
+      />
 
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/92 backdrop-blur-xl">
         <div className="mx-auto flex min-h-16 max-w-[1440px] flex-wrap items-center gap-3 px-4 py-2 sm:min-h-18 sm:flex-nowrap sm:gap-4 sm:px-6 sm:py-0 lg:gap-8 lg:px-10">

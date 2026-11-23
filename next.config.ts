@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
     // (minutes long on this machine) stalled `next dev`. Keep dev in-memory.
     turbopackFileSystemCacheForDev: false,
   },
+  async redirects() {
+    return [
+      // New arrivals became the full, newest-first "All products" list.
+      { source: "/new-arrivals", destination: "/shop", permanent: true },
+    ];
+  },
   images: {
     qualities: [75, 85],
     remotePatterns: [

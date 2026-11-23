@@ -175,7 +175,7 @@ export function ProductCard({
 
           {lowStock ? (
             <p className="mt-1.5 text-[10px] font-semibold text-amber-700">
-              Only {displayProduct.low_stock_remaining} left
+              Only a few left
             </p>
           ) : null}
         </div>

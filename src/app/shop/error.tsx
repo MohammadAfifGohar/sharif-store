@@ -1,10 +1,10 @@
 "use client";
 
-import { SparklesIcon } from "lucide-react";
+import { ShoppingBagIcon } from "lucide-react";
 
 import { RouteErrorState } from "@/components/route-error-state";
 
-export default function NewArrivalsError({
+export default function ShopError({
   error,
   unstable_retry,
 }: {
@@ -13,10 +13,10 @@ export default function NewArrivalsError({
 }) {
   return (
     <RouteErrorState
-      scope="New arrivals"
-      icon={SparklesIcon}
-      title="The latest arrivals are taking a moment."
-      description="We couldn't load the newest products. Please try again shortly."
+      scope="All products"
+      icon={ShoppingBagIcon}
+      title="Our products are taking a moment."
+      description="We couldn't load the product list. Please try again shortly."
       error={error}
       onRetry={unstable_retry}
     />

@@ -15,25 +15,41 @@ import { getHomeBannerSlides } from "@/lib/home-banners";
 import { getHomepageCommerceData } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
+const CATEGORY_LINK = /^\/category\/([^/?#]+)/;
+
 export default async function HomePage() {
-  const [{ products, categories }, wordpressBanners] = await Promise.all([
-    getHomepageCommerceData(),
-    getHomeBannerSlides(),
-  ]);
-  const bannerSlides = wordpressBanners ?? heroSlides;
+  const [{ products, categories, stockedCategorySlugs }, wordpressBanners] =
+    await Promise.all([getHomepageCommerceData(), getHomeBannerSlides()]);
+
+  // Never send shoppers to an empty category or a product that is gone:
+  // anything pointing at a category without products is hidden until that
+  // category is stocked again.
+  const linksToStock = (href: string) => {
+    const slug = CATEGORY_LINK.exec(href)?.[1];
+    return !slug || stockedCategorySlugs.has(decodeURIComponent(slug));
+  };
+  const bannerSlides = (wordpressBanners ?? heroSlides).filter((slide) =>
+    linksToStock(slide.href),
+  );
+  const showFaceWashPanel = stockedCategorySlugs.has("face-wash");
+  const showGiftsPanel = stockedCategorySlugs.has("toys");
   const categorizedProducts = products.filter(
     (product) => product.categories.length > 0,
   );
   const trendingItems = await expandProductsForGrid(categorizedProducts);
 
   return (
-      <main className="flex-1">
-        <h1 className="sr-only">
-          Beauty, gifts and everyday essentials at The Sharif Store
-        </h1>
-        <CampaignHero slides={bannerSlides} />
+    <main className="flex-1">
+      <h1 className="sr-only">
+        Beauty, gifts and everyday essentials at The Sharif Store
+      </h1>
+      <CampaignHero slides={bannerSlides} />
 
-        <section id="categories" className="border-y border-border bg-background">
+      {categories.length > 1 ? (
+        <section
+          id="categories"
+          className="border-y border-border bg-background"
+        >
           <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
             <CategoryCarousel
               eyebrow="Find your aisle"
@@ -46,42 +62,57 @@ export default async function HomePage() {
             </CategoryCarousel>
           </div>
         </section>
+      ) : null}
 
-        {trendingItems.length > 0 ? (
-          <section
-            id="trending"
-            className="mx-auto max-w-[1440px] px-4 py-10 sm:px-6 sm:py-14 lg:px-10 lg:py-16"
-          >
-            <div className="mb-7 flex items-end justify-between gap-5 sm:mb-9">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-                  Just landed
-                </p>
-                <h2 className="mt-2 font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
-                  Shop our latest picks
-                </h2>
-              </div>
-              <Link
-                href="/new-arrivals"
-                className="shrink-0 text-sm font-semibold text-primary hover:underline"
-              >
-                View all
-              </Link>
+      {trendingItems.length > 0 ? (
+        <section
+          id="trending"
+          className="mx-auto max-w-[1440px] px-4 py-10 sm:px-6 sm:py-14 lg:px-10 lg:py-16"
+        >
+          <div className="mb-7 flex items-end justify-between gap-5 sm:mb-9">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                Just landed
+              </p>
+              <h2 className="mt-2 font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
+                Shop our latest picks
+              </h2>
             </div>
+            <Link
+              href="/shop"
+              className="shrink-0 text-sm font-semibold text-primary hover:underline"
+            >
+              View all
+            </Link>
+          </div>
 
-            <div className="-mx-3 grid grid-cols-2 gap-1 sm:mx-0 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4">
-              {trendingItems.map((item) => (
-                <ProductCard
-                  key={item.product.id}
-                  product={item.product}
-                  categorySlug={item.product.categories[0].slug}
-                  variants={item.variants}
-                />
-              ))}
-            </div>
-          </section>
-        ) : null}
+          <div className="-mx-3 grid grid-cols-2 gap-1 sm:mx-0 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4">
+            {trendingItems.map((item) => (
+              <ProductCard
+                key={item.product.id}
+                product={item.product}
+                categorySlug={item.product.categories[0].slug}
+                variants={item.variants}
+              />
+            ))}
+          </div>
 
+          <div className="mt-8 flex justify-center sm:mt-10">
+            <Link
+              href="/shop"
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "h-12 w-full text-base sm:w-auto sm:px-10",
+              )}
+            >
+              View all products
+              <ArrowRightIcon data-icon="inline-end" />
+            </Link>
+          </div>
+        </section>
+      ) : null}
+
+      {showFaceWashPanel ? (
         <section
           id="deals"
           className="border-y border-[#e5e7eb] bg-primary text-primary-foreground"
@@ -100,7 +131,7 @@ export default async function HomePage() {
                   Fresh skin starts with one simple step.
                 </h2>
                 <Link
-                  href="/category/face-wash/mama-earth-face-wash"
+                  href="/category/face-wash"
                   className={cn(
                     buttonVariants({ variant: "secondary", size: "lg" }),
                     "mt-8 w-full sm:mt-9 sm:w-auto",
@@ -118,7 +149,9 @@ export default async function HomePage() {
             />
           </div>
         </section>
+      ) : null}
 
+      {showGiftsPanel ? (
         <section
           id="new-finds"
           className="border-b border-[#e5e7eb] bg-secondary text-secondary-foreground"
@@ -159,45 +192,45 @@ export default async function HomePage() {
             </Reveal>
           </div>
         </section>
+      ) : null}
 
-        <section
-          id="our-promise"
-          className="mx-auto max-w-[1440px] px-4 py-16 sm:px-6 sm:py-24 lg:px-10 lg:py-32"
-        >
-          <Reveal className="mx-auto max-w-3xl text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-              Why Sharif
-            </p>
-            <h2 className="mt-3 font-heading text-3xl font-semibold sm:text-5xl lg:text-6xl">
-              A neighbourhood-store kind of experience.
-            </h2>
-          </Reveal>
+      <section
+        id="our-promise"
+        className="mx-auto max-w-[1440px] px-4 py-16 sm:px-6 sm:py-24 lg:px-10 lg:py-32"
+      >
+        <Reveal className="mx-auto max-w-3xl text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+            Why Sharif
+          </p>
+          <h2 className="mt-3 font-heading text-3xl font-semibold sm:text-5xl lg:text-6xl">
+            A neighbourhood-store kind of experience.
+          </h2>
+        </Reveal>
 
-          <div className="mt-10 grid gap-8 sm:mt-16 sm:gap-10 md:grid-cols-3">
-            {promises.map((item, index) => {
-              const Icon = item.icon;
+        <div className="mt-10 grid gap-8 sm:mt-16 sm:gap-10 md:grid-cols-3">
+          {promises.map((item, index) => {
+            const Icon = item.icon;
 
-              return (
-                <Reveal key={item.title} delay={index * 0.08}>
-                  <div className="flex items-start gap-4 text-left sm:flex-col sm:items-center sm:gap-0 sm:text-center">
-                    <span className="grid size-12 shrink-0 place-items-center rounded-full bg-secondary sm:size-16">
-                      <Icon className="size-5 sm:size-6" />
-                    </span>
-                    <div>
-                      <h3 className="font-heading text-lg font-semibold sm:mt-6 sm:text-2xl">
-                        {item.title}
-                      </h3>
-                      <p className="mt-1 max-w-sm text-sm leading-6 text-muted-foreground sm:mt-3">
-                        {item.copy}
-                      </p>
-                    </div>
+            return (
+              <Reveal key={item.title} delay={index * 0.08}>
+                <div className="flex items-start gap-4 text-left sm:flex-col sm:items-center sm:gap-0 sm:text-center">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-full bg-secondary sm:size-16">
+                    <Icon className="size-5 sm:size-6" />
+                  </span>
+                  <div>
+                    <h3 className="font-heading text-lg font-semibold sm:mt-6 sm:text-2xl">
+                      {item.title}
+                    </h3>
+                    <p className="mt-1 max-w-sm text-sm leading-6 text-muted-foreground sm:mt-3">
+                      {item.copy}
+                    </p>
                   </div>
-                </Reveal>
-              );
-            })}
-          </div>
-        </section>
-      </main>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
+      </section>
+    </main>
   );
 }
-

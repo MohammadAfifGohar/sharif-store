@@ -7,6 +7,7 @@ import {
   type ProductCardItem,
 } from "@/lib/product-variants";
 import {
+  getAllProductsListing,
   getCategoryListingData,
   getSaleProducts,
   searchProducts,
@@ -21,6 +22,7 @@ export const CATALOG_PAGE_SIZE = 12;
 export type CatalogFeedSource =
   | { kind: "category"; slug: string; options: CatalogListingOptions }
   | { kind: "search"; query: string; options: CatalogListingOptions }
+  | { kind: "all"; options: CatalogListingOptions }
   | { kind: "sale" };
 
 export type CatalogFeedPage = {
@@ -83,6 +85,8 @@ export function sanitizeCatalogFeedSource(
       if (!query) return null;
       return { kind: "search", query, options: parseOptions("relevance") };
     }
+    case "all":
+      return { kind: "all", options: parseOptions("newest") };
     case "sale":
       return { kind: "sale" };
     default:
@@ -113,6 +117,18 @@ export async function getCatalogFeedPage(
     case "search": {
       const data = await searchProducts(
         source.query,
+        page,
+        CATALOG_PAGE_SIZE,
+        source.options,
+      );
+      return {
+        items: await expandProductsForGrid(withCategories(data.products)),
+        page: data.page,
+        totalPages: data.totalPages,
+      };
+    }
+    case "all": {
+      const data = await getAllProductsListing(
         page,
         CATALOG_PAGE_SIZE,
         source.options,

@@ -7,7 +7,7 @@ import { getStoreCategories, getStoreProducts } from "@/lib/woocommerce";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/"), changeFrequency: "daily", priority: 1 },
-    { url: absoluteUrl("/new-arrivals"), changeFrequency: "daily", priority: 0.9 },
+    { url: absoluteUrl("/shop"), changeFrequency: "daily", priority: 0.9 },
     { url: absoluteUrl("/best-deals"), changeFrequency: "daily", priority: 0.9 },
     { url: absoluteUrl("/contact"), changeFrequency: "monthly", priority: 0.6 },
     { url: absoluteUrl("/terms-conditions"), changeFrequency: "yearly", priority: 0.3 },

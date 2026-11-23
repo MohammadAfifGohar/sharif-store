@@ -150,13 +150,10 @@ export function ProductPurchasePanel({
         >
           <CheckIcon className="size-3.5" strokeWidth={3} />
         </span>
-        {isInStock
-          ? selectedProduct.stock_availability?.text || "In stock"
-          : "Currently out of stock"}
+        {/* Never show stock counts to shoppers; WooCommerce's own text ("6 in stock") includes them. */}
+        {isInStock ? "In stock" : "Currently out of stock"}
         {isInStock && selectedProduct.low_stock_remaining ? (
-          <span className="font-medium opacity-75">
-            ({selectedProduct.low_stock_remaining} left)
-          </span>
+          <span className="font-medium opacity-75">(only a few left)</span>
         ) : null}
       </div>
 

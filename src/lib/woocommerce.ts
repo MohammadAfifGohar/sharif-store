@@ -197,10 +197,33 @@ async function fetchStoreApiResponse(path: string) {
   }
 }
 
+/**
+ * WooCommerce's stock text says how many are left ("6 in stock"). Stock counts
+ * are not for shoppers, so it is reduced to plain "In stock" / "Out of stock"
+ * before any product data reaches a page or the browser.
+ */
+function hideStockCounts(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(hideStockCounts);
+  if (value && typeof value === "object" && "stock_availability" in value) {
+    const product = value as { is_in_stock?: boolean; stock_availability?: unknown };
+    if (product.stock_availability && typeof product.stock_availability === "object") {
+      product.stock_availability = {
+        ...product.stock_availability,
+        text: product.is_in_stock === false ? "Out of stock" : "In stock",
+      };
+    }
+  }
+  return value;
+}
+
+async function readStoreApiJson(response: Response): Promise<unknown> {
+  return hideStockCounts(await response.json());
+}
+
 async function fetchStoreApi<T>(path: string): Promise<T> {
   const response = await fetchStoreApiResponse(path);
 
-  return response.json() as Promise<T>;
+  return (await readStoreApiJson(response)) as T;
 }
 
 /**
@@ -276,7 +299,7 @@ export const getCategoryListingData = cache(
     appendCatalogOptions(params, options);
 
     const response = await fetchStoreApiResponse(`products?${params}`);
-    const products = (await response.json()) as WooProduct[];
+    const products = (await readStoreApiJson(response)) as WooProduct[];
     const subcategories = categories.filter(
       (item) => item.parent === category.id,
     );
@@ -369,10 +392,27 @@ export const getProductReviews = cache(async (productId: number) =>
   ),
 );
 
-export const getNewArrivalProducts = cache(async () =>
-  fetchStoreApi<WooProduct[]>(
-    "products?orderby=date&order=desc&per_page=12",
-  ),
+/** One page of the whole catalogue, for the "All products" page. */
+export const getAllProductsListing = cache(
+  async (page: number, perPage = 12, options: CatalogListingOptions = {}) => {
+    const safePage = Number.isInteger(page) && page > 0 ? page : 1;
+    const params = new URLSearchParams({
+      page: String(safePage),
+      per_page: String(perPage),
+    });
+    appendCatalogOptions(params, options);
+
+    const response = await fetchStoreApiResponse(`products?${params}`);
+    const products = (await readStoreApiJson(response)) as WooProduct[];
+
+    return {
+      products,
+      page: safePage,
+      perPage,
+      total: Number(response.headers.get("x-wp-total") ?? products.length),
+      totalPages: Number(response.headers.get("x-wp-totalpages") ?? 1),
+    };
+  },
 );
 
 export const getSaleProducts = cache(async (page: number) => {
@@ -381,7 +421,7 @@ export const getSaleProducts = cache(async (page: number) => {
   const response = await fetchStoreApiResponse(
     `products?on_sale=true&orderby=date&order=desc&page=${safePage}&per_page=${perPage}`,
   );
-  const products = (await response.json()) as WooProduct[];
+  const products = (await readStoreApiJson(response)) as WooProduct[];
 
   return {
     products: products.filter((product) => product.on_sale),
@@ -409,7 +449,7 @@ export const searchProducts = cache(
     const response = await fetchStoreApiResponse(
       `products?${params}`,
     );
-    const products = (await response.json()) as WooProduct[];
+    const products = (await readStoreApiJson(response)) as WooProduct[];
 
     return {
       products,
@@ -432,6 +472,8 @@ export const getHomepageCommerceData = cache(async () => {
   return {
     products,
     categories: categories.filter((category) => category.parent === 0),
+    /** Every category (any depth) that currently has products. */
+    stockedCategorySlugs: new Set(categories.map((category) => category.slug)),
     featuredDiscoveryProduct: selectFirstProductWithImage(products),
   };
 });

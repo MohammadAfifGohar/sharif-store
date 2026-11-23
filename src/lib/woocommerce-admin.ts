@@ -2,6 +2,11 @@ import "server-only";
 
 import { cache } from "react";
 
+import {
+  getCouponOffers,
+  type CouponOffer,
+  type WooCoupon,
+} from "@/lib/coupons";
 import { getWordpressUrl } from "@/lib/site-config";
 import { getProductsByIds, type WooProduct } from "@/lib/woocommerce";
 
@@ -66,5 +71,19 @@ export const getRelatedProducts = cache(
     ).slice(0, limit);
 
     return getProductsByIds(ids);
+  },
+);
+
+/**
+ * Coupons advertised in the announcement bar: the same `[show]` offers the bag
+ * lists. Cached like the rest of the catalogue (5 minutes) so the header does
+ * not turn every page into a per-request render.
+ */
+export const getAdvertisedCouponOffers = cache(
+  async (): Promise<CouponOffer[]> => {
+    const coupons = await fetchAdminApi<WooCoupon[]>(
+      "coupons?per_page=100&orderby=date&order=desc",
+    );
+    return coupons ? getCouponOffers(coupons) : [];
   },
 );
