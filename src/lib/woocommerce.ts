@@ -1,5 +1,13 @@
 import { cache } from "react";
 
+import {
+  CONCERNS,
+  EMPTY_FACETS,
+  filterParams,
+  type CatalogConcern,
+  type CatalogFacets,
+  type CatalogPriceBand,
+} from "@/lib/catalog-filters";
 import { decodeEntities } from "@/lib/html-text";
 import { decodeSlug } from "@/lib/product-route";
 import { selectFirstProductWithImage } from "@/lib/product-selection";
@@ -143,6 +151,10 @@ export type CatalogAvailability = "all" | "in-stock" | "on-sale";
 export type CatalogListingOptions = {
   sort?: CatalogSort;
   availability?: CatalogAvailability;
+  /** Brand slug. */
+  brand?: string;
+  price?: CatalogPriceBand;
+  concern?: CatalogConcern;
 };
 
 function appendCatalogOptions(
@@ -171,6 +183,7 @@ function appendCatalogOptions(
   if (options.availability === "on-sale") {
     params.set("on_sale", "true");
   }
+  for (const [key, value] of filterParams(options)) params.set(key, value);
 }
 
 async function fetchStoreApiResponse(path: string) {
@@ -341,6 +354,56 @@ export const getCategoryListingData = cache(
       total: Number(response.headers.get("x-wp-total") ?? products.length),
       totalPages: Number(response.headers.get("x-wp-totalpages") ?? 1),
     };
+  },
+);
+
+type CollectionData = {
+  taxonomy_counts?: Array<{ term: number; count: number | string }> | null;
+};
+
+/**
+ * Which brands and skin concerns have products in a listing (a category, a
+ * search, or the whole store), so the filters only offer choices that lead
+ * somewhere. Counts ignore the shopper's other filters, so they can switch
+ * brand without clearing anything first. Toys have no brands or concern
+ * tags, so those filters simply don't show there.
+ */
+export const getCatalogFacets = cache(
+  // Plain arguments (not an object) so React's cache can match repeat calls.
+  async (category: number | null, search: string | null = null): Promise<CatalogFacets> => {
+    const params = new URLSearchParams();
+    if (category) params.set("category", String(category));
+    if (search) params.set("search", search);
+    params.append("calculate_taxonomy_counts[]", "product_brand");
+    params.append("calculate_taxonomy_counts[]", "product_tag");
+
+    try {
+      const [data, brands, tags] = await Promise.all([
+        fetchStoreApi<CollectionData>(`products/collection-data?${params}`),
+        fetchStoreApi<WooTerm[]>("products/brands?per_page=100"),
+        fetchStoreApi<WooTerm[]>("products/tags?per_page=100"),
+      ]);
+      const counts = new Map(
+        (data.taxonomy_counts ?? []).map((item) => [item.term, Number(item.count)]),
+      );
+      const tagSlugsInUse = new Set(
+        tags.filter((tag) => (counts.get(tag.id) ?? 0) > 0).map((tag) => tag.slug),
+      );
+
+      return {
+        brands: brands
+          .map((brand) => ({ slug: brand.slug, name: brand.name, count: counts.get(brand.id) ?? 0 }))
+          .filter((brand) => brand.count > 0)
+          .sort((a, b) => a.name.localeCompare(b.name)),
+        concerns: CONCERNS.filter((concern) =>
+          concern.tags.some((slug) => tagSlugsInUse.has(slug)),
+        ).map((concern) => concern.value),
+      };
+    } catch (cause) {
+      // Filters are a convenience: the listing still works without them.
+      console.error("[catalog] could not load filter options", cause);
+      return EMPTY_FACETS;
+    }
   },
 );
 

@@ -12,6 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  CONCERNS,
+  EMPTY_FACETS,
+  PRICE_BANDS,
+  type CatalogFacets,
+} from "@/lib/catalog-filters";
+import { catalogSearchParams, hasActiveFilters } from "@/lib/catalog-query";
 import type {
   CatalogListingOptions,
   CatalogSort,
@@ -31,16 +38,61 @@ const AVAILABILITY_ITEMS = [
   { label: "On sale", value: "on-sale" },
 ];
 
+/** "all" stands for "no filter" in every select. */
+const ALL = "all";
+
+type FilterName = "sort" | "availability" | "brand" | "price" | "concern";
+
+function FilterSelect({
+  label,
+  value,
+  items,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  items: Array<{ label: string; value: string }>;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="min-w-0">
+      <Select
+        disabled={disabled}
+        value={value}
+        onValueChange={(next) => onChange(String(next))}
+        items={items}
+      >
+        <SelectTrigger aria-label={label} className="h-9 w-full min-w-0 rounded-sm">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent alignItemWithTrigger={false}>
+          <SelectGroup>
+            {items.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 export function CatalogControls({
   basePath,
   query,
   options,
   defaultSort,
+  facets = EMPTY_FACETS,
 }: {
   basePath: string;
   query?: string;
   options: CatalogListingOptions;
   defaultSort: CatalogSort;
+  facets?: CatalogFacets;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -50,24 +102,47 @@ export function CatalogControls({
       ? [{ label: "Most relevant", value: "relevance" }, ...STANDARD_SORT_ITEMS]
       : STANDARD_SORT_ITEMS;
 
-  function updateFilters(name: "sort" | "availability", value: string) {
-    const params = new URLSearchParams();
-    const nextSort = name === "sort" ? value : (options.sort ?? defaultSort);
-    const nextAvailability =
-      name === "availability" ? value : (options.availability ?? "all");
+  // A filter is offered only when it can narrow this listing; one that is
+  // already chosen always stays visible so it can be changed or cleared.
+  const brandItems = [
+    { label: "All brands", value: ALL },
+    ...facets.brands.map((brand) => ({ label: `${brand.name} (${brand.count})`, value: brand.slug })),
+  ];
+  if (options.brand && !facets.brands.some((brand) => brand.slug === options.brand)) {
+    brandItems.push({ label: options.brand, value: options.brand });
+  }
+  const showBrand = facets.brands.length > 1 || Boolean(options.brand);
 
-    if (query) params.set("q", query);
-    if (nextSort !== defaultSort) params.set("sort", nextSort);
-    if (nextAvailability !== "all") {
-      params.set("availability", nextAvailability);
-    }
+  const concernItems = [
+    { label: "All skin concerns", value: ALL },
+    ...CONCERNS.filter(
+      (concern) => facets.concerns.includes(concern.value) || concern.value === options.concern,
+    ).map((concern) => ({ label: concern.label, value: concern.value })),
+  ];
+  const showConcern = concernItems.length > 1;
 
-    const search = params.toString();
+  const priceItems = [
+    { label: "Any price", value: ALL },
+    ...PRICE_BANDS.map((band) => ({ label: band.label, value: band.value })),
+  ];
+
+  function navigate(next: CatalogListingOptions) {
+    const search = catalogSearchParams({ query, options: next, defaultSort }).toString();
     notifyCatalogNavigation();
     startTransition(() => {
       router.push(search ? `${basePath}?${search}` : pathname);
     });
   }
+
+  function updateFilter(name: FilterName, value: string) {
+    const next: CatalogListingOptions = { ...options, sort: options.sort ?? defaultSort };
+    if (name === "sort") next.sort = value as CatalogListingOptions["sort"];
+    else if (name === "availability") next.availability = value as CatalogListingOptions["availability"];
+    else next[name] = value === ALL ? undefined : (value as never);
+    navigate(next);
+  }
+
+  const active = hasActiveFilters(options);
 
   return (
     <div className="relative flex justify-end" aria-busy={isPending}>
@@ -81,52 +156,56 @@ export function CatalogControls({
           <span className="sr-only">Updating products</span>
         </div>
       ) : null}
-      <div className="grid w-full grid-cols-2 justify-end gap-1.5 sm:w-auto sm:grid-cols-[minmax(152px,180px)_minmax(132px,160px)] sm:gap-2">
-        <div className="min-w-0">
-          <Select
+      <div className="grid w-full grid-cols-2 gap-1.5 sm:flex sm:w-auto sm:flex-wrap sm:justify-end sm:gap-2 sm:[&>*]:w-[168px]">
+        <FilterSelect
+          label="Sort products"
+          value={options.sort ?? defaultSort}
+          items={sortItems}
+          disabled={isPending}
+          onChange={(value) => updateFilter("sort", value)}
+        />
+        {showBrand ? (
+          <FilterSelect
+            label="Filter by brand"
+            value={options.brand ?? ALL}
+            items={brandItems}
             disabled={isPending}
-            value={options.sort ?? defaultSort}
-            onValueChange={(value) => updateFilters("sort", String(value))}
-            items={sortItems}
-          >
-            <SelectTrigger aria-label="Sort products" className="h-9 w-full min-w-0 rounded-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              <SelectGroup>
-                {sortItems.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="min-w-0">
-          <Select
+            onChange={(value) => updateFilter("brand", value)}
+          />
+        ) : null}
+        {showConcern ? (
+          <FilterSelect
+            label="Filter by skin concern"
+            value={options.concern ?? ALL}
+            items={concernItems}
             disabled={isPending}
-            value={options.availability ?? "all"}
-            onValueChange={(value) =>
-              updateFilters("availability", String(value))
-            }
-            items={AVAILABILITY_ITEMS}
+            onChange={(value) => updateFilter("concern", value)}
+          />
+        ) : null}
+        <FilterSelect
+          label="Filter by price"
+          value={options.price ?? ALL}
+          items={priceItems}
+          disabled={isPending}
+          onChange={(value) => updateFilter("price", value)}
+        />
+        <FilterSelect
+          label="Filter by availability"
+          value={options.availability ?? ALL}
+          items={AVAILABILITY_ITEMS}
+          disabled={isPending}
+          onChange={(value) => updateFilter("availability", value)}
+        />
+        {active ? (
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => navigate({ sort: options.sort ?? defaultSort })}
+            className="h-9 rounded-sm border border-border px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 sm:!w-auto"
           >
-            <SelectTrigger aria-label="Filter by availability" className="h-9 w-full min-w-0 rounded-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              <SelectGroup>
-                {AVAILABILITY_ITEMS.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
+            Clear filters
+          </button>
+        ) : null}
       </div>
     </div>
   );

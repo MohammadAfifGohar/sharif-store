@@ -57,16 +57,19 @@ export function sanitizeCatalogFeedSource(
     raw.options && typeof raw.options === "object"
       ? (raw.options as Record<string, unknown>)
       : {};
+  const text = (value: unknown) => (typeof value === "string" ? value : undefined);
   const optionQuery = {
-    sort: typeof rawOptions.sort === "string" ? rawOptions.sort : undefined,
-    availability:
-      typeof rawOptions.availability === "string"
-        ? rawOptions.availability
-        : undefined,
+    sort: text(rawOptions.sort),
+    availability: text(rawOptions.availability),
+    brand: text(rawOptions.brand),
+    price: text(rawOptions.price),
+    concern: text(rawOptions.concern),
   };
   const parseOptions = (defaultSort: CatalogSort): CatalogListingOptions => {
-    const { sort, availability } = parseCatalogQuery(optionQuery, defaultSort);
-    return { sort, availability };
+    // parseCatalogQuery drops anything that isn't a known value.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { page, ...options } = parseCatalogQuery(optionQuery, defaultSort);
+    return options;
   };
 
   switch (raw.kind) {

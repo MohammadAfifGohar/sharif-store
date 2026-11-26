@@ -1,3 +1,8 @@
+import {
+  isBrandSlug,
+  isConcern,
+  isPriceBand,
+} from "@/lib/catalog-filters";
 import type {
   CatalogAvailability,
   CatalogListingOptions,
@@ -33,6 +38,9 @@ export function parseCatalogQuery(
     | CatalogAvailability
     | undefined;
   const parsedPage = Number(first(query.page));
+  const brand = first(query.brand)?.toLowerCase();
+  const price = first(query.price);
+  const concern = first(query.concern);
 
   return {
     page: Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1,
@@ -41,7 +49,32 @@ export function parseCatalogQuery(
       rawAvailability && AVAILABILITY_VALUES.has(rawAvailability)
         ? rawAvailability
         : "all",
+    ...(isBrandSlug(brand) ? { brand } : {}),
+    ...(isPriceBand(price) ? { price } : {}),
+    ...(isConcern(concern) ? { concern } : {}),
   };
+}
+
+/** Query-string parameters for a listing's options (defaults left out). */
+export function catalogSearchParams({
+  query,
+  options,
+  defaultSort,
+}: {
+  query?: string;
+  options: CatalogListingOptions;
+  defaultSort?: CatalogSort;
+}) {
+  const params = new URLSearchParams();
+  if (query) params.set("q", query);
+  if (options.sort && options.sort !== defaultSort) params.set("sort", options.sort);
+  if (options.availability && options.availability !== "all") {
+    params.set("availability", options.availability);
+  }
+  if (options.brand) params.set("brand", options.brand);
+  if (options.price) params.set("price", options.price);
+  if (options.concern) params.set("concern", options.concern);
+  return params;
 }
 
 export function getCatalogPageHref({
@@ -55,14 +88,19 @@ export function getCatalogPageHref({
   query?: string;
   options: CatalogListingOptions;
 }) {
-  const params = new URLSearchParams();
-  if (query) params.set("q", query);
-  if (options.sort) params.set("sort", options.sort);
-  if (options.availability && options.availability !== "all") {
-    params.set("availability", options.availability);
-  }
+  const params = catalogSearchParams({ query, options });
   if (page > 1) params.set("page", String(page));
 
   const search = params.toString();
   return search ? `${basePath}?${search}` : basePath;
+}
+
+/** True when the shopper narrowed the list (sorting alone doesn't count). */
+export function hasActiveFilters(options: CatalogListingOptions) {
+  return Boolean(
+    (options.availability && options.availability !== "all") ||
+      options.brand ||
+      options.price ||
+      options.concern,
+  );
 }

@@ -7,7 +7,7 @@ import { CATALOG_PAGE_SIZE } from "@/lib/catalog-feed";
 import { parseCatalogQuery } from "@/lib/catalog-query";
 import { parseSearchQuery } from "@/lib/product-search";
 import { expandProductsForGrid } from "@/lib/product-variants";
-import { searchProducts } from "@/lib/woocommerce";
+import { getCatalogFacets, searchProducts } from "@/lib/woocommerce";
 
 type SearchPageProps = {
   searchParams: Promise<{
@@ -15,6 +15,9 @@ type SearchPageProps = {
     page?: string | string[];
     sort?: string | string[];
     availability?: string | string[];
+    brand?: string | string[];
+    price?: string | string[];
+    concern?: string | string[];
   }>;
 };
 
@@ -52,12 +55,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     );
   }
 
-  const { products, total, totalPages, page } = await searchProducts(
-    query,
-    requestedPage,
-    CATALOG_PAGE_SIZE,
-    options,
-  );
+  const [{ products, total, totalPages, page }, facets] = await Promise.all([
+    searchProducts(query, requestedPage, CATALOG_PAGE_SIZE, options),
+    getCatalogFacets(null, query),
+  ]);
   const categorizedProducts = products.filter(
     (product) => product.categories.length > 0,
   );
@@ -80,6 +81,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         query={query}
         options={options}
         defaultSort="relevance"
+        facets={facets}
       />
     </main>
   );

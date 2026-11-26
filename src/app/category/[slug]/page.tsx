@@ -5,7 +5,7 @@ import { CatalogResults } from "@/components/catalog-results";
 import { CATALOG_PAGE_SIZE } from "@/lib/catalog-feed";
 import { parseCatalogQuery } from "@/lib/catalog-query";
 import { expandProductsForGrid } from "@/lib/product-variants";
-import { getCategoryListingData } from "@/lib/woocommerce";
+import { getCatalogFacets, getCategoryListingData } from "@/lib/woocommerce";
 import { SubcategoryList } from "./components/subcategory-list";
 import {
   getCategoryMetadata,
@@ -40,7 +40,10 @@ export default async function CategoryPage(props: PageProps<"/category/[slug]">)
   if (!data) notFound();
 
   const { category, products, subcategories, page, total, totalPages } = data;
-  const items = await expandProductsForGrid(products);
+  const [items, facets] = await Promise.all([
+    expandProductsForGrid(products),
+    getCatalogFacets(category.id),
+  ]);
 
   return (
     <main>
@@ -60,6 +63,7 @@ export default async function CategoryPage(props: PageProps<"/category/[slug]">)
         options={options}
         defaultSort="newest"
         categorySlug={category.slug}
+        facets={facets}
         toolbarStart={
           <h2 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
             Explore {category.name.replaceAll("&amp;", "&")}

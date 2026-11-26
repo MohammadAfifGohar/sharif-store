@@ -6,6 +6,7 @@ import { CatalogGridTransition } from "@/components/catalog-grid-transition";
 import { InfiniteProductGrid } from "@/components/infinite-product-grid";
 import { buttonVariants } from "@/components/ui/button";
 import type { CatalogFeedSource } from "@/lib/catalog-feed";
+import type { CatalogFacets } from "@/lib/catalog-filters";
 import type { ProductCardItem } from "@/lib/product-variants";
 import type {
   CatalogListingOptions,
@@ -28,6 +29,7 @@ export function CatalogResults({
   categorySlug,
   hideHeader = false,
   toolbarStart,
+  facets,
 }: {
   title: string;
   eyebrow?: string;
@@ -43,8 +45,12 @@ export function CatalogResults({
   categorySlug?: string;
   hideHeader?: boolean;
   toolbarStart?: ReactNode;
+  facets?: CatalogFacets;
 }) {
-  const navigationKey = `${basePath}:${page}:${query ?? ""}:${options.sort ?? defaultSort}:${options.availability ?? "all"}`;
+  const navigationKey = [
+    basePath, page, query ?? "", options.sort ?? defaultSort, options.availability ?? "all",
+    options.brand ?? "", options.price ?? "", options.concern ?? "",
+  ].join(":");
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-12 pt-7 sm:px-6 sm:pb-16 sm:pt-8 lg:px-8">
@@ -79,6 +85,7 @@ export function CatalogResults({
             query={query}
             options={options}
             defaultSort={defaultSort}
+            facets={facets}
           />
         </div>
       </div>

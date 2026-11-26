@@ -5,13 +5,16 @@ import { CatalogResults } from "@/components/catalog-results";
 import { CATALOG_PAGE_SIZE } from "@/lib/catalog-feed";
 import { parseCatalogQuery } from "@/lib/catalog-query";
 import { expandProductsForGrid } from "@/lib/product-variants";
-import { getAllProductsListing } from "@/lib/woocommerce";
+import { getAllProductsListing, getCatalogFacets } from "@/lib/woocommerce";
 
 type ShopPageProps = {
   searchParams: Promise<{
     page?: string | string[];
     sort?: string | string[];
     availability?: string | string[];
+    brand?: string | string[];
+    price?: string | string[];
+    concern?: string | string[];
   }>;
 };
 
@@ -31,11 +34,10 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
     await searchParams,
     "newest",
   );
-  const { products, total, totalPages, page } = await getAllProductsListing(
-    requestedPage,
-    CATALOG_PAGE_SIZE,
-    options,
-  );
+  const [{ products, total, totalPages, page }, facets] = await Promise.all([
+    getAllProductsListing(requestedPage, CATALOG_PAGE_SIZE, options),
+    getCatalogFacets(null),
+  ]);
   const items = await expandProductsForGrid(
     products.filter((product) => product.categories.length > 0),
   );
@@ -56,6 +58,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         basePath="/shop"
         options={options}
         defaultSort="newest"
+        facets={facets}
       />
     </main>
   );
