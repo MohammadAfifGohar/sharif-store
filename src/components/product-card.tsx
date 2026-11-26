@@ -7,6 +7,7 @@ import Link from "next/link";
 import { AddToBagControl } from "@/components/add-to-bag-control";
 import { RatingStars } from "@/components/rating-stars";
 import { SaleBadge } from "@/components/sale-badge";
+import { WishlistButton } from "@/components/wishlist-button";
 import { Badge } from "@/components/ui/badge";
 import type { ProductCardVariant } from "@/lib/product-variants";
 import {
@@ -55,7 +56,7 @@ export function ProductCard({
     displayProduct.low_stock_remaining > 0;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-border/80 bg-background shadow-[0_1px_0_rgba(31,31,31,0.03)] transition-[border-color,box-shadow] duration-300 hover:border-primary/20 hover:shadow-[0_16px_42px_rgba(91,21,55,0.09)] sm:rounded-2xl">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-border/80 bg-background shadow-[0_1px_0_rgba(31,31,31,0.03)] transition-[border-color,box-shadow] duration-300 hover:border-primary/20 hover:shadow-[0_16px_42px_rgba(91,21,55,0.09)] sm:rounded-2xl">
       <Link
         href={productHref}
         className="relative block aspect-[4/5] overflow-hidden border-b border-border/80 bg-[#f8f6f7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
@@ -99,6 +100,14 @@ export function ProductCard({
           </div>
         ) : null}
       </Link>
+
+      {/* Outside the photo link, so tapping the heart never opens the product. */}
+      <WishlistButton
+        productId={product.id}
+        productName={product.name}
+        categorySlug={categorySlug}
+        className="absolute right-2 top-2 z-20 sm:right-3 sm:top-3"
+      />
 
       <div className="flex flex-1 flex-col p-3 sm:p-3.5">
         <div className="flex flex-1 flex-col">

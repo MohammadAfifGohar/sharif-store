@@ -6,6 +6,7 @@ import { AnnouncementBar } from "@/components/announcement-bar";
 import { BagSheet } from "@/components/bag-sheet";
 import { DesktopCategoryMenu } from "@/components/desktop-category-menu";
 import { HeaderSearchBar } from "@/components/header-search";
+import { WishlistHeaderLink } from "@/components/wishlist-header-link";
 import {
   MobileNavigationSheet,
   type NavigationItem,
@@ -98,6 +99,8 @@ export async function SiteHeader() {
             >
               <UserRoundIcon />
             </Link>
+
+            <WishlistHeaderLink />
 
             <BagSheet />
 
