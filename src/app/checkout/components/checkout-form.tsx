@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,6 +28,7 @@ import { OrderTotalRow, SavingsBanner } from "@/components/order-total";
 import { ShippingSummary } from "@/components/shipping-summary";
 import { useCoupon } from "@/hooks/use-coupon";
 import { useShippingRules } from "@/hooks/use-shipping-rules";
+import { isValidPin, setDeliveryPin, useDeliveryPin } from "@/lib/delivery-pin";
 import { getFreeShippingThreshold } from "@/lib/shipping";
 import { getBagRegularTotal } from "@/lib/bag";
 import { Textarea } from "@/components/ui/textarea";
@@ -107,11 +108,25 @@ export function CheckoutForm({
   const formRef = useRef<HTMLFormElement>(null);
   const { coupon: activeCoupon, pendingCode } = useCoupon(items);
   // The delivery address picks the WooCommerce shipping zone.
-  const [address, setAddress] = useState({
+  // postcode is null until the customer types one; until then the PIN entered
+  // in the bag (remembered on this device) is used.
+  const savedPin = useDeliveryPin();
+  const [address, setAddress] = useState<{ state: string; postcode: string | null }>({
     state: defaults.state ?? "MH",
-    postcode: defaults.postcode ?? "",
+    postcode: defaults.postcode || null,
   });
-  const shipping = useShippingRules(address);
+  const shipping = useShippingRules({
+    state: address.state,
+    postcode: address.postcode ?? savedPin,
+  });
+
+  // Pre-fill the PIN code field with the PIN entered in the bag.
+  useEffect(() => {
+    const input = formRef.current?.elements.namedItem("postcode");
+    if (address.postcode === null && savedPin && input instanceof HTMLInputElement && !input.value) {
+      input.value = savedPin;
+    }
+  }, [address.postcode, savedPin]);
 
   const orderItems = items.map((item) => ({
     productId: item.productId,
@@ -327,7 +342,7 @@ export function CheckoutForm({
           </Field>
           <Field>
             <FieldLabel htmlFor="postcode">PIN code</FieldLabel>
-            <Input id="postcode" name="postcode" defaultValue={defaults.postcode} onChange={(event) => setAddress((current) => ({ ...current, postcode: event.target.value.trim() }))} inputMode="numeric" autoComplete="postal-code" pattern="[1-9][0-9]{5}" maxLength={6} required className={inputClassName} />
+            <Input id="postcode" name="postcode" defaultValue={defaults.postcode} onChange={(event) => { const postcode = event.target.value.trim(); setAddress((current) => ({ ...current, postcode })); if (isValidPin(postcode)) setDeliveryPin(postcode); }} inputMode="numeric" autoComplete="postal-code" pattern="[1-9][0-9]{5}" maxLength={6} required className={inputClassName} />
           </Field>
           <Field className="sm:col-span-2">
             <FieldLabel htmlFor="state">State</FieldLabel>

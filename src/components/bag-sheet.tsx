@@ -6,6 +6,7 @@ import { ShoppingBagIcon, Trash2Icon } from "lucide-react";
 
 import { useBag } from "@/components/bag-provider";
 import { CouponPanel } from "@/components/coupon-panel";
+import { DeliveryPinField } from "@/components/delivery-pin-field";
 import { FreeShippingProgress } from "@/components/free-shipping-progress";
 import { LinePrice } from "@/components/line-price";
 import { OrderTotalRow, SavingsBanner } from "@/components/order-total";
@@ -27,6 +28,7 @@ import { useCoupon } from "@/hooks/use-coupon";
 import { useShippingRules } from "@/hooks/use-shipping-rules";
 import { getBagRegularTotal } from "@/lib/bag";
 import { getOrderTotals } from "@/lib/checkout";
+import { useDeliveryPin } from "@/lib/delivery-pin";
 import { getProductPath } from "@/lib/product-route";
 import { getFreeShippingThreshold } from "@/lib/shipping";
 import { formatMoneyAmount } from "@/lib/woocommerce";
@@ -37,8 +39,12 @@ export function BagSheet() {
   const { coupon } = useCoupon(items);
   const currencyCode = items[0]?.currencyCode ?? "INR";
   const regularTotal = getBagRegularTotal(items);
-  const shipping = useShippingRules();
+  const deliveryPin = useDeliveryPin();
+  const shipping = useShippingRules({ postcode: deliveryPin || undefined });
   const totals = getOrderTotals({ subtotal, regularTotal, coupon, prepaid: false, shipping });
+  // The charge depends on the area, so without a PIN code it is left out.
+  const shippingFee = deliveryPin ? totals.shippingFee : null;
+  const total = totals.total - (shippingFee === null ? totals.shippingFee : 0);
 
   return (
     <Sheet>
@@ -78,7 +84,7 @@ export function BagSheet() {
           </div>
         ) : (
           <>
-            {getFreeShippingThreshold(shipping) !== null ? (
+            {deliveryPin && getFreeShippingThreshold(shipping) !== null ? (
               <div className="border-b border-border/70 bg-muted/30 px-6 py-4">
                 <FreeShippingProgress
                   shipping={shipping}
@@ -162,6 +168,8 @@ export function BagSheet() {
                 currencyCode={currencyCode}
                 className="mt-4"
               />
+
+              <DeliveryPinField className="mt-3" />
             </div>
           </>
         )}
@@ -185,11 +193,11 @@ export function BagSheet() {
                     <span>−{formatMoneyAmount(totals.couponDiscount, currencyCode)}</span>
                   </div>
                 ) : null}
-                <ShippingSummary fee={totals.shippingFee} currencyCode={currencyCode} />
+                <ShippingSummary fee={shippingFee} currencyCode={currencyCode} />
                 <OrderTotalRow
                   label="Total"
-                  total={totals.total}
-                  regularTotal={regularTotal + totals.shippingFee}
+                  total={total}
+                  regularTotal={regularTotal + (shippingFee ?? 0)}
                   currencyCode={currencyCode}
                 />
                 {totals.prepaidDiscount ? (
