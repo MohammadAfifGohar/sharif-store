@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { decodeEntities } from "@/lib/html-text";
 import { decodeSlug } from "@/lib/product-route";
 import { selectFirstProductWithImage } from "@/lib/product-selection";
 import { getWordpressUrl } from "@/lib/site-config";
@@ -216,8 +217,35 @@ function hideStockCounts(value: unknown): unknown {
   return value;
 }
 
+/**
+ * The Store API sends names HTML-escaped, and names saved with "&" in
+ * WordPress come back escaped twice ("Dot &amp;amp; Key"). Pages render names
+ * as plain text, so every `name` (products, brands, categories, tags,
+ * attribute terms) is decoded here, once, before it reaches a page.
+ */
+function decodeNames(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(decodeNames);
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    for (const [key, child] of Object.entries(record)) {
+      if (key === "name" && typeof child === "string") {
+        let name = child;
+        for (let i = 0; i < 3 && name.includes("&"); i++) {
+          const decoded = decodeEntities(name);
+          if (decoded === name) break;
+          name = decoded;
+        }
+        record[key] = name;
+      } else if (child && typeof child === "object") {
+        decodeNames(child);
+      }
+    }
+  }
+  return value;
+}
+
 async function readStoreApiJson(response: Response): Promise<unknown> {
-  return hideStockCounts(await response.json());
+  return decodeNames(hideStockCounts(await response.json()));
 }
 
 async function fetchStoreApi<T>(path: string): Promise<T> {
