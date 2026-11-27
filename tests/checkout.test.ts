@@ -6,18 +6,9 @@ import {
   checkoutRequestSchema,
   getOrderConfirmationPath,
   getOrderTotals,
-  getPrepaidDiscount,
   toMinorUnits,
 } from "../src/lib/checkout";
 import { FALLBACK_SHIPPING_RULES } from "../src/lib/shipping";
-
-test("gives 5% off online payments, rounded to the rupee and capped at ₹50", () => {
-  assert.equal(getPrepaidDiscount(300), 15);
-  assert.equal(getPrepaidDiscount(499), 25);
-  assert.equal(getPrepaidDiscount(999), 50);
-  assert.equal(getPrepaidDiscount(1500), 50);
-  assert.equal(getPrepaidDiscount(5), 0);
-});
 
 import {
   isValidPaymentSignature,
@@ -102,17 +93,15 @@ test("requires a known payment method", () => {
   assert.equal(checkoutRequestSchema.safeParse(order).success, false);
 });
 
-test("order totals apply the coupon before shipping and the online discount", () => {
+test("order totals apply the coupon before shipping", () => {
   const totals = getOrderTotals({
     subtotal: 550,
     regularTotal: 650,
     coupon: { discount: 100, freeShipping: false },
-    prepaid: true,
     shipping: FALLBACK_SHIPPING_RULES,
   });
   assert.equal(totals.itemsTotal, 450);
   assert.equal(totals.shippingFee, 59);
-  assert.equal(totals.appliedPrepaidDiscount, 23);
-  assert.equal(totals.total, 486);
-  assert.equal(totals.totalSavings, 223);
+  assert.equal(totals.total, 509);
+  assert.equal(totals.totalSavings, 200);
 });

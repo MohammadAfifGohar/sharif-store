@@ -36,8 +36,6 @@ import {
   checkoutCustomerSchema,
   getOrderTotals,
   INDIAN_STATES,
-  PREPAID_DISCOUNT_MAX,
-  PREPAID_DISCOUNT_PERCENT,
   type CheckoutCustomer,
   type CheckoutSession,
   type CodOrderResult,
@@ -61,7 +59,7 @@ const PAYMENT_OPTIONS: Array<{
   {
     value: "razorpay",
     label: "Pay online",
-    description: `UPI, cards, net banking & wallets via Razorpay. Save ${PREPAID_DISCOUNT_PERCENT}% (up to ${formatMoneyAmount(PREPAID_DISCOUNT_MAX, "INR")})`,
+    description: "UPI, cards, net banking & wallets via Razorpay",
   },
   {
     value: "cod",
@@ -140,11 +138,9 @@ export function CheckoutForm({
     subtotal,
     regularTotal,
     coupon: activeCoupon,
-    prepaid: paymentMethod === "razorpay",
     shipping,
   });
-  const { couponDiscount, itemsTotal, prepaidDiscount, total } = totals;
-  const discount = totals.appliedPrepaidDiscount;
+  const { couponDiscount, itemsTotal, total } = totals;
   // Wait for a coupon being (re)checked so the order uses its current price.
   const busy = status !== "idle" || pendingCode !== null;
 
@@ -435,17 +431,6 @@ export function CheckoutForm({
             </div>
           ) : null}
           <ShippingSummary fee={totals.shippingFee} currencyCode={currencyCode} />
-          {discount ? (
-            <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400">
-              <span>Online payment discount</span>
-              <span>−{formatMoneyAmount(discount, currencyCode)}</span>
-            </div>
-          ) : null}
-          {paymentMethod === "cod" && prepaidDiscount ? (
-            <p className="text-xs text-muted-foreground">
-              Pay online instead and save {formatMoneyAmount(prepaidDiscount, currencyCode)}.
-            </p>
-          ) : null}
           <OrderTotalRow
             label="Total"
             total={total}

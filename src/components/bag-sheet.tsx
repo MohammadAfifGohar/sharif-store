@@ -41,7 +41,7 @@ export function BagSheet() {
   const regularTotal = getBagRegularTotal(items);
   const deliveryPin = useDeliveryPin();
   const shipping = useShippingRules({ postcode: deliveryPin || undefined });
-  const totals = getOrderTotals({ subtotal, regularTotal, coupon, prepaid: false, shipping });
+  const totals = getOrderTotals({ subtotal, regularTotal, coupon, shipping });
   // The charge depends on the area, so without a PIN code it is left out.
   const shippingFee = deliveryPin ? totals.shippingFee : null;
   const total = totals.total - (shippingFee === null ? totals.shippingFee : 0);
@@ -200,12 +200,6 @@ export function BagSheet() {
                   regularTotal={regularTotal + (shippingFee ?? 0)}
                   currencyCode={currencyCode}
                 />
-                {totals.prepaidDiscount ? (
-                  <p className="text-xs text-emerald-700 dark:text-emerald-400">
-                    Pay online at checkout and save{" "}
-                    {formatMoneyAmount(totals.prepaidDiscount, currencyCode)} more.
-                  </p>
-                ) : null}
               </div>
             </>
           ) : null}

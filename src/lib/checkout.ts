@@ -95,33 +95,20 @@ const couponCodeSchema = z
 export const PAYMENT_METHODS = ["razorpay", "cod"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
-/** Discount on online (prepaid) orders: a share of the items total, capped. */
-export const PREPAID_DISCOUNT_PERCENT = 5;
-export const PREPAID_DISCOUNT_MAX = 50;
-export const PREPAID_DISCOUNT_LABEL = "Online payment discount";
-
-/** Whole-rupee discount (₹) for paying online. Shipping is not discounted. */
-export function getPrepaidDiscount(itemsTotal: number) {
-  const discount = Math.round((itemsTotal * PREPAID_DISCOUNT_PERCENT) / 100);
-  return Math.max(0, Math.min(discount, PREPAID_DISCOUNT_MAX));
-}
-
 /**
  * Order totals in the order they apply: coupon first, then shipping (from the
- * WooCommerce shipping zone) and the online discount on what is left.
+ * WooCommerce shipping zone) on what is left.
  * `regularTotal` is the bag at MRP.
  */
 export function getOrderTotals({
   subtotal,
   regularTotal,
   coupon,
-  prepaid,
   shipping,
 }: {
   subtotal: number;
   regularTotal: number;
   coupon: Pick<AppliedCoupon, "discount" | "freeShipping"> | null;
-  prepaid: boolean;
   shipping: ShippingRules;
 }) {
   const couponDiscount = coupon ? Math.min(coupon.discount, subtotal) : 0;
@@ -131,19 +118,15 @@ export function getOrderTotals({
     itemsTotal,
     freeShippingCoupon: coupon?.freeShipping,
   }).fee;
-  const prepaidDiscount = getPrepaidDiscount(itemsTotal);
-  const appliedPrepaidDiscount = prepaid ? prepaidDiscount : 0;
   const mrpSavings = Math.max(0, regularTotal - subtotal);
 
   return {
     couponDiscount,
     itemsTotal,
     shippingFee,
-    prepaidDiscount,
-    appliedPrepaidDiscount,
     mrpSavings,
-    totalSavings: mrpSavings + couponDiscount + appliedPrepaidDiscount,
-    total: itemsTotal + shippingFee - appliedPrepaidDiscount,
+    totalSavings: mrpSavings + couponDiscount,
+    total: itemsTotal + shippingFee,
   };
 }
 
