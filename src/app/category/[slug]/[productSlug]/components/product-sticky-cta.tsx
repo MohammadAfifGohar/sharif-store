@@ -31,7 +31,7 @@ export function ProductStickyCta({
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur-md lg:hidden">
       <div className="mx-auto flex max-w-[1440px] items-center gap-3">
-        <span className="min-w-0 flex-1">
+        <span className="min-w-0 shrink-0">
           <span className="block truncate text-base font-bold">
             {priceDisplay}
           </span>
@@ -59,15 +59,16 @@ export function ProductStickyCta({
           product={product}
           categorySlug={categorySlug}
           variation={variation}
-          size="sm"
-          className="size-11 rounded-xl border-primary text-primary hover:bg-primary/5 hover:text-primary"
-          quantityClassName="h-11 w-auto flex-none rounded-xl"
+          variant="outline"
+          label="Add"
+          className="min-w-0 flex-1 px-2"
+          quantityClassName="w-24 flex-none"
         />
         <BuyNowButton
           product={product}
           categorySlug={categorySlug}
           variation={variation}
-          className="h-11 w-auto flex-none rounded-xl px-5"
+          className="min-w-0 flex-1 px-2"
         />
       </div>
     </div>
