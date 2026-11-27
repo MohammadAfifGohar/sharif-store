@@ -193,9 +193,9 @@ export function ProductCard({
           product={product}
           categorySlug={categorySlug}
           size="lg"
-          label="Add to cart"
+          label="Add to Bag"
           className="mt-3 h-10 rounded-lg border-primary/20 bg-primary px-3 text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary/90 sm:mt-4 sm:text-sm"
-          quantityClassName="mt-3 h-10 w-full rounded- sm:mt-4"
+          quantityClassName="mt-3 h-10 w-full rounded-lg sm:mt-4"
           variation={
             selectedVariant
               ? {
