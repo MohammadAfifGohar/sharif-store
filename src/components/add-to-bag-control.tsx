@@ -16,6 +16,8 @@ type AddToBagControlProps = {
   label?: string;
   className?: string;
   quantityClassName?: string;
+  /** "outline" when a stronger button (Buy Now) sits next to it. */
+  variant?: "default" | "outline";
   /** Set when this control represents one specific variation of a variable product. */
   variation?: BagVariation | null;
 };
@@ -28,6 +30,7 @@ export function AddToBagControl({
   className,
   quantityClassName,
   variation = null,
+  variant = "default",
 }: AddToBagControlProps) {
   const { items, addItem, setQuantity } = useBag();
   const variationId = variation?.id ?? null;
@@ -74,7 +77,12 @@ export function AddToBagControl({
       type="button"
       disabled={disabled}
       onClick={() => addItem(product, categorySlug, 1, variation ?? undefined)}
-      className={cn(buttonVariants({ size: "lg" }), "w-full", className)}
+      className={cn(
+        buttonVariants({ size: "lg", variant }),
+        variant === "outline" && "border-primary text-primary hover:bg-primary/5 hover:text-primary",
+        "w-full",
+        className,
+      )}
     >
       <ShoppingBagIcon data-icon="inline-start" />
       {label}

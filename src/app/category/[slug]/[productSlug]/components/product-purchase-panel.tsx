@@ -5,6 +5,7 @@ import { CheckIcon } from "lucide-react";
 import { ProductStickyCta } from "./product-sticky-cta";
 import { useProductVariant } from "./product-variant-context";
 import { AddToBagControl } from "@/components/add-to-bag-control";
+import { BuyNowButton } from "@/components/buy-now-button";
 import { WishlistButton } from "@/components/wishlist-button";
 import {
   formatMoneyAmount,
@@ -158,13 +159,20 @@ export function ProductPurchasePanel({
         ) : null}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         <AddToBagControl
           product={product}
           categorySlug={categorySlug}
           variation={bagVariation}
+          variant="outline"
           className="h-11 min-w-0 flex-1 rounded-xl"
-          quantityClassName="w-28 flex-none sm:w-44"
+          quantityClassName="w-28 flex-none sm:w-40"
+        />
+        <BuyNowButton
+          product={product}
+          categorySlug={categorySlug}
+          variation={bagVariation}
+          className="h-11 min-w-0 flex-1 rounded-xl"
         />
         <WishlistButton
           productId={product.id}

@@ -293,7 +293,7 @@ export function CheckoutForm({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-14"
+      className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-14"
     >
       <FieldSet disabled={busy}>
         <FieldLegend className="font-heading text-xl font-semibold">
