@@ -234,17 +234,6 @@ export default async function CategoryProductPage(
                 ))}
               </dl>
             ) : null}
-
-            {product.tags.length > 0 ? (
-              <div className="mt-6 flex flex-wrap items-center gap-2">
-                <span className="text-sm text-muted-foreground">Tags:</span>
-                {product.tags.map((tag) => (
-                  <Badge key={tag.id} variant="outline">
-                    {tag.name}
-                  </Badge>
-                ))}
-              </div>
-            ) : null}
           </section>
         </div>
       </ProductVariantProvider>

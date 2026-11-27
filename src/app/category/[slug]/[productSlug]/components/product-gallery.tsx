@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import Image from "next/image";
 import useEmblaCarousel from "embla-carousel-react";
-import { BadgePercentIcon } from "lucide-react";
+import { BadgePercentIcon, ZoomInIcon } from "lucide-react";
 
+import { ProductImageViewer } from "./product-image-viewer";
 import type { WooImage } from "@/lib/woocommerce";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,7 @@ export function ProductGallery({
   });
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [zoomPosition, setZoomPosition] = useState<{
     x: number;
     y: number;
@@ -114,7 +116,12 @@ export function ProductGallery({
               aria-roledescription="slide"
               aria-label={`Image ${index + 1} of ${images.length}`}
               aria-hidden={index !== activeIndex}
-              className="relative h-full w-full shrink-0 grow-0 basis-full"
+              className="relative h-full w-full shrink-0 grow-0 basis-full cursor-zoom-in"
+              // Embla swallows the click that ends a swipe, so this only fires on a tap.
+              onClick={() => {
+                setZoomPosition(null);
+                setViewerIndex(index);
+              }}
             >
               <Image
                 src={image.src}
@@ -144,6 +151,15 @@ export function ProductGallery({
             </span>
           </div>
         ) : null}
+
+        <button
+          type="button"
+          onClick={() => setViewerIndex(activeIndex)}
+          aria-label="Zoom photo"
+          className="absolute bottom-3 right-3 z-10 grid size-10 place-items-center rounded-full bg-white/90 text-foreground shadow-md lg:hidden"
+        >
+          <ZoomInIcon className="size-5" />
+        </button>
 
         {zoomPosition ? (
           <span
@@ -201,6 +217,18 @@ export function ProductGallery({
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {viewerIndex !== null ? (
+        <ProductImageViewer
+          images={images}
+          productName={productName}
+          startIndex={viewerIndex}
+          onClose={(index) => {
+            setViewerIndex(null);
+            scrollToIndex(index);
+          }}
+        />
       ) : null}
     </div>
   );
