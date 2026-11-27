@@ -5,10 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  ChevronDownIcon,
   LoaderCircleIcon,
   LockIcon,
   PackageCheckIcon,
   ShoppingBagIcon,
+  ZapIcon,
 } from "lucide-react";
 
 import { useBag } from "@/components/bag-provider";
@@ -21,16 +23,19 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { BagChangeNotice } from "@/components/bag-change-notice";
 import { CouponPanel } from "@/components/coupon-panel";
 import { FreeShippingProgress } from "@/components/free-shipping-progress";
 import { LinePrice } from "@/components/line-price";
 import { OrderTotalRow, SavingsBanner } from "@/components/order-total";
 import { ShippingSummary } from "@/components/shipping-summary";
+import { useBagPriceCheck } from "@/hooks/use-bag-price-check";
 import { useCoupon } from "@/hooks/use-coupon";
 import { useShippingRules } from "@/hooks/use-shipping-rules";
 import { isValidPin, setDeliveryPin, useDeliveryPin } from "@/lib/delivery-pin";
 import { getFreeShippingThreshold } from "@/lib/shipping";
-import { getBagRegularTotal } from "@/lib/bag";
+import { getBagRegularTotal, getBagSubtotal, getBagTotalCount } from "@/lib/bag";
+import { clearBuyNow, useBuyNowItem } from "@/lib/buy-now-store";
 import { Textarea } from "@/components/ui/textarea";
 import {
   checkoutCustomerSchema,
@@ -86,13 +91,37 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
 export function CheckoutForm({
   defaults = {},
   isLoggedIn = false,
+  buyNow = false,
 }: {
   /** Saved details of a logged-in customer, pre-filled into the form. */
   defaults?: Partial<CheckoutCustomer>;
   isLoggedIn?: boolean;
+  /** Checkout for the single product picked with "Buy Now", not the bag. */
+  buyNow?: boolean;
 }) {
   const router = useRouter();
-  const { items, subtotal, totalCount, clear } = useBag();
+  const bag = useBag();
+  const buyNowItem = useBuyNowItem();
+  // undefined while the Buy Now product is read from this tab's storage. If it
+  // is gone (say, the link was opened in a new tab) the bag is used instead.
+  const waitingForBuyNow = buyNow && buyNowItem === undefined;
+  const isBuyNow = buyNow && Boolean(buyNowItem);
+  const items = isBuyNow && buyNowItem ? [buyNowItem] : bag.items;
+  const subtotal = isBuyNow ? getBagSubtotal(items) : bag.subtotal;
+  const totalCount = isBuyNow ? getBagTotalCount(items) : bag.totalCount;
+  // The bag keeps the price from when each product was added; make sure the
+  // summary shows today's price before the customer pays. (A Buy Now product
+  // was just taken from its page, so it is already current.)
+  const priceChanges = useBagPriceCheck(!buyNow || buyNowItem === null);
+  function clear() {
+    if (isBuyNow && buyNowItem) {
+      // The product is bought, so it no longer needs to wait in the bag.
+      bag.removeItem(buyNowItem.productId, buyNowItem.variationId);
+      clearBuyNow();
+    } else {
+      bag.clear();
+    }
+  }
   const [status, setStatus] = useState<Status>("idle");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("razorpay");
   const [errorMessage, setErrorMessage] = useState("");
@@ -273,6 +302,15 @@ export function CheckoutForm({
     );
   }
 
+  if (waitingForBuyNow) {
+    return (
+      <div className="mt-10 flex items-center gap-3 rounded-2xl border border-border bg-muted/20 p-6 text-sm">
+        <LoaderCircleIcon className="size-5 animate-spin" />
+        Loading your order…
+      </div>
+    );
+  }
+
   if (items.length === 0) {
     return (
       <div className="mt-10 flex flex-col items-center gap-4 rounded-2xl border border-border bg-muted/20 px-6 py-14 text-center">
@@ -291,6 +329,74 @@ export function CheckoutForm({
       onSubmit={handleSubmit}
       className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-14"
     >
+      {isBuyNow ? (
+        <p className="-mb-4 flex items-start gap-2 rounded-xl bg-primary/5 px-4 py-3 text-sm text-foreground/80 lg:col-span-2">
+          <ZapIcon className="mt-0.5 size-4 shrink-0 text-primary" />
+          <span>
+            You are buying only this product. Anything in your bag stays there for later.
+          </span>
+        </p>
+      ) : null}
+      <BagChangeNotice
+        changes={priceChanges}
+        currencyCode={currencyCode}
+        className="-mb-4 lg:col-span-2"
+      />
+      {/* On phones the full summary sits below the form; this keeps the total in view up top. */}
+      <details className="group -mb-4 rounded-2xl border border-border bg-muted/20 lg:hidden">
+        <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3.5 text-sm [&::-webkit-details-marker]:hidden">
+          <ShoppingBagIcon className="size-4 text-primary" />
+          <span className="font-semibold">Order summary</span>
+          <span className="text-muted-foreground">
+            ({totalCount} item{totalCount === 1 ? "" : "s"})
+          </span>
+          <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
+          <span className="ml-auto font-heading text-base font-bold">
+            {formatMoneyAmount(total, currencyCode)}
+          </span>
+        </summary>
+        <div className="border-t border-border/70 px-4 pb-4 pt-3">
+          <ul className="flex flex-col gap-3">
+            {items.map((item) => (
+              <li key={`${item.productId}-${item.variationId ?? "base"}`} className="flex gap-3">
+                <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+                  {item.image ? (
+                    <Image src={item.image.src} alt={item.image.alt} fill sizes="48px" className="object-cover" />
+                  ) : null}
+                </div>
+                <div className="min-w-0 flex-1 text-sm">
+                  <p className="truncate font-semibold capitalize">{item.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {item.variationLabel ? `${item.variationLabel} · ` : ""}Qty {item.quantity}
+                  </p>
+                </div>
+                <LinePrice item={item} className="shrink-0" />
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3 flex flex-col gap-1.5 border-t border-border/70 pt-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span>Subtotal</span>
+              <span>{formatMoneyAmount(subtotal, currencyCode)}</span>
+            </div>
+            {couponDiscount ? (
+              <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400">
+                <span>Coupon ({activeCoupon?.code.toUpperCase()})</span>
+                <span>−{formatMoneyAmount(couponDiscount, currencyCode)}</span>
+              </div>
+            ) : null}
+            <ShippingSummary fee={totals.shippingFee} currencyCode={currencyCode} />
+            <div className="flex items-center justify-between font-semibold">
+              <span>Total</span>
+              <span>{formatMoneyAmount(total, currencyCode)}</span>
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Coupons and payment are below the delivery details.
+          </p>
+        </div>
+      </details>
+
       <FieldSet disabled={busy}>
         <FieldLegend className="font-heading text-xl font-semibold">
           Delivery details

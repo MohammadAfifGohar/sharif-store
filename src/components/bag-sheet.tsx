@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { ShoppingBagIcon, Trash2Icon } from "lucide-react";
 
 import { useBag } from "@/components/bag-provider";
 import { CouponPanel } from "@/components/coupon-panel";
+import { BagChangeNotice } from "@/components/bag-change-notice";
 import { DeliveryPinField } from "@/components/delivery-pin-field";
 import { FreeShippingProgress } from "@/components/free-shipping-progress";
 import { LinePrice } from "@/components/line-price";
@@ -24,6 +26,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useBagPriceCheck } from "@/hooks/use-bag-price-check";
 import { useCoupon } from "@/hooks/use-coupon";
 import { useShippingRules } from "@/hooks/use-shipping-rules";
 import { getBagRegularTotal } from "@/lib/bag";
@@ -36,6 +39,9 @@ import { cn } from "@/lib/utils";
 
 export function BagSheet() {
   const { items, removeItem, setQuantity, totalCount, subtotal } = useBag();
+  const [open, setOpen] = useState(false);
+  // Prices saved with the bag can be days old; check them whenever it opens.
+  const priceChanges = useBagPriceCheck(open);
   const { coupon } = useCoupon(items);
   const currencyCode = items[0]?.currencyCode ?? "INR";
   const regularTotal = getBagRegularTotal(items);
@@ -47,7 +53,7 @@ export function BagSheet() {
   const total = totals.total - (shippingFee === null ? totals.shippingFee : 0);
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={<Button variant="ghost" size="icon-lg" className="relative size-11" />}
       >
@@ -97,6 +103,7 @@ export function BagSheet() {
             ) : null}
 
             <div className="flex-1 overflow-y-auto px-4 py-4">
+              <BagChangeNotice changes={priceChanges} currencyCode={currencyCode} className="mb-3" />
               <ul className="flex flex-col gap-3">
                 {items.map((item) => (
                   <li

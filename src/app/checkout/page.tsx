@@ -25,8 +25,13 @@ async function loadCheckoutDefaults() {
   return getCheckoutDefaults(customer, user);
 }
 
-export default async function CheckoutPage() {
-  const defaults = await loadCheckoutDefaults();
+export default async function CheckoutPage(props: PageProps<"/checkout">) {
+  const [defaults, searchParams] = await Promise.all([
+    loadCheckoutDefaults(),
+    props.searchParams,
+  ]);
+  // "Buy Now" opens checkout with only that product, leaving the bag alone.
+  const buyNow = searchParams.buy === "now";
 
   return (
     <main className="flex-1 bg-[#fffdfb]">
@@ -39,7 +44,11 @@ export default async function CheckoutPage() {
           Checkout
         </h1>
 
-        <CheckoutForm defaults={defaults ?? {}} isLoggedIn={defaults !== null} />
+        <CheckoutForm
+          defaults={defaults ?? {}}
+          isLoggedIn={defaults !== null}
+          buyNow={buyNow}
+        />
       </div>
     </main>
   );

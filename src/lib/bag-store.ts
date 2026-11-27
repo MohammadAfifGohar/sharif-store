@@ -1,10 +1,13 @@
 import {
   addItemToBag,
+  applyFreshBagLines,
   removeItemFromBag,
   setItemQuantity,
   toBagItem,
+  type BagChange,
   type BagItem,
   type BagVariation,
+  type FreshBagLine,
 } from "@/lib/bag";
 import { readBagFromStorage, writeBagToStorage } from "@/lib/bag-storage";
 import type { WooProduct } from "@/lib/woocommerce";
@@ -72,4 +75,39 @@ export function setBagItemQuantity(
 
 export function clearBag() {
   setItems([]);
+}
+
+let lastPriceCheck = 0;
+let pendingPriceCheck: Promise<BagChange[]> | null = null;
+
+/**
+ * Brings the saved bag up to date with the store's current prices and stock
+ * (see applyFreshBagLines). Checks at most once every 30 seconds; returns
+ * what changed so the shopper can be told.
+ */
+export function refreshBagPrices(
+  load: (lines: Array<{ productId: number; variationId: number | null }>) => Promise<FreshBagLine[] | null>,
+): Promise<BagChange[]> {
+  if (pendingPriceCheck) return pendingPriceCheck;
+  // Child components can ask before the provider has read the saved bag.
+  if (!hasHydrated && typeof window !== "undefined") {
+    hasHydrated = true;
+    items = readBagFromStorage();
+  }
+  if (items.length === 0 || Date.now() - lastPriceCheck < 30_000) return Promise.resolve([]);
+
+  const lines = items.map(({ productId, variationId }) => ({ productId, variationId }));
+  pendingPriceCheck = load(lines)
+    .then((fresh) => {
+      if (!fresh) return [];
+      lastPriceCheck = Date.now();
+      const result = applyFreshBagLines(items, fresh);
+      if (JSON.stringify(result.items) !== JSON.stringify(items)) setItems(result.items);
+      return result.changes;
+    })
+    .catch(() => [])
+    .finally(() => {
+      pendingPriceCheck = null;
+    });
+  return pendingPriceCheck;
 }

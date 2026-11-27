@@ -127,3 +127,69 @@ export function getPercentOff(regular: number, current: number): number {
     ? Math.round(((regular - current) / regular) * 100)
     : 0;
 }
+
+/** The store's current price and stock for one bag line. */
+export type FreshBagLine = {
+  productId: number;
+  variationId: number | null;
+  /** False when the product was removed, hidden or sold out. */
+  available: boolean;
+  unitPrice: number;
+  regularUnitPrice: number;
+  maxQuantity: number | null;
+  soldIndividually: boolean;
+};
+
+export type BagChange =
+  | { kind: "price"; name: string; from: number; to: number }
+  | { kind: "quantity"; name: string; from: number; to: number }
+  | { kind: "removed"; name: string };
+
+/**
+ * Brings saved bag lines up to date with the store: new prices and stock
+ * limits, and lines that can no longer be bought are dropped. Lines the store
+ * did not answer for are left as they are. Returns what changed so the
+ * shopper can be told.
+ */
+export function applyFreshBagLines(
+  items: BagItem[],
+  fresh: FreshBagLine[],
+): { items: BagItem[]; changes: BagChange[] } {
+  const changes: BagChange[] = [];
+  const next = items.flatMap((line) => {
+    const update = fresh.find((entry) => isSameLine(line, entry.productId, entry.variationId));
+    if (!update) return [line];
+
+    const name = line.variationLabel ? `${line.name} (${line.variationLabel})` : line.name;
+    if (!update.available) {
+      changes.push({ kind: "removed", name });
+      return [];
+    }
+
+    const maxQuantity = update.soldIndividually ? 1 : update.maxQuantity;
+    const quantity = clampQuantity(line.quantity, maxQuantity);
+    if (quantity === 0) {
+      changes.push({ kind: "removed", name });
+      return [];
+    }
+    if (update.unitPrice !== line.unitPrice) {
+      changes.push({ kind: "price", name, from: line.unitPrice, to: update.unitPrice });
+    }
+    if (quantity !== line.quantity) {
+      changes.push({ kind: "quantity", name, from: line.quantity, to: quantity });
+    }
+
+    return [
+      {
+        ...line,
+        unitPrice: update.unitPrice,
+        regularUnitPrice: update.regularUnitPrice,
+        maxQuantity,
+        soldIndividually: update.soldIndividually,
+        quantity,
+      },
+    ];
+  });
+
+  return { items: next, changes };
+}
