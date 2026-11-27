@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
+import { ProductDescription } from "./components/product-description";
 import { ProductPurchasePanel } from "./components/product-purchase-panel";
 import { ProductVariantProvider } from "./components/product-variant-context";
 import { ProductVariantGallery } from "./components/product-variant-gallery";
@@ -189,9 +190,11 @@ export default async function CategoryProductPage(
               {product.name}
             </h1>
 
-            <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-              {view.description}
-            </p>
+            {view.shortDescription ? (
+              <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+                {view.shortDescription}
+              </p>
+            ) : null}
 
             {view.hasRating ? (
               <div className="mt-3 flex items-center gap-2 text-sm">
@@ -213,6 +216,8 @@ export default async function CategoryProductPage(
               categorySlug={category.slug}
               product={product}
             />
+
+            <ProductDescription description={view.about} />
 
             {view.specs.length > 0 ? (
               <h2 className="mt-8 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">

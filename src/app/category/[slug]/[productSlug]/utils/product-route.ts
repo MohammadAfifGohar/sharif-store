@@ -8,6 +8,10 @@ import {
   type WooProduct,
 } from "@/lib/woocommerce";
 import { textFromHtml } from "@/lib/html-text";
+import {
+  parseProductDescription,
+  type ProductDescription,
+} from "@/lib/product-description";
 import { decodeSlug, getProductPath } from "@/lib/product-route";
 import { absoluteUrl, SELLER } from "@/lib/site-config";
 import { getWhatsAppOrderUrl } from "@/lib/whatsapp-order";
@@ -53,6 +57,8 @@ export type ProductViewModel = {
   discountPercent: number;
   description: string;
   shortDescription: string;
+  /** The description split into sections for the "About this product" block. */
+  about: ProductDescription;
   productPath: string;
   productPrice: string;
   regularPrice: string;
@@ -223,6 +229,7 @@ export function getProductViewModel({
       textFromHtml(product.short_description) ||
       "A curated pick from The Sharif Store.",
     shortDescription: textFromHtml(product.short_description),
+    about: parseProductDescription(product.description, product.name),
     productPath,
     productPrice,
     regularPrice: formatRegularPrice(product),
