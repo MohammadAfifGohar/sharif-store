@@ -344,9 +344,19 @@ export const getCategoryListingData = cache(
     const subcategories = categories.filter(
       (item) => item.parent === category.id,
     );
+    // Parent, grandparent … up to the top level, for the breadcrumbs.
+    const ancestors: WooCategory[] = [];
+    for (
+      let parent = categories.find((item) => item.id === category.parent);
+      parent && ancestors.length < 5;
+      parent = categories.find((item) => item.id === parent!.parent)
+    ) {
+      ancestors.unshift(parent);
+    }
 
     return {
       category,
+      ancestors,
       products,
       subcategories,
       page: safePage,

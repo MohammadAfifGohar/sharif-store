@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { CatalogResults } from "@/components/catalog-results";
+import { decodeEntities } from "@/lib/html-text";
 import { CATALOG_PAGE_SIZE } from "@/lib/catalog-feed";
 import { parseCatalogQuery } from "@/lib/catalog-query";
 import { expandProductsForGrid } from "@/lib/product-variants";
@@ -39,7 +41,8 @@ export default async function CategoryPage(props: PageProps<"/category/[slug]">)
 
   if (!data) notFound();
 
-  const { category, products, subcategories, page, total, totalPages } = data;
+  const { category, ancestors, products, subcategories, page, total, totalPages } =
+    data;
   const [items, facets] = await Promise.all([
     expandProductsForGrid(products),
     getCatalogFacets(category.id),
@@ -47,6 +50,17 @@ export default async function CategoryPage(props: PageProps<"/category/[slug]">)
 
   return (
     <main>
+      <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+        <Breadcrumbs
+          items={[
+            ...ancestors.map((parent) => ({
+              label: decodeEntities(parent.name),
+              href: `/category/${encodeURIComponent(parent.slug)}`,
+            })),
+            { label: decodeEntities(category.name) },
+          ]}
+        />
+      </div>
       <SubcategoryList
         parentName={category.name}
         subcategories={subcategories}
