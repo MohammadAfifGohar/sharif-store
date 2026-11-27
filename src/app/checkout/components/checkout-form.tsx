@@ -9,6 +9,7 @@ import {
   LoaderCircleIcon,
   LockIcon,
   PackageCheckIcon,
+  MapPinIcon,
   ShoppingBagIcon,
   ZapIcon,
 } from "lucide-react";
@@ -30,6 +31,7 @@ import { LinePrice } from "@/components/line-price";
 import { OrderTotalRow, SavingsBanner } from "@/components/order-total";
 import { ShippingSummary } from "@/components/shipping-summary";
 import { useBagPriceCheck } from "@/hooks/use-bag-price-check";
+import { lookupPin, type PinLookup } from "@/hooks/use-pin-lookup";
 import { useCoupon } from "@/hooks/use-coupon";
 import { useShippingRules } from "@/hooks/use-shipping-rules";
 import { isValidPin, setDeliveryPin, useDeliveryPin } from "@/lib/delivery-pin";
@@ -86,6 +88,37 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
   }
 
   return data;
+}
+
+/** What the PIN code told us, under the PIN field. */
+function PinHint({
+  lookup,
+  pin,
+}: {
+  lookup: (PinLookup & { forPin: string }) | null;
+  pin: string | null;
+}) {
+  if (!lookup || !pin || lookup.forPin !== pin) {
+    return <p id="postcode-hint" className="sr-only" aria-live="polite" />;
+  }
+  if (lookup.status === "found") {
+    const { city, district, stateName } = lookup.info;
+    const place = [city, district !== city ? district : "", stateName].filter(Boolean).join(", ");
+    return (
+      <p id="postcode-hint" aria-live="polite" className="flex items-center gap-1.5 text-xs text-emerald-700">
+        <MapPinIcon className="size-3.5 shrink-0" />
+        {place}
+      </p>
+    );
+  }
+  if (lookup.status === "unknown") {
+    return (
+      <p id="postcode-hint" aria-live="polite" className="text-xs text-destructive">
+        We couldn&apos;t find this PIN code. Please check it.
+      </p>
+    );
+  }
+  return <p id="postcode-hint" className="sr-only" aria-live="polite" />;
 }
 
 export function CheckoutForm({
@@ -147,13 +180,49 @@ export function CheckoutForm({
     postcode: address.postcode ?? savedPin,
   });
 
-  // Pre-fill the PIN code field with the PIN entered in the bag.
+  // City and state found for the PIN code, shown under the PIN field.
+  const [pinLookup, setPinLookup] = useState<(PinLookup & { forPin: string }) | null>(null);
+  const autoFilledCity = useRef("");
+
+  /** Looks the PIN code up and fills in city and state, unless typed by hand. */
+  function fillFromPin(pin: string) {
+    void lookupPin(pin).then((lookup) => {
+      const form = formRef.current;
+      const current = form?.elements.namedItem("postcode");
+      // Ignore answers for a PIN code the shopper has since changed.
+      if (!(current instanceof HTMLInputElement) || current.value.trim() !== pin) return;
+      setPinLookup({ ...lookup, forPin: pin });
+      if (lookup.status !== "found") return;
+
+      const { info } = lookup;
+      const city = form?.elements.namedItem("city");
+      if (
+        city instanceof HTMLInputElement &&
+        (!city.value.trim() || city.value === autoFilledCity.current)
+      ) {
+        city.value = info.city;
+        autoFilledCity.current = info.city;
+      }
+      const state = form?.elements.namedItem("state");
+      if (info.stateCode && state instanceof HTMLSelectElement && state.value !== info.stateCode) {
+        state.value = info.stateCode;
+        setAddress((previous) => ({ ...previous, state: info.stateCode! }));
+      }
+    });
+  }
+
+  // Pre-fill the PIN code field with the PIN entered in the bag, and look up
+  // the city for whichever PIN code the form starts with.
   useEffect(() => {
     const input = formRef.current?.elements.namedItem("postcode");
-    if (address.postcode === null && savedPin && input instanceof HTMLInputElement && !input.value) {
+    if (!(input instanceof HTMLInputElement)) return;
+    if (address.postcode === null && savedPin && !input.value) {
       input.value = savedPin;
     }
-  }, [address.postcode, savedPin]);
+    if (isValidPin(input.value.trim())) fillFromPin(input.value.trim());
+    // Only when the saved PIN first becomes known, not on every keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedPin]);
 
   const orderItems = items.map((item) => ({
     productId: item.productId,
@@ -439,12 +508,13 @@ export function CheckoutForm({
             <Input id="address2" name="address2" defaultValue={defaults.address2} autoComplete="address-line2" maxLength={200} className={inputClassName} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="city">City</FieldLabel>
-            <Input id="city" name="city" defaultValue={defaults.city} autoComplete="address-level2" maxLength={80} required className={inputClassName} />
+            <FieldLabel htmlFor="postcode">PIN code</FieldLabel>
+            <Input id="postcode" name="postcode" defaultValue={defaults.postcode} onChange={(event) => { const postcode = event.target.value.trim(); setAddress((current) => ({ ...current, postcode })); if (isValidPin(postcode)) { setDeliveryPin(postcode); fillFromPin(postcode); } }} inputMode="numeric" autoComplete="postal-code" pattern="[1-9][0-9]{5}" maxLength={6} required aria-describedby="postcode-hint" className={inputClassName} />
+            <PinHint lookup={pinLookup} pin={address.postcode ?? savedPin} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="postcode">PIN code</FieldLabel>
-            <Input id="postcode" name="postcode" defaultValue={defaults.postcode} onChange={(event) => { const postcode = event.target.value.trim(); setAddress((current) => ({ ...current, postcode })); if (isValidPin(postcode)) setDeliveryPin(postcode); }} inputMode="numeric" autoComplete="postal-code" pattern="[1-9][0-9]{5}" maxLength={6} required className={inputClassName} />
+            <FieldLabel htmlFor="city">City</FieldLabel>
+            <Input id="city" name="city" defaultValue={defaults.city} autoComplete="address-level2" maxLength={80} required className={inputClassName} />
           </Field>
           <Field className="sm:col-span-2">
             <FieldLabel htmlFor="state">State</FieldLabel>
