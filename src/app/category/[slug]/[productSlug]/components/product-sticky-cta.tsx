@@ -62,13 +62,13 @@ export function ProductStickyCta({
           variant="outline"
           label="Add"
           className="min-w-0 flex-1 px-2"
-          quantityClassName="w-24 flex-none"
+          quantityClassName="w-auto flex-none px-0.5 [&>button]:size-9 [&>span]:min-w-6"
         />
         <BuyNowButton
           product={product}
           categorySlug={categorySlug}
           variation={variation}
-          className="min-w-0 flex-1 px-2"
+          className="min-w-0 flex-1 px-2 max-[359px]:[&>svg]:hidden"
         />
       </div>
     </div>
