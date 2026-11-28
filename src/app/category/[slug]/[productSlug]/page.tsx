@@ -21,6 +21,7 @@ import {
   getProductViewModel,
 } from "./utils/product-route";
 import { SaleBadge } from "@/components/sale-badge";
+import { ShareButton } from "@/components/share-button";
 import { Badge } from "@/components/ui/badge";
 import { getProductPath } from "@/lib/product-route";
 import { absoluteUrl } from "@/lib/site-config";
@@ -176,14 +177,17 @@ export default async function CategoryProductPage(
           </section>
 
           <section className="flex min-w-0 flex-col lg:sticky lg:top-28">
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">{category.name}</Badge>
-              {product.brands.map((brand) => (
-                <Badge key={brand.id} variant="outline">
-                  {brand.name}
-                </Badge>
-              ))}
-              {product.on_sale ? <SaleBadge /> : null}
+            <div className="flex items-start gap-3">
+              <div className="flex flex-1 flex-wrap gap-2">
+                <Badge variant="secondary">{category.name}</Badge>
+                {product.brands.map((brand) => (
+                  <Badge key={brand.id} variant="outline">
+                    {brand.name}
+                  </Badge>
+                ))}
+                {product.on_sale ? <SaleBadge /> : null}
+              </div>
+              <ShareButton title={product.name} className="-my-2 size-10" />
             </div>
 
             <h1 className="mt-4 font-heading text-2xl font-semibold capitalize tracking-tight text-[#423b3f] sm:text-4xl">
